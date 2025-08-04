@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(chmod:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(pip3 list:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 manage.py migrate:*)",
+      "Bash(python3 manage.py makemigrations:*)",
+      "Bash(rm:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(mkdir:*)",
+      "Bash(true)",
+      "Bash(npm run lint)",
+      "Bash(python manage.py:*)"
+    ],
+    "deny": []
+  }
+}
