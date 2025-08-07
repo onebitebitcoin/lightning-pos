@@ -50,7 +50,7 @@ sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
 # Setup directories
-FRONTEND_DEPLOY_DIR="/var/www/shop"
+FRONTEND_DEPLOY_DIR="/var/www/pos/"
 CURRENT_DIR=$(pwd)
 
 echo "Current directory: $CURRENT_DIR"
@@ -107,7 +107,7 @@ if [ -f "package.json" ]; then
         npm install
         
         echo "Building production build..."
-        npm run build
+        npm run build-only
         
         echo "Deploying to $FRONTEND_DEPLOY_DIR..."
         sudo rm -rf $FRONTEND_DEPLOY_DIR/*
