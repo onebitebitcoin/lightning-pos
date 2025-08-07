@@ -19,7 +19,8 @@
       "Bash(mkdir:*)",
       "Bash(true)",
       "Bash(npm run lint)",
-      "Bash(python manage.py:*)"
+      "Bash(python manage.py:*)",
+      "Bash(vue-template-compiler:*)"
     ],
     "deny": []
   }

@@ -7,6 +7,7 @@ export const useCartStore = defineStore('cart', () => {
   const discount = ref(0)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const addingToCart = ref(new Set<number>()) // Track which products are being added
 
   // Computed properties
   const subtotal = computed(() => {
@@ -47,7 +48,8 @@ export const useCartStore = defineStore('cart', () => {
 
   // Add item to cart
   async function addItem(product: Product, quantity: number = 1): Promise<{ success: boolean; message?: string }> {
-    isLoading.value = true
+    // Add product ID to loading set
+    addingToCart.value.add(product.id)
     error.value = null
 
     try {
@@ -65,7 +67,8 @@ export const useCartStore = defineStore('cart', () => {
       error.value = err.message || '장바구니 추가에 실패했습니다'
       return { success: false, message: error.value || '오류가 발생했습니다' }
     } finally {
-      isLoading.value = false
+      // Remove product ID from loading set
+      addingToCart.value.delete(product.id)
     }
   }
 
@@ -185,6 +188,11 @@ export const useCartStore = defineStore('cart', () => {
     error.value = null
   }
 
+  // Check if a specific product is being added to cart
+  function isAddingToCart(productId: number): boolean {
+    return addingToCart.value.has(productId)
+  }
+
   // Initialize cart
   async function initialize() {
     await fetchCart()
@@ -192,7 +200,8 @@ export const useCartStore = defineStore('cart', () => {
 
   // Helper function to add item by product ID
   async function addItemById(productId: number, quantity: number = 1): Promise<{ success: boolean; message?: string }> {
-    isLoading.value = true
+    // Add product ID to loading set
+    addingToCart.value.add(productId)
     error.value = null
 
     try {
@@ -210,7 +219,8 @@ export const useCartStore = defineStore('cart', () => {
       error.value = err.message || '장바구니 추가에 실패했습니다'
       return { success: false, message: error.value || '오류가 발생했습니다' }
     } finally {
-      isLoading.value = false
+      // Remove product ID from loading set
+      addingToCart.value.delete(productId)
     }
   }
 
@@ -220,6 +230,7 @@ export const useCartStore = defineStore('cart', () => {
     discount,
     isLoading,
     error,
+    addingToCart,
 
     // Computed
     total,
@@ -237,6 +248,7 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     createOrder,
     setDiscount,
-    clearError
+    clearError,
+    isAddingToCart
   }
 })

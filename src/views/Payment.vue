@@ -1,27 +1,27 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors duration-200">
+    <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 sticky top-0 z-10">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center">
         <div class="flex items-center space-x-4">
           <button
             @click="$router.push('/shop')"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center space-x-1 transition-colors duration-200"
+            class="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           >
             <span>←</span>
             <span>상점으로 돌아가기</span>
           </button>
-          <h1 class="text-2xl font-bold text-gray-800 dark:text-white">결제</h1>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">결제</h1>
         </div>
-        <span class="text-gray-600 dark:text-gray-300">{{ authStore.username }}</span>
+        <span class="text-gray-600 dark:text-gray-400">{{ authStore.username }}</span>
       </div>
     </header>
 
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="container mx-auto px-3 xs:px-4 py-4 xs:py-6 tablet:py-8 max-w-4xl">
+      <div class="grid grid-cols-1 tablet:grid-cols-2 gap-4 xs:gap-6 tablet:gap-8">
         <!-- Order Summary -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-200">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">주문 내역</h2>
+        <div class="card p-4 xs:p-6 animate-fade-in">
+          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">주문 내역</h2>
           
           <div class="space-y-3 mb-6">
             <div
@@ -38,15 +38,15 @@
           </div>
 
           <!-- Discount Section -->
-          <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-3">할인 적용</h3>
-            <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="mb-4 xs:mb-6">
+            <h3 class="text-base xs:text-lg font-medium text-gray-800 dark:text-white mb-2 xs:mb-3">할인 적용</h3>
+            <div class="grid grid-cols-2 gap-2 xs:gap-3 mb-2 xs:mb-3">
               <button
                 v-for="discountOption in discountOptions"
                 :key="discountOption"
                 @click="selectPresetDiscount(discountOption)"
                 :class="[
-                  'px-4 py-2 rounded-lg border transition-colors',
+                  'px-2 xs:px-4 py-1.5 xs:py-2 rounded-lg border transition-colors text-xs xs:text-sm',
                   cartStore.discount === discountOption && !isCustomDiscount
                     ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-200'
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -57,7 +57,7 @@
               <button
                 @click="selectPresetDiscount(0)"
                 :class="[
-                  'px-4 py-2 rounded-lg border transition-colors',
+                  'px-2 xs:px-4 py-1.5 xs:py-2 rounded-lg border transition-colors text-xs xs:text-sm',
                   cartStore.discount === 0 && !isCustomDiscount
                     ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-200'
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -102,25 +102,40 @@
           <div class="space-y-2 pt-4 border-t">
             <div class="flex justify-between text-gray-600 dark:text-gray-300">
               <span>소계:</span>
-              <span>₩{{ cartStore.subtotal.toLocaleString('ko-KR') }}</span>
+              <div class="text-right">
+                <div>₩{{ cartStore.subtotal.toLocaleString('ko-KR') }}</div>
+                <div class="text-xs text-warning-600 dark:text-warning-400">
+                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}
+                </div>
+              </div>
             </div>
             <div v-if="cartStore.discount > 0" class="flex justify-between text-green-600 dark:text-green-400">
               <span>할인 ({{ cartStore.discount }}%):</span>
-              <span>-₩{{ (cartStore.subtotal * cartStore.discount / 100).toLocaleString('ko-KR') }}</span>
+              <div class="text-right">
+                <div>-₩{{ (cartStore.subtotal * cartStore.discount / 100).toLocaleString('ko-KR') }}</div>
+                <div class="text-xs">
+                  -{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal * cartStore.discount / 100)) }}
+                </div>
+              </div>
             </div>
             <div class="flex justify-between text-xl font-bold text-gray-800 dark:text-white pt-2 border-t dark:border-gray-600">
               <span>총액:</span>
-              <span>₩{{ cartStore.total.toLocaleString('ko-KR') }}</span>
+              <div class="text-right">
+                <div>₩{{ cartStore.total.toLocaleString('ko-KR') }}</div>
+                <div class="text-sm text-warning-600 dark:text-warning-400 font-medium">
+                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Payment Methods -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-200">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">결제 방법</h2>
+        <div class="card p-4 xs:p-6 animate-fade-in">
+          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">결제 방법</h2>
           
-          <div class="space-y-4 mb-6">
-            <label class="flex items-center space-x-3 p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+          <div class="space-y-3 xs:space-y-4 mb-4 xs:mb-6">
+            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
               <input
                 v-model="paymentMethod"
                 type="radio"
@@ -128,14 +143,14 @@
                 class="w-4 h-4 text-blue-600 dark:text-blue-400"
               />
               <div class="flex-1">
-                <p class="font-medium text-gray-800 dark:text-white">라이트닝 네트워크</p>
-                <p class="text-sm text-gray-600 dark:text-gray-300">빠른 비트코인 결제</p>
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">라이트닝 네트워크</p>
+                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">빠른 비트코인 결제</p>
               </div>
-              <span class="text-2xl">⚡</span>
+              <span class="text-xl xs:text-2xl">⚡</span>
             </label>
 
 
-            <label class="flex items-center space-x-3 p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
               <input
                 v-model="paymentMethod"
                 type="radio"
@@ -143,19 +158,24 @@
                 class="w-4 h-4 text-blue-600 dark:text-blue-400"
               />
               <div class="flex-1">
-                <p class="font-medium text-gray-800 dark:text-white">현금</p>
-                <p class="text-sm text-gray-600 dark:text-gray-300">카운터에서 결제</p>
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">현금</p>
+                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">카운터에서 결제</p>
               </div>
-              <span class="text-2xl">💵</span>
+              <span class="text-xl xs:text-2xl">💵</span>
             </label>
           </div>
 
           <button
             @click="handlePayment"
             :disabled="!paymentMethod"
-            class="w-full bg-green-600 dark:bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-medium text-lg"
+            class="btn btn-success w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg"
           >
-            ₩{{ cartStore.total.toLocaleString('ko-KR') }} 결제하기
+            <div class="text-center">
+              <div>₩{{ cartStore.total.toLocaleString('ko-KR') }} 결제하기</div>
+              <div class="text-xs opacity-90">
+                {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
+              </div>
+            </div>
           </button>
         </div>
       </div>
@@ -227,12 +247,14 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useThemeStore } from '@/stores/theme'
+import { useBitcoinStore } from '@/stores/bitcoin'
 import QRCode from 'qrcode'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 const themeStore = useThemeStore()
+const bitcoinStore = useBitcoinStore()
 
 const paymentMethod = ref('')
 const showQRCode = ref(false)
@@ -242,6 +264,9 @@ const qrCanvas = ref<HTMLCanvasElement>()
 const discountOptions = [5, 10, 15, 20, 25]
 const customDiscountValue = ref<number | null>(null)
 const isCustomDiscount = ref(false)
+
+// Initialize Bitcoin store
+bitcoinStore.initialize()
 
 async function handlePayment() {
   if (!paymentMethod.value) return

@@ -1,296 +1,352 @@
 #!/bin/bash
 
-# Kiosk Shop Deployment Script for Ubuntu
-# This script sets up the Django backend and Vue frontend on Ubuntu
+set -e
 
-set -e  # Exit on any error
+echo "Starting Ubuntu server deployment..."
 
-echo "🚀 Starting Kiosk Shop Deployment on Ubuntu..."
+# Update system packages
+echo "Updating system packages..."
+sudo apt update && sudo apt upgrade -y
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Install essential packages
+echo "Installing essential packages..."
+sudo apt install -y curl wget git build-essential software-properties-common python3 python3-pip python3-venv psmisc net-tools
 
-# Configuration
-PROJECT_NAME="kiosk-shop"
-PROJECT_DIR="/var/www/$PROJECT_NAME"
-BACKEND_DIR="$PROJECT_DIR/backend"
-FRONTEND_DIR="$PROJECT_DIR"
-NGINX_AVAILABLE="/etc/nginx/sites-available/$PROJECT_NAME"
-NGINX_ENABLED="/etc/nginx/sites-enabled/$PROJECT_NAME"
-SYSTEMD_SERVICE="/etc/systemd/system/$PROJECT_NAME.service"
+# Install Node.js (if needed)
+if ! command -v node &> /dev/null; then
+    echo "Installing Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt install -y nodejs
+fi
 
-# Functions
-print_status() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
+# Install Docker (if needed)
+if ! command -v docker &> /dev/null; then
+    echo "Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    sudo usermod -aG docker $USER
+    rm get-docker.sh
+fi
 
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
+# Install Docker Compose (if needed)
+if ! command -v docker-compose &> /dev/null; then
+    echo "Installing Docker Compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+fi
 
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
+# Install Nginx (if needed)
+if ! command -v nginx &> /dev/null; then
+    echo "Installing Nginx..."
+    sudo apt install -y nginx
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+fi
 
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        print_error "This script must be run as root (use sudo)"
-        exit 1
-    fi
-}
+# Setup firewall
+echo "Configuring firewall..."
+sudo ufw allow ssh
+sudo ufw allow 'Nginx Full'
+sudo ufw --force enable
 
-install_dependencies() {
-    print_status "Installing system dependencies..."
-    
-    # Update package list
-    apt update
-    
-    # Install Python and pip
-    apt install -y python3 python3-pip python3-venv python3-dev
-    
-    # Install Node.js and npm
-    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-    apt install -y nodejs
-    
-    # Install Nginx
-    apt install -y nginx
-    
-    # Install SQLite (should already be installed)
-    apt install -y sqlite3
-    
-    # Install other dependencies
-    apt install -y git curl wget unzip
-    
-    print_status "System dependencies installed successfully!"
-}
+# Setup directories
+FRONTEND_DEPLOY_DIR="/var/www/shop"
+CURRENT_DIR=$(pwd)
 
-setup_project_directory() {
-    print_status "Setting up project directory..."
-    
-    # Create project directory
-    mkdir -p $PROJECT_DIR
-    
-    # Copy project files (assuming script is run from project root)
-    if [ -d "./backend" ] && [ -f "./package.json" ]; then
-        cp -r . $PROJECT_DIR/
-        print_status "Project files copied to $PROJECT_DIR"
-    else
-        print_error "Please run this script from the project root directory"
-        exit 1
-    fi
-    
-    # Set permissions
-    chown -R www-data:www-data $PROJECT_DIR
-    chmod -R 755 $PROJECT_DIR
-}
+echo "Current directory: $CURRENT_DIR"
+echo "Creating frontend deployment directory: $FRONTEND_DEPLOY_DIR"
+sudo mkdir -p $FRONTEND_DEPLOY_DIR
+sudo chown -R $USER:$USER $FRONTEND_DEPLOY_DIR
 
-setup_backend() {
-    print_status "Setting up Django backend..."
-    
-    cd $BACKEND_DIR
-    
-    # Create virtual environment
+# Deploy Django Backend
+echo "=== Deploying Django Backend ==="
+if [ -d "backend" ] && [ -f "backend/requirements.txt" ]; then
+    cd backend
+    echo "Setting up Python virtual environment..."
     python3 -m venv venv
     source venv/bin/activate
     
-    # Install Python dependencies
+    echo "Installing Python dependencies..."
     pip install --upgrade pip
     pip install -r requirements.txt
+    pip install gunicorn
     
-    # Set up environment variables for production
-    cat > .env << EOF
-SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,$(hostname -I | awk '{print $1}'),$(hostname -f)
-CORS_ALLOWED_ORIGINS=http://localhost,http://127.0.0.1,http://$(hostname -I | awk '{print $1}'),http://$(hostname -f)
-EOF
-    
-    # Run Django setup
-    python manage.py collectstatic --noinput
-    python manage.py makemigrations accounts
-    python manage.py makemigrations products
+    echo "Running Django migrations..."
     python manage.py migrate
     
-    # Create superuser (you'll need to set password manually)
-    echo "from accounts.models import User; User.objects.create_superuser('admin', 'admin@kiosk.com', 'password') if not User.objects.filter(username='admin').exists() else None" | python manage.py shell
+    echo "Collecting static files..."
+    python manage.py collectstatic --noinput
     
-    print_status "Django backend setup completed!"
-}
+    echo "Copying static files to frontend deployment directory..."
+    sudo mkdir -p $FRONTEND_DEPLOY_DIR/staticfiles
+    sudo cp -r staticfiles/* $FRONTEND_DEPLOY_DIR/staticfiles/ 2>/dev/null || true
+    sudo mkdir -p $FRONTEND_DEPLOY_DIR/media
+    sudo cp -r media/* $FRONTEND_DEPLOY_DIR/media/ 2>/dev/null || true
+    
+    echo "Creating Django superuser (if needed)..."
+    python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+    print('Superuser created: admin/admin123')
+else:
+    print('Superuser already exists')
+"
+    deactivate
+    cd $CURRENT_DIR
+fi
 
-setup_frontend() {
-    print_status "Setting up Vue frontend..."
+# Deploy Vue Frontend
+echo "=== Deploying Vue Frontend ==="
+if [ -f "package.json" ]; then
+    echo "Building Vue frontend..."
     
-    cd $FRONTEND_DIR
-    
-    # Install Node dependencies
-    npm install
-    
-    # Build for production
-    npm run build
-    
-    print_status "Vue frontend built successfully!"
-}
+    if [ -f "package.json" ]; then
+        echo "Installing Node.js dependencies..."
+        npm install
+        
+        echo "Building production build..."
+        npm run build
+        
+        echo "Deploying to $FRONTEND_DEPLOY_DIR..."
+        sudo rm -rf $FRONTEND_DEPLOY_DIR/*
+        sudo cp -r dist/* $FRONTEND_DEPLOY_DIR/
+        sudo chown -R www-data:www-data $FRONTEND_DEPLOY_DIR/
+        sudo chmod -R 755 $FRONTEND_DEPLOY_DIR/
+        
+        echo "Frontend deployed successfully!"
+    fi
+fi
 
-setup_systemd_service() {
-    print_status "Setting up systemd service..."
-    
-    cat > $SYSTEMD_SERVICE << EOF
+# Setup systemd service for Django backend
+SERVICE_NAME="shop-django-backend"
+SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
+
+echo "Creating/updating Django systemd service..."
+sudo tee $SERVICE_FILE > /dev/null <<EOF
 [Unit]
-Description=Kiosk Shop Django Application
+Description=Shop Django Backend
 After=network.target
 
 [Service]
-Type=exec
-User=www-data
+Type=simple
+User=$USER
 Group=www-data
-WorkingDirectory=$BACKEND_DIR
-Environment=PATH=$BACKEND_DIR/venv/bin
-ExecStart=$BACKEND_DIR/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 kiosk_backend.wsgi:application
+WorkingDirectory=$CURRENT_DIR/backend
+Environment="PATH=$CURRENT_DIR/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=$CURRENT_DIR/backend"
+Environment="DJANGO_SETTINGS_MODULE=kiosk_backend.settings"
+ExecStart=$CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8001 kiosk_backend.wsgi:application
+ExecReload=/bin/kill -s HUP \$MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+TimeoutStartSec=30
+PrivateTmp=true
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 EOF
-    
-    # Enable and start the service
-    systemctl daemon-reload
-    systemctl enable $PROJECT_NAME
-    systemctl start $PROJECT_NAME
-    
-    print_status "Systemd service created and started!"
-}
 
-setup_nginx() {
-    print_status "Setting up Nginx configuration..."
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+echo "Django service created and enabled"
+
+# Start/restart the service
+echo "=== Starting Django Backend Service ==="
+echo "Stopping existing service if running..."
+sudo systemctl stop $SERVICE_NAME 2>/dev/null || true
+
+echo "Starting Django backend service..."
+sudo systemctl start $SERVICE_NAME
+
+# Wait for service to start
+sleep 3
+
+echo "Checking service status..."
+if sudo systemctl is-active --quiet $SERVICE_NAME; then
+    echo "✅ Django service is running successfully"
+    sudo systemctl status $SERVICE_NAME --no-pager
+else
+    echo "❌ Django service failed to start. Checking logs..."
+    sudo journalctl -u $SERVICE_NAME --no-pager -n 20
     
-    cat > $NGINX_AVAILABLE << EOF
+    # Try to start manually as fallback
+    echo "Attempting manual start as fallback..."
+    cd $CURRENT_DIR/backend
+    source venv/bin/activate
+    
+    # Kill any existing processes on port 8001
+    sudo fuser -k 8001/tcp 2>/dev/null || true
+    sleep 2
+    
+    # Start Gunicorn manually in background
+    echo "Starting Gunicorn manually on port 8001..."
+    nohup $CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8001 kiosk_backend.wsgi:application > /var/log/gunicorn.log 2>&1 &
+    
+    # Wait and check if port 8001 is responding
+    sleep 5
+    if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
+        echo "✅ Django backend started manually on port 8001"
+    else
+        echo "❌ Failed to start Django backend. Trying development server..."
+        # Kill gunicorn and try development server
+        sudo fuser -k 8001/tcp 2>/dev/null || true
+        sleep 2
+        nohup python manage.py runserver 0.0.0.0:8001 > /var/log/django-dev.log 2>&1 &
+        sleep 3
+        if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
+            echo "✅ Django development server started on port 8001"
+        else
+            echo "❌ All startup methods failed. Check logs:"
+            echo "  - systemd: sudo journalctl -u $SERVICE_NAME"
+            echo "  - gunicorn: tail -f /var/log/gunicorn.log"
+            echo "  - django: tail -f /var/log/django-dev.log"
+        fi
+    fi
+    deactivate
+fi
+
+# Setup Nginx configuration
+NGINX_CONFIG="/etc/nginx/sites-available/shop.local"
+if ! grep -q "proxy_pass" $NGINX_CONFIG 2>/dev/null; then
+    echo "Configuring Nginx reverse proxy..."
+    sudo bash -c "cat > $NGINX_CONFIG" <<EOF
 server {
     listen 80;
-    server_name localhost $(hostname -I | awk '{print $1}') $(hostname -f);
-    
-    # Frontend (Vue.js built files)
+    server_name shop.local localhost;
+
+    root $FRONTEND_DEPLOY_DIR;
+    index index.html;
+
     location / {
-        root $FRONTEND_DIR/dist;
         try_files \$uri \$uri/ /index.html;
-        
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
     }
-    
-    # Backend API
+
     location /api/ {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://localhost:8001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
-    
-    # Django admin
+
     location /admin/ {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://localhost:8001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
-    
-    # Django static files
+
+    # Serve Django static files
     location /static/ {
-        alias $BACKEND_DIR/staticfiles/;
+        alias $FRONTEND_DEPLOY_DIR/staticfiles/;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
     }
-    
-    # Django media files
+
+    # Serve media files
     location /media/ {
-        alias $BACKEND_DIR/media/;
+        alias $FRONTEND_DEPLOY_DIR/media/;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    # Serve JavaScript, CSS, images, fonts, etc. from Vue build
+    location ~* \.(?:js|css|ico|json|xml|jpg|jpeg|png|gif|woff|woff2|ttf|svg|map)$ {
+        root $FRONTEND_DEPLOY_DIR;
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000";
+        
+        # Fallback for cache busting
+        try_files \$uri \$uri/ =404;
     }
 }
 EOF
-    
+
     # Enable the site
-    ln -sf $NGINX_AVAILABLE $NGINX_ENABLED
+    sudo ln -sf $NGINX_CONFIG /etc/nginx/sites-enabled/shop.local
     
     # Remove default site if it exists
-    rm -f /etc/nginx/sites-enabled/default
+    sudo rm -f /etc/nginx/sites-enabled/default
     
-    # Test and reload Nginx
-    nginx -t
-    systemctl reload nginx
-    
-    print_status "Nginx configuration completed!"
-}
+    sudo nginx -t
+    sudo systemctl reload nginx
+fi
 
-setup_firewall() {
-    print_status "Setting up firewall..."
-    
-    # Install ufw if not installed
-    apt install -y ufw
-    
-    # Configure firewall
-    ufw --force reset
-    ufw default deny incoming
-    ufw default allow outgoing
-    ufw allow ssh
-    ufw allow 'Nginx Full'
-    ufw --force enable
-    
-    print_status "Firewall configured!"
-}
+# Final setup and permissions
+echo "=== Final Setup ==="
+sudo chown -R www-data:www-data $FRONTEND_DEPLOY_DIR/
+sudo chmod -R 755 $FRONTEND_DEPLOY_DIR/
 
-show_completion_info() {
-    print_status "🎉 Deployment completed successfully!"
-    echo ""
-    echo -e "${GREEN}Your Kiosk Shop is now running!${NC}"
-    echo ""
-    echo "📋 Service Information:"
-    echo "  • Frontend: http://$(hostname -I | awk '{print $1}')/"
-    echo "  • Admin Panel: http://$(hostname -I | awk '{print $1}')/admin/"
-    echo "  • API Endpoints: http://$(hostname -I | awk '{print $1}')/api/"
-    echo ""
-    echo "🔧 Management Commands:"
-    echo "  • Check backend status: systemctl status $PROJECT_NAME"
-    echo "  • Restart backend: systemctl restart $PROJECT_NAME"
-    echo "  • Check Nginx status: systemctl status nginx"
-    echo "  • View backend logs: journalctl -u $PROJECT_NAME -f"
-    echo ""
-    echo "👤 Default Admin Account:"
-    echo "  • Username: admin"
-    echo "  • Password: password"
-    echo "  • Admin URL: http://$(hostname -I | awk '{print $1}')/admin/"
-    echo ""
-    echo "📁 Project Location: $PROJECT_DIR"
-    echo ""
-    print_warning "Remember to:"
-    echo "  1. Change the default admin password"
-    echo "  2. Update the SECRET_KEY in production"
-    echo "  3. Set up SSL/HTTPS for production use"
-    echo "  4. Configure domain name in ALLOWED_HOSTS if needed"
-}
+# Enable and start nginx site
+if [ -f "/etc/nginx/sites-available/shop.local" ]; then
+    echo "Enabling Nginx site..."
+    sudo ln -sf /etc/nginx/sites-available/shop.local /etc/nginx/sites-enabled/
+    sudo systemctl reload nginx
+fi
 
-# Main execution
-main() {
-    print_status "Starting deployment process..."
-    
-    check_root
-    install_dependencies
-    setup_project_directory
-    setup_backend
-    setup_frontend
-    setup_systemd_service
-    setup_nginx
-    setup_firewall
-    show_completion_info
-}
+echo "=== Final Verification ==="
+echo "Checking if Django backend is running on port 8001..."
+if netstat -tlnp 2>/dev/null | grep -q ":8001 "; then
+    echo "✅ Port 8001 is active"
+    if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
+        echo "✅ Django backend health check passed"
+    else
+        echo "⚠️  Port 8001 active but health check failed"
+    fi
+else
+    echo "❌ Port 8001 is not active"
+    echo "Checking what's running on port 8001..."
+    sudo lsof -i :8001 || echo "No process found on port 8001"
+fi
 
-# Handle script interruption
-trap 'print_error "Deployment interrupted!"; exit 1' INT TERM
+echo ""
+echo "=== Deployment Summary ==="
+BACKEND_STATUS="❌ Not Running"
+if netstat -tlnp 2>/dev/null | grep -q ":8001 "; then
+    BACKEND_STATUS="✅ Running on http://localhost:8001"
+fi
 
-# Run main function
-main "$@"
+echo "🔧 Django Backend: $BACKEND_STATUS"
+echo "✅ Vue Frontend: Deployed to $FRONTEND_DEPLOY_DIR/"
+echo "✅ Repository: Working from $CURRENT_DIR/"
+echo "✅ Nginx: Configured for local access"
+echo "✅ Systemd Service: shop-django-backend"
+echo ""
+echo "🔧 Manual Configuration Needed:"
+echo "1. Update Django settings for production (DEBUG=False, ALLOWED_HOSTS)"
+echo "2. Set up environment variables for database and secrets"
+echo "3. Configure SSL certificates for production"
+echo ""
+echo "📋 Service Management Commands:"
+echo "  sudo systemctl status shop-django-backend"
+echo "  sudo systemctl restart shop-django-backend"
+echo "  sudo systemctl reload nginx"
+echo "  sudo journalctl -u shop-django-backend -f  # View logs"
+echo ""
+echo "🔍 Debugging Commands:"
+echo "  netstat -tlnp | grep :8001  # Check port 8001"
+echo "  curl http://localhost:8001/api/accounts/user/  # Test backend"
+echo "  tail -f /var/log/gunicorn.log  # Gunicorn logs"
+echo "  tail -f /var/log/django-dev.log  # Django dev server logs"
+echo ""
+echo "🌐 Site should be accessible at: http://shop.local or http://localhost"
+echo "📝 Django admin: http://shop.local/admin/"
+echo "🔑 Default admin credentials: admin/admin123"

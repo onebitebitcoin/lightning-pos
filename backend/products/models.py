@@ -10,6 +10,7 @@ class Category(models.Model):
     """
     name = models.CharField(max_length=100, verbose_name='카테고리명')
     description = models.TextField(blank=True, verbose_name='설명')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, verbose_name='생성자')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

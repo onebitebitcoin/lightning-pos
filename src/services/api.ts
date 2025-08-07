@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api'
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -52,9 +52,20 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - remove token and redirect to login
+      // Unauthorized - remove token but don't redirect during login attempts
       TokenManager.removeToken()
-      window.location.href = '/login'
+      
+      // Only redirect if this is not a login or register request
+      const isAuthRequest = error.config?.url?.includes('/auth/login') || 
+                           error.config?.url?.includes('/auth/register') ||
+                           error.config?.url?.includes('/auth/demo-login')
+      
+      if (!isAuthRequest) {
+        // Use router for navigation instead of window.location to avoid page refresh
+        import('@/router').then(({ default: router }) => {
+          router.push('/login')
+        })
+      }
     }
     return Promise.reject(error)
   }
@@ -72,8 +83,20 @@ export interface User {
   id: number
   username: string
   email: string
+  lightning_address?: string
   created_at: string
   is_kiosk_admin: boolean
+}
+
+export interface Category {
+  id: number
+  name: string
+  description?: string
+  created_by?: number
+  created_by_username?: string
+  is_global: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Product {
@@ -88,6 +111,8 @@ export interface Product {
   category_name?: string
   is_available: boolean
   stock_quantity: number
+  created_by?: number
+  created_by_username?: string
   created_at: string
   updated_at: string
 }
@@ -196,17 +221,119 @@ export const authAPI = {
     } catch (error: any) {
       return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
     }
+  },
+
+  async updateProfile(profileData: {
+    username?: string
+    email?: string
+    lightning_address?: string
+  }): Promise<{ success: boolean; message: string; user?: User; errors?: any }> {
+    try {
+      const response = await apiClient.put('/auth/profile/update/', profileData)
+      return response.data
+    } catch (error: any) {
+      return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
+    }
+  }
+}
+
+// Admin API
+export const adminAPI = {
+  async getUsersList(): Promise<{ success: boolean; users: (User & { product_count: number })[]; total_count: number; message?: string }> {
+    try {
+      const response = await apiClient.get('/auth/admin/users/')
+      return response.data
+    } catch (error: any) {
+      return error.response?.data || { success: false, users: [], total_count: 0, message: '서버 오류가 발생했습니다' }
+    }
+  },
+
+  async getUserDetail(userId: number): Promise<{ 
+    success: boolean; 
+    user?: User; 
+    products?: any[]; 
+    product_count?: number; 
+    message?: string 
+  }> {
+    try {
+      const response = await apiClient.get(`/auth/admin/users/${userId}/`)
+      return response.data
+    } catch (error: any) {
+      return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
+    }
+  }
+}
+
+// Categories API
+export const categoriesAPI = {
+  async getCategories(): Promise<Category[]> {
+    try {
+      const response = await apiClient.get('/products/categories/')
+      return response.data.results || response.data
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      return []
+    }
+  },
+
+  async createCategory(categoryData: Omit<Category, 'id' | 'created_by' | 'created_by_username' | 'is_global' | 'created_at' | 'updated_at'>): Promise<{ success: boolean; category?: Category; message?: string }> {
+    try {
+      const response = await apiClient.post('/products/categories/', categoryData)
+      return { success: true, category: response.data }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || '카테고리 생성에 실패했습니다' 
+      }
+    }
+  },
+
+  async updateCategory(id: number, categoryData: Partial<Category>): Promise<{ success: boolean; category?: Category; message?: string }> {
+    try {
+      const response = await apiClient.put(`/products/categories/${id}/`, categoryData)
+      return { success: true, category: response.data }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || '카테고리 수정에 실패했습니다' 
+      }
+    }
+  },
+
+  async deleteCategory(id: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      await apiClient.delete(`/products/categories/${id}/`)
+      return { success: true, message: '카테고리가 삭제되었습니다' }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || '카테고리 삭제에 실패했습니다' 
+      }
+    }
   }
 }
 
 // Products API
 export const productsAPI = {
+  // Get user's own products (for management/settings)
   async getProducts(): Promise<Product[]> {
     try {
       const response = await apiClient.get('/products/')
       return response.data.results || response.data
     } catch (error) {
       console.error('Error fetching products:', error)
+      return []
+    }
+  },
+
+  // Get all available products (for shopping)
+  async getAvailableProducts(categoryId?: string): Promise<Product[]> {
+    try {
+      const params = categoryId ? `?category=${categoryId}` : ''
+      const response = await apiClient.get(`/products/available/${params}`)
+      return response.data.products || response.data
+    } catch (error) {
+      console.error('Error fetching available products:', error)
       return []
     }
   },

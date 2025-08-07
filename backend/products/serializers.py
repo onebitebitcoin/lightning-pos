@@ -6,14 +6,22 @@ from django.core.files.base import ContentFile
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    is_global = serializers.SerializerMethodField()
+    
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'created_by', 'created_by_username', 'is_global', 'created_at', 'updated_at']
+        read_only_fields = ['created_by', 'created_by_username', 'created_at', 'updated_at']
+    
+    def get_is_global(self, obj):
+        return obj.created_by is None
 
 
 class ProductSerializer(serializers.ModelSerializer):
     image_display_url = serializers.ReadOnlyField()
     category_name = serializers.CharField(source='category.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     # Override image_url to accept any string (including base64)
     image_url = serializers.CharField(required=False, allow_blank=True)
     
@@ -22,9 +30,9 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'price', 'image_url', 'image', 
             'image_display_url', 'category', 'category_name', 'is_available', 
-            'stock_quantity', 'created_at', 'updated_at'
+            'stock_quantity', 'created_by', 'created_by_username', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_by', 'created_by_username', 'created_at', 'updated_at']
     
     def validate(self, attrs):
         """Custom validation to handle base64 image data"""

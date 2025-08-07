@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">한입 POS</h1>
-        <p class="text-gray-600">환영합니다! 계속하려면 로그인해주세요</p>
+  <div class="min-h-screen flex items-center justify-center gradient-primary px-4 py-8">
+    <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
+      <div class="text-center mb-6 tablet:mb-8">
+        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">한입 POS</h1>
+        <p class="text-sm xs:text-base text-gray-600 dark:text-gray-400">환영합니다! 계속하려면 로그인해주세요</p>
       </div>
       
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form @submit.prevent="handleLogin" class="space-y-4 tablet:space-y-6">
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="username" class="block text-sm tablet:text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
             사용자명
           </label>
           <input
@@ -16,13 +16,13 @@
             v-model="username"
             type="text"
             required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            class="input text-sm xs:text-base"
             placeholder="사용자명을 입력하세요"
           />
         </div>
         
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="password" class="block text-sm tablet:text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
             비밀번호
           </label>
           <input
@@ -30,40 +30,38 @@
             v-model="password"
             type="password"
             required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            class="input text-sm xs:text-base"
             placeholder="비밀번호를 입력하세요"
           />
         </div>
         
         <!-- Error Message -->
-        <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div v-if="errorMessage" class="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-700 dark:text-error-300 px-4 py-3 rounded-xl">
           {{ errorMessage }}
         </div>
 
         <button
           type="submit"
           :disabled="isSubmitting"
-          :class="[
-            'w-full py-3 px-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium text-lg text-white',
-            isSubmitting
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          ]"
+          class="btn btn-primary w-full py-2 xs:py-3 tablet:py-4 text-base xs:text-lg tablet:text-xl"
         >
-          <span v-if="isSubmitting">로그인 중...</span>
+          <span v-if="isSubmitting" class="flex items-center justify-center space-x-2">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>로그인 중...</span>
+          </span>
           <span v-else>로그인</span>
         </button>
       </form>
       
-      <div class="mt-6 text-center space-y-2">
-        <p class="text-sm text-gray-500">
+      <div class="mt-4 xs:mt-6 text-center space-y-2">
+        <p class="text-xs xs:text-sm text-gray-500 dark:text-gray-400">
           데모 계정: admin / password
         </p>
-        <p class="text-sm text-gray-600">
+        <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
           계정이 없으신가요? 
           <button
             @click="$router.push('/register')"
-            class="text-blue-600 hover:text-blue-800 underline font-medium"
+            class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 underline font-medium transition-colors"
           >
             회원가입
           </button>
@@ -103,6 +101,10 @@ async function handleLogin() {
       // Initialize cart after successful login
       const cartStore = useCartStore()
       await cartStore.initialize()
+      
+      // Small delay to ensure token is fully set in axios instance
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       router.push('/shop')
     } else {
       errorMessage.value = result.message

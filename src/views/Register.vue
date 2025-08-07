@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-blue-600">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">계정 생성</h1>
-        <p class="text-gray-600">한입 POS에 오신 것을 환영합니다</p>
+  <div class="min-h-screen flex items-center justify-center gradient-success px-4 py-8">
+    <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
+      <div class="text-center mb-6 tablet:mb-8">
+        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-white mb-2">계정 생성</h1>
+        <p class="text-sm xs:text-base text-white">한입 POS에 오신 것을 환영합니다</p>
       </div>
       
-      <form @submit.prevent="handleRegister" class="space-y-6">
+      <form @submit.prevent="handleRegister" class="space-y-4 tablet:space-y-6">
         <!-- Username Field -->
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="username" class="block text-sm font-medium text-white mb-2">
             사용자명 *
           </label>
           <input
@@ -28,7 +28,7 @@
 
         <!-- Email Field -->
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="email" class="block text-sm font-medium text-white mb-2">
             이메일 *
           </label>
           <input
@@ -47,7 +47,7 @@
         
         <!-- Password Field -->
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="password" class="block text-sm font-medium text-white mb-2">
             비밀번호 *
           </label>
           <input
@@ -62,12 +62,12 @@
             placeholder="비밀번호를 입력하세요"
           />
           <p v-if="formErrors.password" class="text-red-500 text-sm mt-1">{{ formErrors.password }}</p>
-          <p class="text-xs text-gray-500 mt-1">최소 6자 이상, 영문과 숫자를 포함해주세요</p>
+          <p class="text-xs text-white/80 mt-1">최소 6자 이상, 영문과 숫자를 포함해주세요</p>
         </div>
 
         <!-- Confirm Password Field -->
         <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="confirmPassword" class="block text-sm font-medium text-white mb-2">
             비밀번호 확인 *
           </label>
           <input
@@ -93,10 +93,10 @@
             required
             class="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
           />
-          <label for="agreeTerms" class="text-sm text-gray-600">
-            <span class="text-red-500">*</span> 
-            <span class="underline cursor-pointer hover:text-green-600">이용약관</span>과 
-            <span class="underline cursor-pointer hover:text-green-600">개인정보 처리방침</span>에 동의합니다
+          <label for="agreeTerms" class="text-sm text-white">
+            <span class="text-red-300">*</span> 
+            <span class="underline cursor-pointer hover:text-green-200">이용약관</span>과 
+            <span class="underline cursor-pointer hover:text-green-200">개인정보 처리방침</span>에 동의합니다
           </label>
         </div>
         <p v-if="formErrors.agreeTerms" class="text-red-500 text-sm">{{ formErrors.agreeTerms }}</p>
@@ -118,11 +118,11 @@
       </form>
       
       <div class="mt-6 text-center">
-        <p class="text-sm text-gray-600">
+        <p class="text-sm text-white">
           이미 계정이 있으신가요? 
           <button
             @click="$router.push('/login')"
-            class="text-green-600 hover:text-green-800 underline font-medium"
+            class="text-green-200 hover:text-green-100 underline font-medium"
           >
             로그인
           </button>

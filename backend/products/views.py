@@ -1,7 +1,7 @@
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.db import transaction
+from django.db import transaction, models
 from django.utils.crypto import get_random_string
 from decimal import Decimal
 from .models import Category, Product, CartItem, Order, OrderItem
@@ -12,34 +12,69 @@ from .serializers import (
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Show categories created by the current user and global categories (created_by=None)
+        return Category.objects.filter(
+            models.Q(created_by=self.request.user) | models.Q(created_by__isnull=True)
+        ).order_by('name')
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Users can only access their own categories and global categories
+        return Category.objects.filter(
+            models.Q(created_by=self.request.user) | models.Q(created_by__isnull=True)
+        )
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
-    queryset = Product.objects.filter(is_available=True)
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Show only products created by the current user
+        queryset = Product.objects.filter(created_by=self.request.user, is_available=True)
         category = self.request.query_params.get('category')
         if category:
             queryset = queryset.filter(category_id=category)
-        return queryset
+        return queryset.order_by('-created_at')
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Users can only access their own products
+        return Product.objects.filter(created_by=self.request.user)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def available_products_view(request):
+    """
+    Get all available products (read-only view for shopping)
+    This endpoint shows all products for shopping purposes
+    """
+    products = Product.objects.filter(is_available=True).order_by('-created_at')
+    category = request.query_params.get('category')
+    if category:
+        products = products.filter(category_id=category)
+    
+    serializer = ProductSerializer(products, many=True, context={'request': request})
+    return Response({
+        'success': True,
+        'products': serializer.data
+    })
 
 
 @api_view(['GET', 'POST'])
@@ -67,6 +102,7 @@ def cart_view(request):
         quantity = int(request.data.get('quantity', 1))
         
         try:
+            # Allow adding any available product to cart
             product = Product.objects.get(id=product_id, is_available=True)
         except Product.DoesNotExist:
             return Response({

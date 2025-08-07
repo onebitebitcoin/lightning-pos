@@ -12,7 +12,7 @@ export const useProductStore = defineStore('products', () => {
     products.value.filter(product => product.is_available)
   )
 
-  // Load products from API
+  // Load user's own products (for management/settings)
   async function fetchProducts() {
     isLoading.value = true
     error.value = null
@@ -23,6 +23,22 @@ export const useProductStore = defineStore('products', () => {
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
       console.error('Error fetching products:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Load all available products (for shopping)
+  async function fetchAvailableProducts(categoryId?: string) {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const fetchedProducts = await productsAPI.getAvailableProducts(categoryId)
+      products.value = fetchedProducts
+    } catch (err: any) {
+      error.value = err.message || '상품을 불러오는데 실패했습니다'
+      console.error('Error fetching available products:', err)
     } finally {
       isLoading.value = false
     }
@@ -135,8 +151,15 @@ export const useProductStore = defineStore('products', () => {
     error.value = null
   }
 
-  // Initialize store
+  // Initialize store for shop (loads all available products)
   async function initialize() {
+    if (products.value.length === 0) {
+      await fetchAvailableProducts()
+    }
+  }
+
+  // Initialize store for settings (loads user's own products)  
+  async function initializeForSettings() {
     if (products.value.length === 0) {
       await fetchProducts()
     }
@@ -153,7 +176,9 @@ export const useProductStore = defineStore('products', () => {
 
     // Actions
     initialize,
+    initializeForSettings,
     fetchProducts,
+    fetchAvailableProducts,
     fetchProduct,
     addProduct,
     updateProduct,

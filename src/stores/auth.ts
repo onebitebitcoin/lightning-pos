@@ -148,6 +148,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Update user data
+  function updateUser(userData: User) {
+    user.value = userData
+    saveUserToStorage(userData)
+  }
+
   // Clear error
   function clearError() {
     error.value = null
@@ -170,6 +176,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout, 
     register,
     getProfile,
+    updateUser,
     clearError
   }
 })

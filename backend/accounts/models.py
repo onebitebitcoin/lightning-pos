@@ -10,6 +10,13 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_kiosk_admin = models.BooleanField(default=False)
+    lightning_address = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        verbose_name='라이트닝 지갑 주소',
+        help_text='예: test@walletofsatoshi.com'
+    )
     
     # Override username to make it optional since we use email for login
     username = models.CharField(max_length=150, unique=True)

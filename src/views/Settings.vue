@@ -15,6 +15,24 @@
             <h1 class="text-lg font-bold text-gray-800 dark:text-white">상품 관리</h1>
           </div>
           <div class="flex items-center space-x-2">
+            <!-- Mobile Bitcoin Price -->
+            <div class="text-right text-xs">
+              <div class="flex items-center space-x-1">
+                <span v-if="bitcoinStore.isLoading" class="text-gray-400">
+                  <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
+                </span>
+                <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                  ⚠️
+                </span>
+                <template v-else>
+                  <span class="text-orange-500">₿</span>
+                  <span class="text-gray-900 dark:text-white">₩{{ (bitcoinStore.btcPriceKrw / 1000).toFixed(0) }}K</span>
+                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                    ⚠️
+                  </span>
+                </template>
+              </div>
+            </div>
             <button
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
@@ -38,6 +56,25 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-white">상품 관리</h1>
           </div>
           <div class="flex items-center space-x-4">
+            <!-- Bitcoin Price -->
+            <div class="text-right">
+              <div class="text-sm text-gray-500 dark:text-gray-400">BTC 가격</div>
+              <div class="flex items-center space-x-1 text-sm font-medium">
+                <span v-if="bitcoinStore.isLoading" class="text-gray-400">
+                  <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
+                </span>
+                <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                  ⚠️
+                </span>
+                <template v-else>
+                  <span class="text-orange-500">₿</span>
+                  <span class="text-gray-900 dark:text-white">₩{{ bitcoinStore.btcPriceKrw.toLocaleString('ko-KR') }}</span>
+                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                    ⚠️
+                  </span>
+                </template>
+              </div>
+            </div>
             <button
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
@@ -52,6 +89,119 @@
     </header>
 
     <div class="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
+      <!-- User Profile Settings -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 md:p-6 mb-6 transition-colors duration-200">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">사용자 설정</h2>
+          <button
+            v-if="!showUserSettings"
+            @click="showUserSettings = true"
+            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm"
+          >
+            편집
+          </button>
+        </div>
+
+        <!-- User Info Display -->
+        <div v-if="!showUserSettings" class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">사용자명:</span>
+            <span class="text-gray-900 dark:text-white">{{ authStore.username }}</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">이메일:</span>
+            <span class="text-gray-900 dark:text-white">{{ authStore.user?.email || '설정되지 않음' }}</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">라이트닝 주소:</span>
+            <span class="text-gray-900 dark:text-white font-mono text-sm">
+              {{ authStore.user?.lightning_address || '설정되지 않음' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- User Info Edit Form -->
+        <div v-else>
+          <form @submit.prevent="updateProfile" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                사용자명
+              </label>
+              <input
+                v-model="userForm.username"
+                type="text"
+                required
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  userFormErrors.username ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                placeholder="사용자명을 입력하세요"
+              />
+              <p v-if="userFormErrors.username" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.username }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                이메일
+              </label>
+              <input
+                v-model="userForm.email"
+                type="email"
+                required
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  userFormErrors.email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                placeholder="이메일을 입력하세요"
+              />
+              <p v-if="userFormErrors.email" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.email }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                라이트닝 지갑 주소
+              </label>
+              <input
+                v-model="userForm.lightning_address"
+                type="text"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 font-mono text-sm',
+                  userFormErrors.lightning_address ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                placeholder="예: test@walletofsatoshi.com"
+              />
+              <p v-if="userFormErrors.lightning_address" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.lightning_address }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                비트코인 라이트닝 결제를 받기 위한 주소입니다
+              </p>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+              <button
+                type="button"
+                @click="cancelUserEdit"
+                class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                :disabled="isUpdatingProfile"
+                :class="[
+                  'flex-1 px-4 py-2 rounded-lg transition-colors text-white',
+                  isUpdatingProfile
+                    ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
+                    : 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600'
+                ]"
+              >
+                <span v-if="isUpdatingProfile">업데이트 중...</span>
+                <span v-else>저장</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Add Product Button -->
       <div class="mb-4 md:mb-6">
         <button
@@ -63,41 +213,154 @@
         </button>
       </div>
 
-      <!-- Products Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        <div
-          v-for="product in productStore.products"
-          :key="product.id"
-          class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-        >
-          <div class="relative">
-            <img
-              :src="product.image || product.image_url"
-              :alt="product.name"
-              class="w-full h-48 object-cover"
-              @error="handleImageError"
-            />
-            <div class="absolute top-1 md:top-2 right-1 md:right-2 flex space-x-1 md:space-x-2">
-              <button
-                @click="openEditModal(product)"
-                class="bg-white text-blue-600 p-1.5 md:p-2 rounded-full shadow-md hover:bg-blue-50 transition-colors text-sm md:text-base"
-                title="수정"
-              >
-                ✏️
-              </button>
-              <button
-                @click="openDeleteModal(product)"
-                class="bg-white text-red-600 p-1.5 md:p-2 rounded-full shadow-md hover:bg-red-50 transition-colors text-sm md:text-base"
-                title="삭제"
-              >
-                🗑️
-              </button>
+      <!-- Products Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+        <!-- Mobile Card View -->
+        <div class="md:hidden space-y-4 p-4">
+          <div
+            v-for="product in productStore.products"
+            :key="product.id"
+            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-colors"
+          >
+            <div class="flex items-start space-x-3">
+              <!-- Product Image -->
+              <img
+                :src="product.image || product.image_url"
+                :alt="product.name"
+                class="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-600 flex-shrink-0"
+                @error="handleImageError"
+              />
+              
+              <!-- Product Info -->
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium text-gray-900 dark:text-white text-sm mb-2 line-clamp-2">
+                  {{ product.name }}
+                </h3>
+                
+                <!-- Prices -->
+                <div class="space-y-1 mb-3">
+                  <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    ₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <div class="text-xs font-medium text-warning-600 dark:text-warning-400">
+                      {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
+                    </div>
+                    <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
+                      <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
+                    </span>
+                    <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                      ⚠️
+                    </span>
+                    <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="비트코인 가격 정보가 오래되었습니다">
+                      ⚠️
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex space-x-2">
+                  <button
+                    @click="openEditModal(product)"
+                    class="flex-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                  >
+                    수정
+                  </button>
+                  <button
+                    @click="openDeleteModal(product)"
+                    class="flex-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="p-3 md:p-4">
-            <h3 class="font-semibold text-gray-800 dark:text-white mb-2 text-sm md:text-base line-clamp-2">{{ product.name }}</h3>
-            <p class="text-lg md:text-2xl font-bold text-blue-600 dark:text-blue-400">₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}</p>
-          </div>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  이미지
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  상품명
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  KRW 가격
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Sats 가격
+                </th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  작업
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tr
+                v-for="product in productStore.products"
+                :key="product.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <img
+                    :src="product.image || product.image_url"
+                    :alt="product.name"
+                    class="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                    @error="handleImageError"
+                  />
+                </td>
+                <td class="px-4 py-4">
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ product.name }}
+                  </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    ₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}
+                  </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <div class="flex items-center space-x-2">
+                    <div class="text-sm font-medium text-warning-600 dark:text-warning-400">
+                      {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
+                    </div>
+                    <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
+                      <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
+                    </span>
+                    <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                      ⚠️
+                    </span>
+                    <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="비트코인 가격 정보가 오래되었습니다">
+                      ⚠️
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-center">
+                  <div class="flex justify-center space-x-2">
+                    <button
+                      @click="openEditModal(product)"
+                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      title="수정"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      @click="openDeleteModal(product)"
+                      class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      title="삭제"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -150,6 +413,41 @@
                 placeholder="0.00"
               />
               <p v-if="formErrors.price" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.price }}</p>
+            </div>
+
+            <!-- Product Category -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                카테고리
+              </label>
+              <select
+                v-model="productForm.category"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  formErrors.category ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+              >
+                <option value="">카테고리를 선택하세요</option>
+                <optgroup label="기본 카테고리" v-if="categoryStore.globalCategories.length > 0">
+                  <option 
+                    v-for="category in categoryStore.globalCategories" 
+                    :key="category.id" 
+                    :value="category.id"
+                  >
+                    {{ category.name }}
+                  </option>
+                </optgroup>
+                <optgroup label="내 카테고리" v-if="categoryStore.userCategories.length > 0">
+                  <option 
+                    v-for="category in categoryStore.userCategories" 
+                    :key="category.id" 
+                    :value="category.id"
+                  >
+                    {{ category.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <p v-if="formErrors.category" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.category }}</p>
             </div>
 
             <!-- Product Image -->
@@ -278,18 +576,27 @@ import { ref, reactive, watch, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProductStore } from '@/stores/products'
 import { useThemeStore } from '@/stores/theme'
+import { useBitcoinStore } from '@/stores/bitcoin'
+import { useCategoryStore } from '@/stores/categories'
 import type { Product } from '@/services/api'
+import { authAPI } from '@/services/api'
 
 const authStore = useAuthStore()
 const productStore = useProductStore()
 const themeStore = useThemeStore()
+const bitcoinStore = useBitcoinStore()
+const categoryStore = useCategoryStore()
 
-// Initialize products when component mounts
+// Initialize products and Bitcoin price when component mounts
 onMounted(async () => {
   try {
-    await productStore.fetchProducts()
+    await Promise.all([
+      productStore.initializeForSettings(),
+      bitcoinStore.initialize(),
+      categoryStore.initialize()
+    ])
   } catch (error) {
-    console.error('Failed to load products:', error)
+    console.error('Failed to load data:', error)
   }
 })
 
@@ -303,10 +610,15 @@ const isSubmitting = ref(false)
 const successMessage = ref('')
 const showSuccess = ref(false)
 
+// User settings states
+const showUserSettings = ref(false)
+const isUpdatingProfile = ref(false)
+
 // Product form
 const productForm = reactive({
   name: '',
   price: 0,
+  category: '',
   image: ''
 })
 
@@ -314,13 +626,29 @@ const productForm = reactive({
 const formErrors = reactive({
   name: '',
   price: '',
+  category: '',
   image: ''
+})
+
+// User form
+const userForm = reactive({
+  username: '',
+  email: '',
+  lightning_address: ''
+})
+
+// User form errors
+const userFormErrors = reactive({
+  username: '',
+  email: '',
+  lightning_address: ''
 })
 
 // Reset form
 function resetForm() {
   productForm.name = ''
   productForm.price = 0
+  productForm.category = ''
   productForm.image = ''
   imageError.value = false
   clearErrors()
@@ -330,6 +658,7 @@ function resetForm() {
 function clearErrors() {
   formErrors.name = ''
   formErrors.price = ''
+  formErrors.category = ''
   formErrors.image = ''
 }
 
@@ -381,6 +710,7 @@ function openEditModal(product: any) {
   editingProduct.value = product
   productForm.name = product.name
   productForm.price = product.price
+  productForm.category = product.category || ''
   productForm.image = product.image || product.image_url || ''
   showProductModal.value = true
 }
@@ -470,6 +800,7 @@ async function saveProduct() {
       result = await productStore.updateProduct(editingProduct.value.id, {
         name: productForm.name.trim(),
         price: productForm.price,
+        category: productForm.category || null,
         image_url: productForm.image.trim()
       })
     } else {
@@ -477,6 +808,7 @@ async function saveProduct() {
       result = await productStore.addProduct({
         name: productForm.name.trim(),
         price: productForm.price,
+        category: productForm.category || null,
         image_url: productForm.image.trim()
       })
     }
@@ -536,6 +868,70 @@ async function deleteProduct() {
       showSuccessMessage('상품 삭제 중 오류가 발생했습니다')
     }
     closeDeleteModal()
+  }
+}
+
+// User profile functions
+function resetUserForm() {
+  userForm.username = authStore.username || ''
+  userForm.email = authStore.user?.email || ''
+  userForm.lightning_address = authStore.user?.lightning_address || ''
+  clearUserErrors()
+}
+
+function clearUserErrors() {
+  userFormErrors.username = ''
+  userFormErrors.email = ''
+  userFormErrors.lightning_address = ''
+}
+
+function cancelUserEdit() {
+  showUserSettings.value = false
+  resetUserForm()
+}
+
+// Initialize user form when user data changes
+watch(() => authStore.user, () => {
+  resetUserForm()
+}, { immediate: true })
+
+// Update user profile
+async function updateProfile() {
+  clearUserErrors()
+  isUpdatingProfile.value = true
+
+  try {
+    const result = await authAPI.updateProfile({
+      username: userForm.username.trim(),
+      email: userForm.email.trim(),
+      lightning_address: userForm.lightning_address.trim() || undefined
+    })
+
+    if (result.success && result.user) {
+      // Update auth store with new user data
+      authStore.updateUser(result.user)
+      showSuccessMessage('프로필이 성공적으로 업데이트되었습니다')
+      showUserSettings.value = false
+    } else {
+      // Handle specific validation errors
+      if (result.errors) {
+        Object.keys(result.errors).forEach(field => {
+          if (field in userFormErrors) {
+            const errors = result.errors[field]
+            userFormErrors[field as keyof typeof userFormErrors] = Array.isArray(errors) ? errors[0] : errors
+          }
+        })
+      }
+      
+      if (!result.errors || Object.keys(result.errors).length === 0) {
+        showSuccessMessage(result.message || '프로필 업데이트에 실패했습니다')
+      }
+    }
+  } catch (error: any) {
+    console.error('프로필 업데이트 중 오류:', error)
+    showSuccessMessage('프로필 업데이트 중 오류가 발생했습니다')
+  } finally {
+    isUpdatingProfile.value = false
   }
 }
 </script>

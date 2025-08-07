@@ -5,6 +5,7 @@ import Register from '../views/Register.vue'
 import Shop from '../views/Shop.vue'
 import Payment from '../views/Payment.vue'
 import Settings from '../views/Settings.vue'
+import Admin from '../views/Admin.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,12 @@ const router = createRouter({
       name: 'settings',
       component: Settings,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: Admin,
+      meta: { requiresAuth: true, requiresAdmin: true }
     }
   ]
 })
@@ -54,8 +61,13 @@ router.beforeEach(async (to, from, next) => {
   
   // If the route requires auth, check authentication
   if (to.meta.requiresAuth) {
-    // If user is already logged in, proceed
+    // If user is already logged in, check permissions
     if (authStore.isLoggedIn) {
+      // Check admin permissions if required
+      if (to.meta.requiresAdmin && !authStore.isAdmin) {
+        next('/shop') // Redirect non-admin users to shop
+        return
+      }
       next()
       return
     }
@@ -66,6 +78,11 @@ router.beforeEach(async (to, from, next) => {
         await authStore.initialize()
         // After initialization, check if login was successful
         if (authStore.isLoggedIn) {
+          // Check admin permissions if required
+          if (to.meta.requiresAdmin && !authStore.isAdmin) {
+            next('/shop') // Redirect non-admin users to shop
+            return
+          }
           next()
           return
         }
