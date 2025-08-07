@@ -7,10 +7,84 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Vue/Node.js
 node_modules
 dist
 dist-ssr
 *.local
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Django
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django instance-folder
+instance/
+
+# Django settings
+settings_local.py
+local_settings.py
+
+# Django migrations (optional - remove if you want to track them)
+# migrations/
+
+# SQLite database files
+*.sqlite3
+*.db
+db.sqlite3
+
+# Django static files
+/static/
+staticfiles/
+media/
+
+# Django secret key
+.secret_key
+
+# Virtual environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +96,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
