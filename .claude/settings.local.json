@@ -20,7 +20,9 @@
       "Bash(true)",
       "Bash(npm run lint)",
       "Bash(python manage.py:*)",
-      "Bash(vue-template-compiler:*)"
+      "Bash(vue-template-compiler:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f2937;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="1200" height="630" fill="url(#bgGrad)"/>
+  
+  <!-- Main card -->
+  <rect x="100" y="100" width="1000" height="430" rx="20" fill="url(#cardGrad)"/>
+  
+  <!-- POS Terminal Illustration -->
+  <rect x="200" y="200" width="200" height="140" rx="15" fill="#ffffff" opacity="0.95"/>
+  <rect x="220" y="220" width="160" height="80" fill="#1f2937"/>
+  <rect x="240" y="240" width="120" height="15" fill="#10b981"/>
+  <rect x="240" y="265" width="80" height="8" fill="#6b7280"/>
+  <rect x="240" y="280" width="60" height="8" fill="#6b7280"/>
+  
+  <!-- Payment methods -->
+  <rect x="220" y="350" width="40" height="25" rx="5" fill="#ffffff" opacity="0.9"/>
+  <rect x="270" y="350" width="40" height="25" rx="5" fill="#ffffff" opacity="0.9"/>
+  <rect x="320" y="350" width="40" height="25" rx="5" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Bitcoin symbol -->
+  <circle cx="480" cy="270" r="60" fill="#f7931a" opacity="0.9"/>
+  <text x="480" y="285" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="60" font-weight="bold">₿</text>
+  
+  <!-- Main Title -->
+  <text x="600" y="280" fill="#ffffff" font-family="Malgun Gothic, Arial, sans-serif" font-size="80" font-weight="bold">한입 POS</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="330" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" opacity="0.9">Bitcoin Lightning Point of Sale</text>
+  
+  <!-- Features -->
+  <text x="600" y="380" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" opacity="0.8">• Lightning Network Support</text>
+  <text x="600" y="410" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" opacity="0.8">• Modern POS Interface</text>
+  <text x="600" y="440" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" opacity="0.8">• Real-time Bitcoin Payments</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="950" cy="180" r="30" fill="#f59e0b" opacity="0.3"/>
+  <circle cx="1000" cy="220" r="20" fill="#f59e0b" opacity="0.4"/>
+  <circle cx="1050" cy="180" r="15" fill="#f59e0b" opacity="0.5"/>
+</svg>
