@@ -41,7 +41,7 @@
                 </span>
                 <template v-else>
                   <span class="text-orange-500">₿</span>
-                  <span class="text-gray-900 dark:text-white font-medium">₩{{ (bitcoinStore.btcPriceKrw / 1000).toFixed(0) }}K</span>
+                  <span class="text-gray-900 dark:text-white font-medium">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
                   <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
                     ⚠️
                   </span>
@@ -53,7 +53,7 @@
                 class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1"
                 title="가격 새로고침"
               >
-                🔄
+                ↻
               </button>
             </div>
           </div>
@@ -117,7 +117,7 @@
                   </span>
                   <template v-else>
                     <span class="text-orange-500">₿</span>
-                    <span class="text-gray-900 dark:text-white">₩{{ bitcoinStore.btcPriceKrw.toLocaleString('ko-KR') }}</span>
+                    <span class="text-gray-900 dark:text-white">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
                     <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
                       ⚠️
                     </span>
@@ -130,7 +130,7 @@
                 class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1"
                 title="가격 새로고침"
               >
-                🔄
+                ↻
               </button>
             </div>
           </div>

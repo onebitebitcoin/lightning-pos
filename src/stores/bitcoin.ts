@@ -72,7 +72,7 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
   // Format Bitcoin price for display
   function formatBtcPrice(): string {
     if (!btcPriceKrw.value) return '₿ --'
-    return `₿ ₩${btcPriceKrw.value.toLocaleString('ko-KR')}`
+    return `₿ ₩${Math.round(btcPriceKrw.value).toLocaleString('ko-KR', { maximumFractionDigits: 0 })}`
   }
 
   // Manual refresh
