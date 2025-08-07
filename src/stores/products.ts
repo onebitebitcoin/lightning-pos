@@ -89,6 +89,36 @@ export const useProductStore = defineStore('products', () => {
     }
   }
 
+  // Add new product with file upload
+  async function addProductWithFile(productData: {
+    name: string
+    description?: string
+    price: number
+    category?: number
+    stock_quantity: number
+    is_available: boolean
+  }, imageFile: File): Promise<{ success: boolean; message?: string; product?: Product }> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const result = await productsAPI.createProductWithFile(productData, imageFile)
+
+      if (result.success && result.product) {
+        products.value.push(result.product)
+        return { success: true, product: result.product }
+      } else {
+        error.value = result.message || '상품 추가에 실패했습니다'
+        return { success: false, message: error.value || '오류가 발생했습니다' }
+      }
+    } catch (err: any) {
+      error.value = err.message || '상품 추가에 실패했습니다'
+      return { success: false, message: error.value || '상품 추가에 실패했습니다' }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Update product
   async function updateProduct(id: number, updates: Partial<Product>): Promise<{ success: boolean; message?: string; product?: Product }> {
     isLoading.value = true
@@ -181,6 +211,7 @@ export const useProductStore = defineStore('products', () => {
     fetchAvailableProducts,
     fetchProduct,
     addProduct,
+    addProductWithFile,
     updateProduct,
     deleteProduct,
     getProduct,

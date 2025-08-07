@@ -622,6 +622,9 @@ const productForm = reactive({
   image: ''
 })
 
+// File upload
+const selectedFile = ref<File | null>(null)
+
 // Form errors
 const formErrors = reactive({
   name: '',
@@ -650,6 +653,7 @@ function resetForm() {
   productForm.price = 0
   productForm.category = ''
   productForm.image = ''
+  selectedFile.value = null
   imageError.value = false
   clearErrors()
 }
@@ -758,9 +762,9 @@ function closeDeleteModal() {
 function handleImageUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      formErrors.image = '이미지 파일이 너무 큽니다. 최대 5MB까지 업로드 가능합니다.'
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      formErrors.image = '이미지 파일이 너무 큽니다. 최대 10MB까지 업로드 가능합니다.'
       return
     }
 
@@ -771,6 +775,8 @@ function handleImageUpload(event: Event) {
       return
     }
 
+    // Store the file and create a preview URL
+    selectedFile.value = file
     const reader = new FileReader()
     reader.onload = (e) => {
       productForm.image = e.target?.result as string
@@ -805,12 +811,24 @@ async function saveProduct() {
       })
     } else {
       // Add new product
-      result = await productStore.addProduct({
-        name: productForm.name.trim(),
-        price: productForm.price,
-        category: productForm.category || null,
-        image_url: productForm.image.trim()
-      })
+      if (selectedFile.value) {
+        // Use FormData API for file upload
+        result = await productStore.addProductWithFile({
+          name: productForm.name.trim(),
+          price: productForm.price,
+          category: productForm.category || null,
+          stock_quantity: 100, // Default stock
+          is_available: true
+        }, selectedFile.value)
+      } else {
+        // Use regular JSON API for URL-based images
+        result = await productStore.addProduct({
+          name: productForm.name.trim(),
+          price: productForm.price,
+          category: productForm.category || null,
+          image_url: productForm.image.trim()
+        })
+      }
     }
 
     if (result.success) {

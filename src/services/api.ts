@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000, // Increase timeout for file uploads
   headers: {
     'Content-Type': 'application/json',
   },
@@ -360,6 +360,55 @@ export const productsAPI = {
         const imageError = Array.isArray(error.response.data.image_url) 
           ? error.response.data.image_url[0] 
           : error.response.data.image_url
+        return { success: false, message: imageError }
+      }
+      
+      return { 
+        success: false, 
+        message: error.response?.data?.message || error.response?.data?.non_field_errors?.[0] || '상품 생성에 실패했습니다' 
+      }
+    }
+  },
+
+  async createProductWithFile(productData: {
+    name: string
+    description?: string
+    price: number
+    category?: number
+    stock_quantity: number
+    is_available: boolean
+  }, imageFile?: File): Promise<{ success: boolean; product?: Product; message?: string }> {
+    try {
+      const formData = new FormData()
+      
+      // Add product data
+      formData.append('name', productData.name)
+      if (productData.description) formData.append('description', productData.description)
+      formData.append('price', productData.price.toString())
+      if (productData.category) formData.append('category', productData.category.toString())
+      formData.append('stock_quantity', productData.stock_quantity.toString())
+      formData.append('is_available', productData.is_available.toString())
+      
+      // Add image file if provided
+      if (imageFile) {
+        formData.append('image', imageFile)
+      }
+      
+      const response = await apiClient.post('/products/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 120000, // 2 minutes for file upload
+      })
+      return { success: true, product: response.data }
+    } catch (error: any) {
+      console.error('Product creation error:', error.response?.data)
+      
+      // Handle validation errors
+      if (error.response?.data?.image) {
+        const imageError = Array.isArray(error.response.data.image) 
+          ? error.response.data.image[0] 
+          : error.response.data.image
         return { success: false, message: imageError }
       }
       

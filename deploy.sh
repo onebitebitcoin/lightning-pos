@@ -219,6 +219,11 @@ if ! grep -q "proxy_pass" $NGINX_CONFIG 2>/dev/null; then
 server {
     listen 80;
     server_name shop.local localhost;
+    
+    # Increase file upload size limit
+    client_max_body_size 50M;
+    client_body_buffer_size 10M;
+    client_body_timeout 120s;
 
     root $FRONTEND_DEPLOY_DIR;
     index index.html;
@@ -237,6 +242,14 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_cache_bypass \$http_upgrade;
+        
+        # Increase timeout for file uploads
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+        
+        # Allow large file uploads
+        client_max_body_size 50M;
     }
 
     location /admin/ {
@@ -249,6 +262,9 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_cache_bypass \$http_upgrade;
+        
+        # Allow large file uploads
+        client_max_body_size 50M;
     }
 
     # Serve Django static files
