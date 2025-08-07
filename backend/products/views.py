@@ -59,7 +59,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def available_products_view(request):
     """
     Get all available products (read-only view for shopping)
@@ -78,23 +78,48 @@ def available_products_view(request):
 
 
 @api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def cart_view(request):
     """
     장바구니 조회 및 아이템 추가
     """
     if request.method == 'GET':
-        cart_items = CartItem.objects.filter(user=request.user)
-        serializer = CartItemSerializer(cart_items, many=True)
-        
-        # Calculate totals
-        subtotal = sum(item.total_price for item in cart_items)
+        if request.user.is_authenticated:
+            # Authenticated user - use database cart
+            cart_items = CartItem.objects.filter(user=request.user)
+            serializer = CartItemSerializer(cart_items, many=True)
+            subtotal = sum(item.total_price for item in cart_items)
+            items_data = serializer.data
+        else:
+            # Anonymous user - use session cart
+            session_cart = request.session.get('cart', {})
+            items_data = []
+            subtotal = 0
+            
+            for product_id, item_data in session_cart.items():
+                try:
+                    product = Product.objects.get(id=product_id, is_available=True)
+                    total_price = product.price * item_data['quantity']
+                    items_data.append({
+                        'id': f"session_{product_id}",
+                        'product': {
+                            'id': product.id,
+                            'name': product.name,
+                            'price': str(product.price),
+                            'image_url': product.image.url if product.image else None,
+                        },
+                        'quantity': item_data['quantity'],
+                        'total_price': str(total_price)
+                    })
+                    subtotal += total_price
+                except Product.DoesNotExist:
+                    continue
         
         return Response({
             'success': True,
-            'items': serializer.data,
-            'subtotal': subtotal,
-            'item_count': len(cart_items)
+            'items': items_data,
+            'subtotal': str(subtotal),
+            'item_count': len(items_data)
         })
     
     elif request.method == 'POST':
@@ -110,69 +135,173 @@ def cart_view(request):
                 'message': '상품을 찾을 수 없습니다.'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        cart_item, created = CartItem.objects.get_or_create(
-            user=request.user,
-            product=product,
-            defaults={'quantity': quantity}
-        )
-        
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
+        if request.user.is_authenticated:
+            # Authenticated user - use database cart
+            cart_item, created = CartItem.objects.get_or_create(
+                user=request.user,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+            
+            item_data = CartItemSerializer(cart_item).data
+        else:
+            # Anonymous user - use session cart
+            session_cart = request.session.get('cart', {})
+            product_id_str = str(product_id)
+            
+            if product_id_str in session_cart:
+                session_cart[product_id_str]['quantity'] += quantity
+            else:
+                session_cart[product_id_str] = {'quantity': quantity}
+            
+            request.session['cart'] = session_cart
+            request.session.modified = True
+            
+            # Create item data for response
+            total_price = product.price * session_cart[product_id_str]['quantity']
+            item_data = {
+                'id': f"session_{product_id}",
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'price': str(product.price),
+                    'image_url': product.image.url if product.image else None,
+                },
+                'quantity': session_cart[product_id_str]['quantity'],
+                'total_price': str(total_price)
+            }
         
         return Response({
             'success': True,
             'message': '장바구니에 추가되었습니다.',
-            'item': CartItemSerializer(cart_item).data
+            'item': item_data
         }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PUT', 'DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def cart_item_view(request, item_id):
     """
     장바구니 아이템 수정 및 삭제
     """
-    try:
-        cart_item = CartItem.objects.get(id=item_id, user=request.user)
-    except CartItem.DoesNotExist:
-        return Response({
-            'success': False,
-            'message': '장바구니 아이템을 찾을 수 없습니다.'
-        }, status=status.HTTP_404_NOT_FOUND)
+    # Check if this is a session-based cart item
+    if str(item_id).startswith('session_'):
+        product_id = str(item_id).replace('session_', '')
+        session_cart = request.session.get('cart', {})
+        
+        if product_id not in session_cart:
+            return Response({
+                'success': False,
+                'message': '장바구니 아이템을 찾을 수 없습니다.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if request.method == 'PUT':
+            quantity = int(request.data.get('quantity', 1))
+            if quantity <= 0:
+                del session_cart[product_id]
+            else:
+                session_cart[product_id]['quantity'] = quantity
+            
+            request.session['cart'] = session_cart
+            request.session.modified = True
+            
+            if quantity <= 0:
+                return Response({
+                    'success': True,
+                    'message': '장바구니에서 제거되었습니다.'
+                })
+            else:
+                try:
+                    product = Product.objects.get(id=product_id, is_available=True)
+                    total_price = product.price * quantity
+                    item_data = {
+                        'id': f"session_{product_id}",
+                        'product': {
+                            'id': product.id,
+                            'name': product.name,
+                            'price': str(product.price),
+                            'image_url': product.image.url if product.image else None,
+                        },
+                        'quantity': quantity,
+                        'total_price': str(total_price)
+                    }
+                    return Response({
+                        'success': True,
+                        'message': '수량이 변경되었습니다.',
+                        'item': item_data
+                    })
+                except Product.DoesNotExist:
+                    return Response({
+                        'success': False,
+                        'message': '상품을 찾을 수 없습니다.'
+                    }, status=status.HTTP_404_NOT_FOUND)
+        
+        elif request.method == 'DELETE':
+            del session_cart[product_id]
+            request.session['cart'] = session_cart
+            request.session.modified = True
+            return Response({
+                'success': True,
+                'message': '장바구니에서 제거되었습니다.'
+            })
     
-    if request.method == 'PUT':
-        quantity = int(request.data.get('quantity', 1))
-        if quantity <= 0:
+    else:
+        # Database cart item - requires authentication
+        if not request.user.is_authenticated:
+            return Response({
+                'success': False,
+                'message': '로그인이 필요합니다.'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            cart_item = CartItem.objects.get(id=item_id, user=request.user)
+        except CartItem.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': '장바구니 아이템을 찾을 수 없습니다.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if request.method == 'PUT':
+            quantity = int(request.data.get('quantity', 1))
+            if quantity <= 0:
+                cart_item.delete()
+                return Response({
+                    'success': True,
+                    'message': '장바구니에서 제거되었습니다.'
+                })
+            else:
+                cart_item.quantity = quantity
+                cart_item.save()
+                return Response({
+                    'success': True,
+                    'message': '수량이 변경되었습니다.',
+                    'item': CartItemSerializer(cart_item).data
+                })
+        
+        elif request.method == 'DELETE':
             cart_item.delete()
             return Response({
                 'success': True,
                 'message': '장바구니에서 제거되었습니다.'
             })
-        else:
-            cart_item.quantity = quantity
-            cart_item.save()
-            return Response({
-                'success': True,
-                'message': '수량이 변경되었습니다.',
-                'item': CartItemSerializer(cart_item).data
-            })
-    
-    elif request.method == 'DELETE':
-        cart_item.delete()
-        return Response({
-            'success': True,
-            'message': '장바구니에서 제거되었습니다.'
-        })
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def clear_cart_view(request):
     """
     장바구니 비우기
     """
-    CartItem.objects.filter(user=request.user).delete()
+    if request.user.is_authenticated:
+        CartItem.objects.filter(user=request.user).delete()
+    else:
+        request.session['cart'] = {}
+        request.session.modified = True
+    
     return Response({
         'success': True,
         'message': '장바구니가 비워졌습니다.'
