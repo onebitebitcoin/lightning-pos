@@ -59,21 +59,20 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def available_products_view(request):
     """
-    Get all available products (read-only view for shopping)
-    This endpoint shows all products for shopping purposes
+    Get available products for the current user (read-only view for shopping)
+    This endpoint shows only products created by the current user
     """
-    products = Product.objects.filter(is_available=True).order_by('-created_at')
+    products = Product.objects.filter(
+        created_by=request.user,
+        is_available=True
+    ).order_by('-created_at')
+    
     category = request.query_params.get('category')
     if category:
         products = products.filter(category_id=category)
-    
-    # Add user filter
-    user_id = request.query_params.get('user')
-    if user_id:
-        products = products.filter(created_by_id=user_id)
     
     serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response({
@@ -83,20 +82,22 @@ def available_products_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def available_users_view(request):
+@permission_classes([permissions.IsAuthenticated])
+def user_product_categories_view(request):
     """
-    Get users who have available products
+    Get categories that are actually used in the current user's available products
     """
-    from django.contrib.auth.models import User
-    users = User.objects.filter(
-        products__is_available=True
-    ).distinct().values('id', 'username').order_by('username')
+    categories = Category.objects.filter(
+        product__created_by=request.user,
+        product__is_available=True
+    ).distinct().order_by('name')
     
+    serializer = CategorySerializer(categories, many=True)
     return Response({
         'success': True,
-        'users': list(users)
+        'categories': serializer.data
     })
+
 
 
 @api_view(['GET', 'POST'])

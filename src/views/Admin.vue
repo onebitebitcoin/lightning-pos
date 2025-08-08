@@ -2,27 +2,42 @@
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
     <header class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors duration-200">
-      <div class="container mx-auto px-4 py-3 md:py-4">
+      <div class="container mx-auto px-4 py-3">
         <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-4">
+          <!-- Left side -->
+          <div class="flex items-center space-x-2 sm:space-x-4">
             <button
               @click="$router.push('/shop')"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center space-x-1 transition-colors duration-200"
+              class="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+              title="상점으로 돌아가기"
             >
-              <span>←</span>
-              <span>상점으로 돌아가기</span>
+              <span class="text-lg sm:text-xl">←</span>
             </button>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">관리자 패널</h1>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white">
+                <span class="hidden sm:inline">관리자 패널</span>
+                <span class="sm:hidden">관리자</span>
+              </h1>
+            </div>
           </div>
-          <div class="flex items-center space-x-4">
+          
+          <!-- Right side -->
+          <div class="flex items-center space-x-2">
             <button
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
               :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
             >
-              <span class="text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <span class="text-lg sm:text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
             </button>
-            <span class="text-gray-600 dark:text-gray-300">관리자: {{ authStore.username }}님</span>
+            
+            <!-- User info - responsive -->
+            <div class="flex items-center space-x-1 sm:space-x-2">
+              <span class="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                <span class="hidden sm:inline">관리자: {{ authStore.username }}님</span>
+                <span class="sm:hidden">{{ authStore.username }}</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -192,77 +207,73 @@
           </button>
         </div>
 
-        <!-- Users Table -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  사용자
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  이메일
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  라이트닝 주소
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  상품 수
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  가입일
-                </th>
-                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  작업
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr
-                v-for="user in users"
-                :key="user.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <td class="px-4 py-4">
-                  <div class="flex items-center">
-                    <div>
-                      <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">
-                          {{ user.username }}
-                        </span>
-                        <span v-if="user.is_kiosk_admin" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                          관리자
-                        </span>
-                      </div>
+        <!-- Users Cards -->
+        <div v-else class="space-y-4">
+          <div
+            v-for="user in users"
+            :key="user.id"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <!-- User Info -->
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ user.username }}
+                  </h3>
+                  <span v-if="user.is_kiosk_admin" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                    관리자
+                  </span>
+                </div>
+                
+                <div class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                  <div class="flex items-start gap-2">
+                    <span class="font-medium min-w-0 flex-shrink-0">이메일:</span>
+                    <span class="break-all">{{ user.email }}</span>
+                  </div>
+                  
+                  <div class="flex items-start gap-2">
+                    <span class="font-medium min-w-0 flex-shrink-0">라이트닝:</span>
+                    <span class="font-mono text-xs break-all">{{ user.lightning_address || '설정되지 않음' }}</span>
+                  </div>
+                  
+                  <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">상품:</span>
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        {{ user.product_count }}개
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">가입:</span>
+                      <span>{{ formatDate(user.created_at) }}</span>
                     </div>
                   </div>
-                </td>
-                <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
-                  {{ user.email }}
-                </td>
-                <td class="px-4 py-4 text-sm text-gray-900 dark:text-white font-mono">
-                  {{ user.lightning_address || '-' }}
-                </td>
-                <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                    {{ user.product_count }}개
-                  </span>
-                </td>
-                <td class="px-4 py-4 text-sm text-gray-900 dark:text-white">
-                  {{ formatDate(user.created_at) }}
-                </td>
-                <td class="px-4 py-4 text-center">
-                  <button
-                    @click="viewUserDetail(user)"
-                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                    title="상세 보기"
-                  >
-                    👁️
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-2 sm:flex-col sm:gap-1">
+                <button
+                  @click="viewUserDetail(user)"
+                  class="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                  title="상세 보기"
+                >
+                  <span class="mr-1">👁️</span>
+                  <span class="hidden sm:inline">상세</span>
+                </button>
+                <button
+                  @click="deleteUser(user)"
+                  :disabled="user.id === authStore.user?.id || isDeletingUser"
+                  class="flex items-center justify-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="사용자 삭제"
+                >
+                  <span class="mr-1">🗑️</span>
+                  <span class="hidden sm:inline">삭제</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -295,6 +306,9 @@ const showUserDetail = ref(false)
 const selectedUser = ref<User | null>(null)
 const userProducts = ref<any[]>([])
 const isLoadingUserDetail = ref(false)
+
+// Delete user state
+const isDeletingUser = ref(false)
 
 // Initialize
 onMounted(async () => {
@@ -348,6 +362,43 @@ function closeUserDetail() {
   showUserDetail.value = false
   selectedUser.value = null
   userProducts.value = []
+}
+
+// Delete user
+async function deleteUser(user: User & { product_count: number }) {
+  // Prevent self-deletion
+  if (user.id === authStore.user?.id) {
+    alert('자기 자신을 삭제할 수 없습니다')
+    return
+  }
+
+  // Confirmation dialog
+  const confirmMessage = `"${user.username}" 사용자를 정말로 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 해당 사용자의 모든 상품과 데이터가 함께 삭제됩니다.`
+  if (!confirm(confirmMessage)) {
+    return
+  }
+
+  isDeletingUser.value = true
+
+  try {
+    const result = await adminAPI.deleteUser(user.id)
+    if (result.success) {
+      alert(result.message)
+      // Remove user from local list
+      users.value = users.value.filter(u => u.id !== user.id)
+      // Close detail modal if it's open for this user
+      if (selectedUser.value?.id === user.id) {
+        closeUserDetail()
+      }
+    } else {
+      alert(result.message || '사용자 삭제에 실패했습니다')
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    alert('사용자 삭제 중 오류가 발생했습니다')
+  } finally {
+    isDeletingUser.value = false
+  }
 }
 
 // Handle image loading error

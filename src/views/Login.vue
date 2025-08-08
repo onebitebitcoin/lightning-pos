@@ -53,10 +53,7 @@
         </button>
       </form>
       
-      <div class="mt-4 xs:mt-6 text-center space-y-2">
-        <p class="text-xs xs:text-sm text-gray-500 dark:text-gray-400">
-          데모 계정: admin / password
-        </p>
+      <div class="mt-4 xs:mt-6 text-center">
         <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
           계정이 없으신가요? 
           <button
@@ -105,7 +102,12 @@ async function handleLogin() {
       // Small delay to ensure token is fully set in axios instance
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      router.push('/shop')
+      // Redirect based on user role
+      if (authStore.isAdmin) {
+        router.push('/admin')
+      } else {
+        router.push('/shop')
+      }
     } else {
       errorMessage.value = result.message
     }

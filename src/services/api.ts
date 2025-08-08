@@ -57,8 +57,7 @@ apiClient.interceptors.response.use(
       
       // Only redirect if this is not a login or register request
       const isAuthRequest = error.config?.url?.includes('/auth/login') || 
-                           error.config?.url?.includes('/auth/register') ||
-                           error.config?.url?.includes('/auth/demo-login')
+                           error.config?.url?.includes('/auth/register')
       
       if (!isAuthRequest) {
         // Use router for navigation instead of window.location to avoid page refresh
@@ -208,20 +207,6 @@ export const authAPI = {
     }
   },
 
-  async demoLogin(credentials: {
-    username: string
-    password: string
-  }): Promise<{ success: boolean; message: string; user?: User; token?: string }> {
-    try {
-      const response = await apiClient.post('/auth/demo-login/', credentials)
-      if (response.data.success && response.data.token) {
-        TokenManager.setToken(response.data.token)
-      }
-      return response.data
-    } catch (error: any) {
-      return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
-    }
-  },
 
   async updateProfile(profileData: {
     username?: string
@@ -257,6 +242,15 @@ export const adminAPI = {
   }> {
     try {
       const response = await apiClient.get(`/auth/admin/users/${userId}/`)
+      return response.data
+    } catch (error: any) {
+      return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
+    }
+  },
+
+  async deleteUser(userId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.delete(`/auth/admin/users/${userId}/delete/`)
       return response.data
     } catch (error: any) {
       return error.response?.data || { success: false, message: '서버 오류가 발생했습니다' }
@@ -310,6 +304,16 @@ export const categoriesAPI = {
         message: error.response?.data?.message || '카테고리 삭제에 실패했습니다' 
       }
     }
+  },
+
+  async getUserProductCategories(): Promise<Category[]> {
+    try {
+      const response = await apiClient.get('/products/categories/used/')
+      return response.data.categories || []
+    } catch (error) {
+      console.error('Error fetching user product categories:', error)
+      return []
+    }
   }
 }
 
@@ -327,13 +331,10 @@ export const productsAPI = {
   },
 
   // Get all available products (for shopping)
-  async getAvailableProducts(categoryId?: string, userId?: string): Promise<Product[]> {
+  async getAvailableProducts(categoryId?: string): Promise<Product[]> {
     try {
-      const params = new URLSearchParams()
-      if (categoryId) params.append('category', categoryId)
-      if (userId) params.append('user', userId)
-      const queryString = params.toString()
-      const response = await apiClient.get(`/products/available/${queryString ? `?${queryString}` : ''}`)
+      const params = categoryId ? `?category=${categoryId}` : ''
+      const response = await apiClient.get(`/products/available/${params}`)
       return response.data.products || response.data
     } catch (error) {
       console.error('Error fetching available products:', error)
@@ -453,17 +454,6 @@ export const productsAPI = {
         success: false, 
         message: error.response?.data?.message || '상품 삭제에 실패했습니다' 
       }
-    }
-  },
-
-  // Get users who have available products
-  async getAvailableUsers(): Promise<{ id: number; username: string }[]> {
-    try {
-      const response = await apiClient.get('/products/users/')
-      return response.data.users || []
-    } catch (error) {
-      console.error('Error fetching available users:', error)
-      return []
     }
   }
 }

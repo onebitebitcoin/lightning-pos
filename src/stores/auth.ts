@@ -90,11 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       // Try demo login first for admin/password
       let result
-      if (userInput === 'admin' && password === 'password') {
-        result = await authAPI.demoLogin({ username: userInput, password })
-      } else {
-        result = await authAPI.login({ username: userInput, password })
-      }
+      result = await authAPI.login({ username: userInput, password })
 
       if (result.success && result.user) {
         user.value = result.user

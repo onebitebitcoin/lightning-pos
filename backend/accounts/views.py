@@ -18,6 +18,14 @@ def register_view(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
+        
+        # Give admin privileges to 'admin' username
+        if user.username.lower() == 'admin':
+            user.is_staff = True
+            user.is_superuser = True
+            user.is_kiosk_admin = True
+            user.save()
+        
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'success': True,
@@ -128,45 +136,6 @@ def profile_update_view(request):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def demo_login_view(request):
-    """
-    데모 계정 로그인 (admin/password)
-    """
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    if username == 'admin' and password == 'password':
-        # Create or get admin user
-        user, created = User.objects.get_or_create(
-            username='admin',
-            defaults={
-                'email': 'admin@kiosk.com',
-                'is_staff': True,
-                'is_superuser': True,
-                'is_kiosk_admin': True
-            }
-        )
-        if created:
-            user.set_password('password')
-            user.save()
-        
-        login(request, user)
-        token, created = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'success': True,
-            'message': '관리자 로그인 성공',
-            'user': UserSerializer(user).data,
-            'token': token.key
-        }, status=status.HTTP_200_OK)
-    
-    return Response({
-        'success': False,
-        'message': '잘못된 관리자 계정 정보입니다'
-    }, status=status.HTTP_401_UNAUTHORIZED)
-
 
 # Admin-only views
 @api_view(['GET'])
@@ -257,4 +226,49 @@ def admin_user_detail_view(request, user_id):
         return Response({
             'success': False,
             'message': '사용자 정보를 불러오는 중 오류가 발생했습니다'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def admin_delete_user_view(request, user_id):
+    """
+    관리자 전용: 사용자 삭제
+    """
+    if not request.user.is_kiosk_admin:
+        return Response({
+            'success': False,
+            'message': '관리자 권한이 필요합니다'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        user_to_delete = User.objects.get(id=user_id)
+        
+        # Prevent self-deletion
+        if user_to_delete.id == request.user.id:
+            return Response({
+                'success': False,
+                'message': '자기 자신을 삭제할 수 없습니다'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get user info before deletion for response
+        deleted_username = user_to_delete.username
+        
+        # Delete the user (this will cascade delete related products, cart items, etc.)
+        user_to_delete.delete()
+        
+        return Response({
+            'success': True,
+            'message': f'사용자 "{deleted_username}"가 성공적으로 삭제되었습니다'
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': '삭제할 사용자를 찾을 수 없습니다'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': '사용자 삭제 중 오류가 발생했습니다'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

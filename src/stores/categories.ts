@@ -32,6 +32,22 @@ export const useCategoryStore = defineStore('categories', () => {
     }
   }
 
+  // Load categories that are actually used in user's available products
+  async function fetchUserProductCategories() {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const fetchedCategories = await categoriesAPI.getUserProductCategories()
+      categories.value = fetchedCategories
+    } catch (err: any) {
+      error.value = err.message || '카테고리를 불러오는데 실패했습니다'
+      console.error('Error fetching user product categories:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Add new category
   async function addCategory(categoryData: {
     name: string
@@ -122,6 +138,7 @@ export const useCategoryStore = defineStore('categories', () => {
     // Actions
     initialize,
     fetchCategories,
+    fetchUserProductCategories,
     addCategory,
     updateCategory,
     deleteCategory,
