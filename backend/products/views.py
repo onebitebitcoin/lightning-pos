@@ -70,10 +70,32 @@ def available_products_view(request):
     if category:
         products = products.filter(category_id=category)
     
+    # Add user filter
+    user_id = request.query_params.get('user')
+    if user_id:
+        products = products.filter(created_by_id=user_id)
+    
     serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response({
         'success': True,
         'products': serializer.data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def available_users_view(request):
+    """
+    Get users who have available products
+    """
+    from django.contrib.auth.models import User
+    users = User.objects.filter(
+        products__is_available=True
+    ).distinct().values('id', 'username').order_by('username')
+    
+    return Response({
+        'success': True,
+        'users': list(users)
     })
 
 

@@ -327,10 +327,13 @@ export const productsAPI = {
   },
 
   // Get all available products (for shopping)
-  async getAvailableProducts(categoryId?: string): Promise<Product[]> {
+  async getAvailableProducts(categoryId?: string, userId?: string): Promise<Product[]> {
     try {
-      const params = categoryId ? `?category=${categoryId}` : ''
-      const response = await apiClient.get(`/products/available/${params}`)
+      const params = new URLSearchParams()
+      if (categoryId) params.append('category', categoryId)
+      if (userId) params.append('user', userId)
+      const queryString = params.toString()
+      const response = await apiClient.get(`/products/available/${queryString ? `?${queryString}` : ''}`)
       return response.data.products || response.data
     } catch (error) {
       console.error('Error fetching available products:', error)
@@ -450,6 +453,17 @@ export const productsAPI = {
         success: false, 
         message: error.response?.data?.message || '상품 삭제에 실패했습니다' 
       }
+    }
+  },
+
+  // Get users who have available products
+  async getAvailableUsers(): Promise<{ id: number; username: string }[]> {
+    try {
+      const response = await apiClient.get('/products/users/')
+      return response.data.users || []
+    } catch (error) {
+      console.error('Error fetching available users:', error)
+      return []
     }
   }
 }

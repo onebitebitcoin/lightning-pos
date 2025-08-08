@@ -314,6 +314,40 @@
               </button>
             </template>
           </div>
+          
+          <!-- User Filter -->
+          <div class="mt-3">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">판매자별 필터</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- All Users Button -->
+              <button
+                @click="selectUser('')"
+                :class="[
+                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200',
+                  selectedUser === '' 
+                    ? 'bg-green-600 text-white dark:bg-green-500' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                ]"
+              >
+                전체 판매자
+              </button>
+              
+              <!-- User Buttons -->
+              <button
+                v-for="user in availableUsers"
+                :key="user.id"
+                @click="selectUser(user.id)"
+                :class="[
+                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200',
+                  selectedUser === user.id 
+                    ? 'bg-green-600 text-white dark:bg-green-500' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                ]"
+              >
+                {{ user.username }}
+              </button>
+            </div>
+          </div>
         </div>
         
         <!-- Loading State -->
@@ -590,6 +624,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import { useCategoryStore } from '@/stores/categories'
 import type { Product } from '@/services/api'
+import { productsAPI } from '@/services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -610,6 +645,10 @@ const selectedProduct = ref<Product | null>(null)
 // Category filtering
 const selectedCategory = ref('')
 
+// User filtering
+const selectedUser = ref('')
+const availableUsers = ref<{ id: number; username: string }[]>([])
+
 // Admin mode toggle for showing/hiding settings
 const showAdminControls = ref(false)
 
@@ -629,6 +668,9 @@ onMounted(async () => {
   
   // Initialize categories
   await categoryStore.initialize()
+  
+  // Load available users
+  await loadAvailableUsers()
   
   // Initialize products store for shopping (load all available products)
   await productStore.initialize()
@@ -745,15 +787,39 @@ function handleEscapeKey(event: KeyboardEvent) {
   }
 }
 
+// Load available users
+async function loadAvailableUsers() {
+  try {
+    availableUsers.value = await productsAPI.getAvailableUsers()
+  } catch (error) {
+    console.error('Error loading available users:', error)
+  }
+}
+
 // Handle category selection
 async function selectCategory(categoryId: string | number) {
   try {
     selectedCategory.value = categoryId
-    // Re-fetch available products with the selected category
-    const filterCategoryId = categoryId || undefined
-    await productStore.fetchAvailableProducts(filterCategoryId)
+    await fetchFilteredProducts()
   } catch (error) {
     console.error('Error filtering products by category:', error)
   }
+}
+
+// Handle user selection
+async function selectUser(userId: string | number) {
+  try {
+    selectedUser.value = userId
+    await fetchFilteredProducts()
+  } catch (error) {
+    console.error('Error filtering products by user:', error)
+  }
+}
+
+// Fetch products with current filters
+async function fetchFilteredProducts() {
+  const filterCategoryId = selectedCategory.value || undefined
+  const filterUserId = selectedUser.value || undefined
+  await productStore.fetchAvailableProducts(filterCategoryId, filterUserId)
 }
 </script>

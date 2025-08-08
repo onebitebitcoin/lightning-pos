@@ -29,12 +29,12 @@ export const useProductStore = defineStore('products', () => {
   }
 
   // Load all available products (for shopping)
-  async function fetchAvailableProducts(categoryId?: string) {
+  async function fetchAvailableProducts(categoryId?: string, userId?: string) {
     isLoading.value = true
     error.value = null
 
     try {
-      const fetchedProducts = await productsAPI.getAvailableProducts(categoryId)
+      const fetchedProducts = await productsAPI.getAvailableProducts(categoryId, userId)
       products.value = fetchedProducts
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
