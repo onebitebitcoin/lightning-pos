@@ -264,7 +264,16 @@
       <div class="flex-1 lg:order-1">
         <!-- Category Filter Breadcrumb -->
         <div class="mb-4 md:mb-6">
-          <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-3">상품</h2>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">상품</h2>
+            <button
+              @click="openDirectInputModal"
+              class="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors font-medium flex items-center space-x-2 text-sm"
+            >
+              <span>₩</span>
+              <span>직접 입력하기</span>
+            </button>
+          </div>
           <div class="flex flex-wrap items-center gap-2">
             <!-- All Products Button -->
             <button
@@ -559,6 +568,106 @@
         </div>
       </div>
     </div>
+
+    <!-- Direct Input Modal -->
+    <div
+      v-if="showDirectInputModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click="closeDirectInputModal"
+    >
+      <div 
+        class="card max-w-md w-full animate-fade-in"
+        @click.stop
+      >
+        <div class="relative">
+          <!-- Modal Header -->
+          <div class="flex justify-between items-center p-4 xs:p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl xs:text-2xl font-bold text-gray-900 dark:text-white">직접 입력하기</h2>
+            <button
+              @click="closeDirectInputModal"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            >
+              <span class="text-xl text-gray-500 dark:text-gray-400">✕</span>
+            </button>
+          </div>
+
+          <!-- Modal Content -->
+          <div class="p-4 xs:p-6">
+            <form @submit.prevent="handleDirectInput" class="space-y-4">
+              <div>
+                <label for="directAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  금액 (₩)
+                </label>
+                <input
+                  id="directAmount"
+                  v-model.number="directInputAmount"
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="999999"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors text-lg"
+                  placeholder="금액을 입력하세요"
+                  autofocus
+                />
+              </div>
+
+              <div>
+                <label for="directDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  설명 (선택사항)
+                </label>
+                <input
+                  id="directDescription"
+                  v-model="directInputDescription"
+                  type="text"
+                  maxlength="100"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                  placeholder="예: 추가 결제, 팁 등"
+                />
+              </div>
+
+              <!-- Bitcoin Price Display -->
+              <div v-if="directInputAmount > 0" class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bitcoin 금액:</div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg font-semibold text-warning-600 dark:text-warning-400">
+                    {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(directInputAmount)) }}
+                  </span>
+                  <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
+                    <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
+                  </span>
+                  <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="가격 정보가 오래되었습니다">
+                    ⚠️
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  @click="closeDirectInputModal"
+                  class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput"
+                  class="flex-1 px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span v-if="isAddingDirectInput" class="flex items-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>추가 중...</span>
+                  </span>
+                  <span v-else>장바구니 추가</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -588,6 +697,12 @@ const showMobileMenu = ref(false)
 // Product modal state
 const showProductModal = ref(false)
 const selectedProduct = ref<Product | null>(null)
+
+// Direct input modal state
+const showDirectInputModal = ref(false)
+const directInputAmount = ref<number | null>(null)
+const directInputDescription = ref('')
+const isAddingDirectInput = ref(false)
 
 // Category filtering
 const selectedCategory = ref('')
@@ -736,6 +851,76 @@ async function selectCategory(categoryId: string | number) {
     await productStore.fetchAvailableProducts(filterCategoryId)
   } catch (error) {
     console.error('Error filtering products by category:', error)
+  }
+}
+
+// Handle direct input modal
+function openDirectInputModal() {
+  showDirectInputModal.value = true
+  directInputAmount.value = null
+  directInputDescription.value = ''
+  
+  // Add escape key listener
+  document.addEventListener('keydown', handleDirectInputEscape)
+}
+
+function closeDirectInputModal() {
+  showDirectInputModal.value = false
+  directInputAmount.value = null
+  directInputDescription.value = ''
+  isAddingDirectInput.value = false
+  
+  // Remove escape key listener
+  document.removeEventListener('keydown', handleDirectInputEscape)
+}
+
+function handleDirectInputEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeDirectInputModal()
+  }
+}
+
+// Handle direct input submission
+async function handleDirectInput() {
+  if (!authStore.isLoggedIn) {
+    alert('로그인이 필요합니다')
+    return
+  }
+
+  if (!directInputAmount.value || directInputAmount.value <= 0) {
+    alert('올바른 금액을 입력해주세요')
+    return
+  }
+
+  isAddingDirectInput.value = true
+
+  try {
+    // Create a custom item name
+    const itemName = directInputDescription.value.trim() || '직접 입력 항목'
+    
+    // Create a temporary product-like object for the cart
+    const customItem = {
+      id: -1, // Use negative ID to indicate custom item
+      name: itemName,
+      price: directInputAmount.value,
+      description: directInputDescription.value.trim(),
+      is_available: true,
+      image_url: '', // No image for direct input items
+      created_by: authStore.user?.id || 0,
+      custom_item: true // Flag to indicate this is a custom item
+    }
+
+    const result = await cartStore.addCustomItem(customItem)
+    if (result.success) {
+      closeDirectInputModal()
+    } else {
+      alert(result.message || '장바구니 추가에 실패했습니다')
+    }
+  } catch (error) {
+    console.error('Error adding direct input to cart:', error)
+    alert('장바구니 추가 중 오류가 발생했습니다')
+  } finally {
+    isAddingDirectInput.value = false
   }
 }
 </script>

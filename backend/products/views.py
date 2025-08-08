@@ -333,6 +333,78 @@ def clear_cart_view(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
+def add_custom_item_view(request):
+    """
+    커스텀 금액 아이템을 장바구니에 추가
+    """
+    data = request.data
+    
+    # Validate required fields
+    if not data.get('name') or not data.get('price'):
+        return Response({
+            'success': False,
+            'message': '상품명과 금액은 필수입니다.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        price = float(data.get('price'))
+        if price <= 0:
+            raise ValueError("Price must be positive")
+    except (ValueError, TypeError):
+        return Response({
+            'success': False,
+            'message': '올바른 금액을 입력해주세요.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Create a temporary product for the custom item
+        custom_product = Product.objects.create(
+            name=data.get('name'),
+            description=data.get('description', ''),
+            price=price,
+            category=None,  # No category for custom items
+            stock_quantity=1,  # Always 1 for custom items
+            is_available=True,
+            created_by=request.user,
+            # Add a flag to identify custom items
+            image_url='custom_item'  # Use this as a flag
+        )
+        
+        # Check if item already exists in cart
+        existing_item = CartItem.objects.filter(
+            user=request.user, 
+            product=custom_product
+        ).first()
+        
+        if existing_item:
+            # Update quantity for existing item
+            existing_item.quantity += 1
+            existing_item.save()
+            serializer = CartItemSerializer(existing_item)
+        else:
+            # Create new cart item
+            cart_item = CartItem.objects.create(
+                user=request.user,
+                product=custom_product,
+                quantity=1
+            )
+            serializer = CartItemSerializer(cart_item)
+        
+        return Response({
+            'success': True,
+            'message': '커스텀 아이템이 장바구니에 추가되었습니다.',
+            'item': serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'커스텀 아이템 추가 중 오류가 발생했습니다: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def create_order_view(request):
     """
     주문 생성

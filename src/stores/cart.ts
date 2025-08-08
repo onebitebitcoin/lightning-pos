@@ -224,6 +224,34 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  // Add custom item to cart
+  async function addCustomItem(itemData: {
+    name: string
+    price: number
+    description?: string
+  }): Promise<{ success: boolean; message?: string }> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const result = await cartAPI.addCustomItem(itemData)
+      
+      if (result.success) {
+        // Refresh cart to get updated data
+        await fetchCart()
+        return { success: true, message: result.message }
+      } else {
+        error.value = result.message || '커스텀 아이템 추가에 실패했습니다'
+        return { success: false, message: error.value || '오류가 발생했습니다' }
+      }
+    } catch (err: any) {
+      error.value = err.message || '커스텀 아이템 추가에 실패했습니다'
+      return { success: false, message: error.value || '오류가 발생했습니다' }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     // State
     items,
@@ -243,6 +271,7 @@ export const useCartStore = defineStore('cart', () => {
     fetchCart,
     addItem,
     addItemById,
+    addCustomItem,
     updateItem,
     removeItem,
     clearCart,

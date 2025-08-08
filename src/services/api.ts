@@ -519,6 +519,22 @@ export const cartAPI = {
         message: error.response?.data?.message || '장바구니 비우기에 실패했습니다'
       }
     }
+  },
+
+  async addCustomItem(itemData: {
+    name: string
+    price: number
+    description?: string
+  }): Promise<{ success: boolean; message?: string; item?: CartItem }> {
+    try {
+      const response = await apiClient.post('/products/cart/add-custom/', itemData)
+      return response.data
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || '커스텀 아이템 추가에 실패했습니다'
+      }
+    }
   }
 }
 
