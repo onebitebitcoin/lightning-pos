@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authAPI, TokenManager, type User } from '@/services/api'
+import { authAPI, csrfAPI, TokenManager, type User } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -38,6 +38,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize auth state
   async function initialize() {
+    // Always fetch CSRF token on app start
+    try {
+      await csrfAPI.getCSRFToken()
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error)
+    }
+
     if (TokenManager.hasToken()) {
       // First try to load user from localStorage for instant login
       const storedUser = loadUserFromStorage()

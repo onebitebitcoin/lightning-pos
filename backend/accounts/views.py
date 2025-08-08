@@ -4,9 +4,22 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
+from django.middleware.csrf import get_token
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, UserProfileUpdateSerializer
 from .models import User
 from products.models import Product
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def csrf_token_view(request):
+    """
+    CSRF 토큰 반환
+    """
+    return Response({
+        'success': True,
+        'csrf_token': get_token(request)
+    })
 
 
 @api_view(['POST'])

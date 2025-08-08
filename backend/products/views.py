@@ -121,21 +121,44 @@ def cart_view(request):
             
             for product_id, item_data in session_cart.items():
                 try:
-                    product = Product.objects.get(id=product_id, is_available=True)
-                    total_price = product.price * item_data['quantity']
-                    items_data.append({
-                        'id': f"session_{product_id}",
-                        'product': {
-                            'id': product.id,
-                            'name': product.name,
-                            'price': str(product.price),
-                            'image_url': product.image.url if product.image else None,
-                        },
-                        'quantity': item_data['quantity'],
-                        'total_price': str(total_price)
-                    })
-                    subtotal += total_price
+                    # Check if this is a custom item
+                    if isinstance(item_data, dict) and item_data.get('is_custom'):
+                        # Custom item handling
+                        total_price = float(item_data['price']) * item_data['quantity']
+                        items_data.append({
+                            'id': f"session_{product_id}",
+                            'product': {
+                                'id': product_id,
+                                'name': item_data['name'],
+                                'price': str(item_data['price']),
+                                'image_url': None,
+                            },
+                            'quantity': item_data['quantity'],
+                            'total_price': str(total_price),
+                            'is_custom': True
+                        })
+                        subtotal += total_price
+                    else:
+                        # Regular product handling
+                        product = Product.objects.get(id=product_id, is_available=True)
+                        total_price = product.price * item_data['quantity']
+                        items_data.append({
+                            'id': f"session_{product_id}",
+                            'product': {
+                                'id': product.id,
+                                'name': product.name,
+                                'price': str(product.price),
+                                'image_url': product.image.url if product.image else None,
+                            },
+                            'quantity': item_data['quantity'],
+                            'total_price': str(total_price)
+                        })
+                        subtotal += total_price
                 except Product.DoesNotExist:
+                    # Skip invalid regular products
+                    continue
+                except (KeyError, ValueError, TypeError):
+                    # Skip invalid custom items
                     continue
         
         return Response({
@@ -332,7 +355,7 @@ def clear_cart_view(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def add_custom_item_view(request):
     """
     커스텀 금액 아이템을 장바구니에 추가
@@ -357,43 +380,80 @@ def add_custom_item_view(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Create a temporary product for the custom item
-        custom_product = Product.objects.create(
-            name=data.get('name'),
-            description=data.get('description', ''),
-            price=price,
-            category=None,  # No category for custom items
-            stock_quantity=1,  # Always 1 for custom items
-            is_available=True,
-            created_by=request.user,
-            # Add a flag to identify custom items
-            image_url='custom_item'  # Use this as a flag
-        )
-        
-        # Check if item already exists in cart
-        existing_item = CartItem.objects.filter(
-            user=request.user, 
-            product=custom_product
-        ).first()
-        
-        if existing_item:
-            # Update quantity for existing item
-            existing_item.quantity += 1
-            existing_item.save()
-            serializer = CartItemSerializer(existing_item)
-        else:
-            # Create new cart item
-            cart_item = CartItem.objects.create(
-                user=request.user,
-                product=custom_product,
-                quantity=1
+        if request.user.is_authenticated:
+            # Authenticated user - use database cart
+            # Create a temporary product for the custom item
+            custom_product = Product.objects.create(
+                name=data.get('name'),
+                description=data.get('description', ''),
+                price=price,
+                category=None,  # No category for custom items
+                stock_quantity=1,  # Always 1 for custom items
+                is_available=True,
+                created_by=request.user,
+                # Add a flag to identify custom items
+                image_url='custom_item'  # Use this as a flag
             )
-            serializer = CartItemSerializer(cart_item)
+            
+            # Check if item already exists in cart
+            existing_item = CartItem.objects.filter(
+                user=request.user, 
+                product=custom_product
+            ).first()
+            
+            if existing_item:
+                # Update quantity for existing item
+                existing_item.quantity += 1
+                existing_item.save()
+                serializer = CartItemSerializer(existing_item)
+                item_data = serializer.data
+            else:
+                # Create new cart item
+                cart_item = CartItem.objects.create(
+                    user=request.user,
+                    product=custom_product,
+                    quantity=1
+                )
+                serializer = CartItemSerializer(cart_item)
+                item_data = serializer.data
+        else:
+            # Anonymous user - use session cart
+            session_cart = request.session.get('cart', {})
+            
+            # Create a unique key for custom items
+            import uuid
+            custom_key = f"custom_{uuid.uuid4().hex[:8]}"
+            
+            # Add custom item to session cart
+            session_cart[custom_key] = {
+                'name': data.get('name'),
+                'price': price,
+                'description': data.get('description', ''),
+                'quantity': 1,
+                'is_custom': True
+            }
+            
+            request.session['cart'] = session_cart
+            request.session.modified = True
+            
+            # Return session cart format
+            item_data = {
+                'id': f"session_{custom_key}",
+                'product': {
+                    'id': custom_key,
+                    'name': data.get('name'),
+                    'price': str(price),
+                    'image_url': None,
+                },
+                'quantity': 1,
+                'total_price': str(price),
+                'is_custom': True
+            }
         
         return Response({
             'success': True,
             'message': '커스텀 아이템이 장바구니에 추가되었습니다.',
-            'item': serializer.data
+            'item': item_data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:

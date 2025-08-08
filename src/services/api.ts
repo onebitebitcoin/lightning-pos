@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000, // Increase timeout for file uploads
+  withCredentials: true, // Enable sending cookies with requests for CSRF
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,6 +16,7 @@ const apiClient: AxiosInstance = axios.create({
 // Token management
 class TokenManager {
   private static readonly TOKEN_KEY = 'auth_token'
+  private static readonly CSRF_TOKEN_KEY = 'csrf_token'
   
   static getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY)
@@ -31,15 +33,46 @@ class TokenManager {
   static hasToken(): boolean {
     return !!this.getToken()
   }
+  
+  // CSRF token management
+  static getCSRFToken(): string | null {
+    return localStorage.getItem(this.CSRF_TOKEN_KEY)
+  }
+  
+  static setCSRFToken(token: string): void {
+    localStorage.setItem(this.CSRF_TOKEN_KEY, token)
+  }
+  
+  static removeCSRFToken(): void {
+    localStorage.removeItem(this.CSRF_TOKEN_KEY)
+  }
+  
+  // Get CSRF token from cookie (Django default)
+  static getCSRFTokenFromCookie(): string | null {
+    const name = 'csrftoken'
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+    return null
+  }
 }
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and CSRF token
 apiClient.interceptors.request.use(
   (config) => {
     const token = TokenManager.getToken()
     if (token) {
       config.headers.Authorization = `Token ${token}`
     }
+    
+    // Add CSRF token for POST, PUT, PATCH, DELETE requests
+    if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
+      const csrfToken = TokenManager.getCSRFToken() || TokenManager.getCSRFTokenFromCookie()
+      if (csrfToken) {
+        config.headers['X-CSRFToken'] = csrfToken
+      }
+    }
+    
     return config
   },
   (error) => {
@@ -151,6 +184,21 @@ export interface OrderItem {
   quantity: number
   unit_price: number
   total_price: number
+}
+
+// CSRF API
+export const csrfAPI = {
+  async getCSRFToken(): Promise<{ success: boolean; csrf_token?: string; message?: string }> {
+    try {
+      const response = await apiClient.get('/auth/csrf/')
+      if (response.data.csrf_token) {
+        TokenManager.setCSRFToken(response.data.csrf_token)
+      }
+      return response.data
+    } catch (error: any) {
+      return { success: false, message: '서버 오류가 발생했습니다' }
+    }
+  }
 }
 
 // Auth API
