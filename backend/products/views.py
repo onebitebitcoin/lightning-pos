@@ -41,8 +41,13 @@ class ProductListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        # Show only products created by the current user
-        queryset = Product.objects.filter(created_by=self.request.user, is_available=True)
+        # Show only products created by the current user, excluding custom items
+        queryset = Product.objects.filter(
+            created_by=self.request.user, 
+            is_available=True
+        ).exclude(
+            image_url='custom_item'  # Exclude custom items from direct input
+        )
         category = self.request.query_params.get('category')
         if category:
             queryset = queryset.filter(category_id=category)
@@ -63,11 +68,13 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 def available_products_view(request):
     """
     Get available products for the current user (read-only view for shopping)
-    This endpoint shows only products created by the current user
+    This endpoint shows only products created by the current user, excluding custom items
     """
     products = Product.objects.filter(
         created_by=request.user,
         is_available=True
+    ).exclude(
+        image_url='custom_item'  # Exclude custom items from direct input
     ).order_by('-created_at')
     
     category = request.query_params.get('category')

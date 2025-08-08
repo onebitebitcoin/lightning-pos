@@ -52,8 +52,17 @@ class TokenManager {
     const name = 'csrftoken'
     const value = `; ${document.cookie}`
     const parts = value.split(`; ${name}=`)
-    if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+    if (parts.length === 2) {
+      const token = parts.pop()?.split(';').shift() || null
+      return token
+    }
     return null
+  }
+
+  // Get CSRF token from meta tag (alternative method)
+  static getCSRFTokenFromMeta(): string | null {
+    const metaTag = document.querySelector('meta[name="csrf-token"]')
+    return metaTag ? metaTag.getAttribute('content') : null
   }
 }
 
@@ -67,9 +76,16 @@ apiClient.interceptors.request.use(
     
     // Add CSRF token for POST, PUT, PATCH, DELETE requests
     if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
-      const csrfToken = TokenManager.getCSRFToken() || TokenManager.getCSRFTokenFromCookie()
+      let csrfToken = TokenManager.getCSRFToken() || 
+                      TokenManager.getCSRFTokenFromCookie() || 
+                      TokenManager.getCSRFTokenFromMeta()
+      
       if (csrfToken) {
         config.headers['X-CSRFToken'] = csrfToken
+        console.debug('Added CSRF token to request:', csrfToken.substring(0, 10) + '...')
+      } else {
+        // If no CSRF token available, try to fetch one first
+        console.warn('No CSRF token found, this request may fail')
       }
     }
     
@@ -83,7 +99,7 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       // Unauthorized - remove token but don't redirect during login attempts
       TokenManager.removeToken()
@@ -97,6 +113,24 @@ apiClient.interceptors.response.use(
         import('@/router').then(({ default: router }) => {
           router.push('/login')
         })
+      }
+    } else if (error.response?.status === 403 && 
+               error.response?.data?.detail?.includes('CSRF')) {
+      // CSRF token error - try to get a fresh token and retry once
+      console.warn('CSRF token error, attempting to refresh token and retry...')
+      
+      try {
+        // Clear old token and get a new one
+        TokenManager.removeCSRFToken()
+        await csrfAPI.getCSRFToken()
+        
+        // Retry the original request once
+        if (error.config && !error.config.__retryCount) {
+          error.config.__retryCount = 1
+          return apiClient.request(error.config)
+        }
+      } catch (retryError) {
+        console.error('Failed to refresh CSRF token:', retryError)
       }
     }
     return Promise.reject(error)
@@ -190,12 +224,15 @@ export interface OrderItem {
 export const csrfAPI = {
   async getCSRFToken(): Promise<{ success: boolean; csrf_token?: string; message?: string }> {
     try {
+      console.debug('Fetching CSRF token from server...')
       const response = await apiClient.get('/auth/csrf/')
       if (response.data.csrf_token) {
         TokenManager.setCSRFToken(response.data.csrf_token)
+        console.debug('CSRF token received and stored:', response.data.csrf_token.substring(0, 10) + '...')
       }
       return response.data
     } catch (error: any) {
+      console.error('Failed to fetch CSRF token:', error)
       return { success: false, message: '서버 오류가 발생했습니다' }
     }
   }
@@ -575,12 +612,17 @@ export const cartAPI = {
     description?: string
   }): Promise<{ success: boolean; message?: string; item?: CartItem }> {
     try {
+      // Ensure we have a CSRF token before making the request
+      if (!TokenManager.getCSRFToken() && !TokenManager.getCSRFTokenFromCookie()) {
+        await csrfAPI.getCSRFToken()
+      }
+      
       const response = await apiClient.post('/products/cart/add-custom/', itemData)
       return response.data
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || '커스텀 아이템 추가에 실패했습니다'
+        message: error.response?.data?.message || error.response?.data?.detail || '커스텀 아이템 추가에 실패했습니다'
       }
     }
   }

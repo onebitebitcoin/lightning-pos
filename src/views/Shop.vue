@@ -668,6 +668,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -882,11 +883,6 @@ function handleDirectInputEscape(event: KeyboardEvent) {
 
 // Handle direct input submission
 async function handleDirectInput() {
-  if (!authStore.isLoggedIn) {
-    alert('로그인이 필요합니다')
-    return
-  }
-
   if (!directInputAmount.value || directInputAmount.value <= 0) {
     alert('올바른 금액을 입력해주세요')
     return
@@ -898,16 +894,11 @@ async function handleDirectInput() {
     // Create a custom item name
     const itemName = directInputDescription.value.trim() || '직접 입력 항목'
     
-    // Create a temporary product-like object for the cart
+    // Create a custom item object for the cart
     const customItem = {
-      id: -1, // Use negative ID to indicate custom item
       name: itemName,
       price: directInputAmount.value,
-      description: directInputDescription.value.trim(),
-      is_available: true,
-      image_url: '', // No image for direct input items
-      created_by: authStore.user?.id || 0,
-      custom_item: true // Flag to indicate this is a custom item
+      description: directInputDescription.value.trim()
     }
 
     const result = await cartStore.addCustomItem(customItem)
@@ -923,4 +914,5 @@ async function handleDirectInput() {
     isAddingDirectInput.value = false
   }
 }
+
 </script>

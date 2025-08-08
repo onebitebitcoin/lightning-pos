@@ -133,20 +133,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF cookie
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.User'
-
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173', 
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174',
-    'http://localhost:5175',
-    'http://127.0.0.1:5175',
-    "https://pos.onebitebitcoin.com"
-]
-
-# Disable CSRF for development
-CSRF_COOKIE_SECURE = False
-CSRF_USE_SESSIONS = False
