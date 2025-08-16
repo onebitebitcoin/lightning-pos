@@ -137,7 +137,7 @@ WorkingDirectory=$CURRENT_DIR/backend
 Environment="PATH=$CURRENT_DIR/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="PYTHONPATH=$CURRENT_DIR/backend"
 Environment="DJANGO_SETTINGS_MODULE=kiosk_backend.settings"
-ExecStart=$CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8002 kiosk_backend.wsgi:application
+ExecStart=$CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8001 kiosk_backend.wsgi:application
 ExecReload=/bin/kill -s HUP \$MAINPID
 KillMode=mixed
 TimeoutStopSec=5
@@ -180,27 +180,27 @@ else
     cd $CURRENT_DIR/backend
     source venv/bin/activate
     
-    # Kill any existing processes on port 8002
-    sudo fuser -k 8002/tcp 2>/dev/null || true
+    # Kill any existing processes on port 8001
+    sudo fuser -k 8001/tcp 2>/dev/null || true
     sleep 2
     
     # Start Gunicorn manually in background
-    echo "포트 8002에서 Gunicorn 수동 시작 중..."
-    nohup $CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8002 kiosk_backend.wsgi:application > /var/log/gunicorn.log 2>&1 &
+    echo "포트 8001에서 Gunicorn 수동 시작 중..."
+    nohup $CURRENT_DIR/backend/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8001 kiosk_backend.wsgi:application > /var/log/gunicorn.log 2>&1 &
     
-    # Wait and check if port 8002 is responding
+    # Wait and check if port 8001 is responding
     sleep 5
-    if curl -s http://localhost:8002/api/accounts/user/ > /dev/null 2>&1; then
-        echo "✅ Django backend started manually on port 8002"
+    if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
+        echo "✅ Django backend started manually on port 8001"
     else
         echo "❌ Failed to start Django backend. Trying development server..."
         # Kill gunicorn and try development server
-        sudo fuser -k 8002/tcp 2>/dev/null || true
+        sudo fuser -k 8001/tcp 2>/dev/null || true
         sleep 2
-        nohup python manage.py runserver 0.0.0.0:8002 > /var/log/django-dev.log 2>&1 &
+        nohup python manage.py runserver 0.0.0.0:8001 > /var/log/django-dev.log 2>&1 &
         sleep 3
-        if curl -s http://localhost:8002/api/accounts/user/ > /dev/null 2>&1; then
-            echo "✅ 포트 8002에서 Django 개발 서버 시작"
+        if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
+            echo "✅ 포트 8001에서 Django 개발 서버 시작"
         else
             echo "❌ 모든 시작 방법이 실패했습니다. 로그를 확인하세요:"
             echo "  - systemd: sudo journalctl -u $SERVICE_NAME"
@@ -233,7 +233,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://localhost:8002;
+        proxy_pass http://localhost:8001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -253,7 +253,7 @@ server {
     }
 
     location /admin/ {
-        proxy_pass http://localhost:8002;
+        proxy_pass http://localhost:8001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -319,25 +319,25 @@ if [ -f "/etc/nginx/sites-available/shop.local" ]; then
 fi
 
 echo "=== 최종 점검 ==="
-echo "포트 8002에서 Django 백엔드가 실행 중인지 확인 중..."
-if netstat -tlnp 2>/dev/null | grep -q ":8002 "; then
-    echo "✅ 포트 8002 활성화됨"
-    if curl -s http://localhost:8002/api/accounts/user/ > /dev/null 2>&1; then
+echo "포트 8001에서 Django 백엔드가 실행 중인지 확인 중..."
+if netstat -tlnp 2>/dev/null | grep -q ":8001 "; then
+    echo "✅ 포트 8001 활성화됨"
+    if curl -s http://localhost:8001/api/accounts/user/ > /dev/null 2>&1; then
         echo "✅ Django 백엔드 상태 점검 통과"
     else
-        echo "⚠️ 포트 8002는 활성화됐으나 상태 점검 실패"
+        echo "⚠️ 포트 8001는 활성화됐으나 상태 점검 실패"
     fi
 else
-    echo "❌ 포트 8002가 활성화되어 있지 않음"
-    echo "포트 8002에서 실행 중인 프로세스 확인 중..."
-    sudo lsof -i :8002 || echo "포트 8002에서 실행 중인 프로세스가 없습니다"
+    echo "❌ 포트 8001가 활성화되어 있지 않음"
+    echo "포트 8001에서 실행 중인 프로세스 확인 중..."
+    sudo lsof -i :8001 || echo "포트 8001에서 실행 중인 프로세스가 없습니다"
 fi
 
 echo ""
 echo "=== 배포 요약 ==="
 BACKEND_STATUS="❌ Not Running"
-if netstat -tlnp 2>/dev/null | grep -q ":8002 "; then
-    BACKEND_STATUS="✅ http://localhost:8002 에서 실행 중"
+if netstat -tlnp 2>/dev/null | grep -q ":8001 "; then
+    BACKEND_STATUS="✅ http://localhost:8001 에서 실행 중"
 fi
 
 echo "🔧 Django 백엔드: $BACKEND_STATUS"
@@ -358,8 +358,8 @@ echo "  sudo systemctl reload nginx"
 echo "  sudo journalctl -u shop-django-backend -f  # 로그 보기"
 echo ""
 echo "🔍 디버깅 명령어:"
-echo "  netstat -tlnp | grep :8002  # 포트 8002 확인"
-echo "  curl http://localhost:8002/api/accounts/user/  # 백엔드 테스트"
+echo "  netstat -tlnp | grep :8001  # 포트 8001 확인"
+echo "  curl http://localhost:8001/api/accounts/user/  # 백엔드 테스트"
 echo "  tail -f /var/log/gunicorn.log  # Gunicorn 로그"
 echo "  tail -f /var/log/django-dev.log  # Django 개발 서버 로그"
 echo ""
