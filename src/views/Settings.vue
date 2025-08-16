@@ -420,34 +420,36 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 카테고리
               </label>
-              <select
-                v-model="productForm.category"
+              <input
+                v-model="productForm.categoryName"
+                type="text"
                 :class="[
                   'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.category ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-              >
-                <option value="">카테고리를 선택하세요</option>
-                <optgroup label="기본 카테고리" v-if="categoryStore.globalCategories.length > 0">
-                  <option 
-                    v-for="category in categoryStore.globalCategories" 
-                    :key="category.id" 
-                    :value="category.id"
-                  >
-                    {{ category.name }}
-                  </option>
-                </optgroup>
-                <optgroup label="내 카테고리" v-if="categoryStore.userCategories.length > 0">
-                  <option 
-                    v-for="category in categoryStore.userCategories" 
-                    :key="category.id" 
-                    :value="category.id"
-                  >
-                    {{ category.name }}
-                  </option>
-                </optgroup>
-              </select>
+                placeholder="카테고리 이름을 입력하세요 (예: 음료수, 스낵, 과자 등)"
+                maxlength="50"
+              />
               <p v-if="formErrors.category" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.category }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                새로운 카테고리를 입력하거나 기존 카테고리 이름을 사용하세요
+              </p>
+              
+              <!-- Show existing categories as suggestions -->
+              <div v-if="allCategoryNames.length > 0" class="mt-2">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">기존 카테고리:</p>
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    v-for="categoryName in allCategoryNames"
+                    :key="categoryName"
+                    @click="productForm.categoryName = categoryName"
+                    type="button"
+                    class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    {{ categoryName }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Product Image -->
@@ -572,7 +574,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProductStore } from '@/stores/products'
 import { useThemeStore } from '@/stores/theme'
@@ -596,7 +598,7 @@ onMounted(async () => {
       categoryStore.initialize()
     ])
   } catch (error) {
-    console.error('Failed to load data:', error)
+    console.error('데이터 로드 실패:', error)
   }
 })
 
@@ -619,6 +621,7 @@ const productForm = reactive({
   name: '',
   price: 0,
   category: '',
+  categoryName: '',
   image: ''
 })
 
@@ -647,11 +650,52 @@ const userFormErrors = reactive({
   lightning_address: ''
 })
 
+// Computed property to get all category names for suggestions
+const allCategoryNames = computed(() => {
+  const globalNames = categoryStore.globalCategories.map(cat => cat.name)
+  const userNames = categoryStore.userCategories.map(cat => cat.name)
+  return [...new Set([...globalNames, ...userNames])].sort()
+})
+
+// Helper function to find or create category by name
+async function findOrCreateCategory(categoryName: string): Promise<number | null> {
+  if (!categoryName.trim()) {
+    return null
+  }
+
+  const trimmedName = categoryName.trim()
+  
+  // First, try to find existing category by name
+  const existingCategory = categoryStore.categories.find(cat => 
+    cat.name.toLowerCase() === trimmedName.toLowerCase()
+  )
+  
+  if (existingCategory) {
+    return existingCategory.id
+  }
+  
+  // If not found, create a new category
+  try {
+    const result = await categoryStore.addCategory({
+      name: trimmedName
+    })
+    
+    if (result.success && result.category) {
+      return result.category.id
+    }
+  } catch (error) {
+    console.error('카테고리 생성 오류:', error)
+  }
+  
+  return null
+}
+
 // Reset form
 function resetForm() {
   productForm.name = ''
   productForm.price = 0
   productForm.category = ''
+  productForm.categoryName = ''
   productForm.image = ''
   selectedFile.value = null
   imageError.value = false
@@ -715,6 +759,8 @@ function openEditModal(product: any) {
   productForm.name = product.name
   productForm.price = product.price
   productForm.category = product.category || ''
+  // Set the category name based on the category ID
+  productForm.categoryName = product.category_name || ''
   productForm.image = product.image || product.image_url || ''
   showProductModal.value = true
 }
@@ -729,7 +775,7 @@ function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
   
   // Log the failed URL for debugging
-  console.warn('Image failed to load:', img.src)
+  console.warn('이미지 로드 실패:', img.src)
   
   // Prevent infinite error loops by checking if we've already handled this error
   if (img.dataset.errorHandled === 'true') {
@@ -800,13 +846,16 @@ async function saveProduct() {
   isSubmitting.value = true
 
   try {
+    // Handle category: find existing or create new
+    const categoryId = await findOrCreateCategory(productForm.categoryName)
+    
     let result
     if (editingProduct.value) {
       // Update existing product
       result = await productStore.updateProduct(editingProduct.value.id, {
         name: productForm.name.trim(),
         price: productForm.price,
-        category: productForm.category || null,
+        category: categoryId,
         image_url: productForm.image.trim()
       })
     } else {
@@ -816,7 +865,7 @@ async function saveProduct() {
         result = await productStore.addProductWithFile({
           name: productForm.name.trim(),
           price: productForm.price,
-          category: productForm.category || null,
+          category: categoryId,
           stock_quantity: 100, // Default stock
           is_available: true
         }, selectedFile.value)
@@ -825,7 +874,7 @@ async function saveProduct() {
         result = await productStore.addProduct({
           name: productForm.name.trim(),
           price: productForm.price,
-          category: productForm.category || null,
+          category: categoryId,
           image_url: productForm.image.trim()
         })
       }

@@ -22,7 +22,7 @@ export const useProductStore = defineStore('products', () => {
       products.value = fetchedProducts
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
-      console.error('Error fetching products:', err)
+      console.error('상품 가져오기 오류:', err)
     } finally {
       isLoading.value = false
     }
@@ -38,7 +38,7 @@ export const useProductStore = defineStore('products', () => {
       products.value = fetchedProducts
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
-      console.error('Error fetching available products:', err)
+      console.error('판매 상품 가져오기 오류:', err)
     } finally {
       isLoading.value = false
     }
@@ -50,7 +50,7 @@ export const useProductStore = defineStore('products', () => {
       return await productsAPI.getProduct(id)
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
-      console.error('Error fetching product:', err)
+      console.error('상품 조회 오류:', err)
       return null
     }
   }

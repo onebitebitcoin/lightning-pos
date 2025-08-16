@@ -68,8 +68,8 @@ npm run dev
 
 ### 접속 정보
 - **프론트엔드**: http://localhost:5173
-- **백엔드 API**: http://localhost:8001/api/
-- **Django 관리자**: http://localhost:8001/admin/
+- **백엔드 API**: http://localhost:8002/api/
+- **Django 관리자**: http://localhost:8002/admin/
 
 ### 기본 계정
 - **사용자명**: admin

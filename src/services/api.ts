@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api'
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -82,10 +82,10 @@ apiClient.interceptors.request.use(
       
       if (csrfToken) {
         config.headers['X-CSRFToken'] = csrfToken
-        console.debug('Added CSRF token to request:', csrfToken.substring(0, 10) + '...')
+        console.debug('요청에 CSRF 토큰 추가:', csrfToken.substring(0, 10) + '...')
       } else {
         // If no CSRF token available, try to fetch one first
-        console.warn('No CSRF token found, this request may fail')
+        console.warn('CSRF 토큰이 없습니다. 요청이 실패할 수 있습니다')
       }
     }
     
@@ -117,7 +117,7 @@ apiClient.interceptors.response.use(
     } else if (error.response?.status === 403 && 
                error.response?.data?.detail?.includes('CSRF')) {
       // CSRF token error - try to get a fresh token and retry once
-      console.warn('CSRF token error, attempting to refresh token and retry...')
+      console.warn('CSRF 토큰 오류, 새 토큰 발급 후 재시도...')
       
       try {
         // Clear old token and get a new one
@@ -130,7 +130,7 @@ apiClient.interceptors.response.use(
           return apiClient.request(error.config)
         }
       } catch (retryError) {
-        console.error('Failed to refresh CSRF token:', retryError)
+        console.error('CSRF 토큰 갱신 실패:', retryError)
       }
     }
     return Promise.reject(error)
@@ -224,15 +224,15 @@ export interface OrderItem {
 export const csrfAPI = {
   async getCSRFToken(): Promise<{ success: boolean; csrf_token?: string; message?: string }> {
     try {
-      console.debug('Fetching CSRF token from server...')
+      console.debug('서버에서 CSRF 토큰 가져오는 중...')
       const response = await apiClient.get('/auth/csrf/')
       if (response.data.csrf_token) {
         TokenManager.setCSRFToken(response.data.csrf_token)
-        console.debug('CSRF token received and stored:', response.data.csrf_token.substring(0, 10) + '...')
+        console.debug('CSRF 토큰 수신 및 저장:', response.data.csrf_token.substring(0, 10) + '...')
       }
       return response.data
     } catch (error: any) {
-      console.error('Failed to fetch CSRF token:', error)
+      console.error('CSRF 토큰 조회 실패:', error)
       return { success: false, message: '서버 오류가 발생했습니다' }
     }
   }
@@ -262,6 +262,9 @@ export const authAPI = {
     password: string
   }): Promise<{ success: boolean; message: string; user?: User; token?: string }> {
     try {
+      // Ensure we have a CSRF token before login
+      await csrfAPI.getCSRFToken()
+      
       const response = await apiClient.post('/auth/login/', credentials)
       if (response.data.success && response.data.token) {
         TokenManager.setToken(response.data.token)
@@ -350,7 +353,7 @@ export const categoriesAPI = {
       const response = await apiClient.get('/products/categories/')
       return response.data.results || response.data
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      console.error('카테고리 가져오기 오류:', error)
       return []
     }
   },
@@ -396,7 +399,7 @@ export const categoriesAPI = {
       const response = await apiClient.get('/products/categories/used/')
       return response.data.categories || []
     } catch (error) {
-      console.error('Error fetching user product categories:', error)
+      console.error('사용자 상품 카테고리 가져오기 오류:', error)
       return []
     }
   }
@@ -410,7 +413,7 @@ export const productsAPI = {
       const response = await apiClient.get('/products/')
       return response.data.results || response.data
     } catch (error) {
-      console.error('Error fetching products:', error)
+      console.error('상품 가져오기 오류:', error)
       return []
     }
   },
@@ -422,7 +425,7 @@ export const productsAPI = {
       const response = await apiClient.get(`/products/available/${params}`)
       return response.data.products || response.data
     } catch (error) {
-      console.error('Error fetching available products:', error)
+      console.error('판매 상품 가져오기 오류:', error)
       return []
     }
   },
@@ -432,7 +435,7 @@ export const productsAPI = {
       const response = await apiClient.get(`/products/${id}/`)
       return response.data
     } catch (error) {
-      console.error('Error fetching product:', error)
+      console.error('상품 조회 오류:', error)
       return null
     }
   },
@@ -442,7 +445,7 @@ export const productsAPI = {
       const response = await apiClient.post('/products/', productData)
       return { success: true, product: response.data }
     } catch (error: any) {
-      console.error('Product creation error:', error.response?.data)
+      console.error('상품 생성 오류:', error.response?.data)
       
       // Handle validation errors from Django serializer
       if (error.response?.data?.image_url) {
@@ -491,7 +494,7 @@ export const productsAPI = {
       })
       return { success: true, product: response.data }
     } catch (error: any) {
-      console.error('Product creation error:', error.response?.data)
+      console.error('상품 생성 오류:', error.response?.data)
       
       // Handle validation errors
       if (error.response?.data?.image) {
@@ -513,7 +516,7 @@ export const productsAPI = {
       const response = await apiClient.put(`/products/${id}/`, productData)
       return { success: true, product: response.data }
     } catch (error: any) {
-      console.error('Product update error:', error.response?.data)
+      console.error('상품 수정 오류:', error.response?.data)
       
       // Handle validation errors from Django serializer
       if (error.response?.data?.image_url) {
@@ -550,7 +553,7 @@ export const cartAPI = {
       const response = await apiClient.get('/products/cart/')
       return response.data
     } catch (error: any) {
-      console.error('Error fetching cart:', error)
+      console.error('장바구니 조회 오류:', error)
       return { success: false, items: [], subtotal: 0, item_count: 0 }
     }
   },
@@ -633,6 +636,11 @@ export const ordersAPI = {
   async createOrder(orderData: {
     payment_method: string
     discount_percentage: number
+    cart_items: Array<{
+      product_id: number
+      quantity: number
+      unit_price: number
+    }>
   }): Promise<{ success: boolean; message?: string; order?: Order }> {
     try {
       const response = await apiClient.post('/products/orders/create/', orderData)
@@ -650,7 +658,7 @@ export const ordersAPI = {
       const response = await apiClient.get('/products/orders/')
       return response.data
     } catch (error: any) {
-      console.error('Error fetching orders:', error)
+      console.error('주문 목록 조회 오류:', error)
       return { success: false, orders: [] }
     }
   },

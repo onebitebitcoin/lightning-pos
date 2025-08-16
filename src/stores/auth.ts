@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
       const stored = localStorage.getItem(USER_STORAGE_KEY)
       return stored ? JSON.parse(stored) : null
     } catch (error) {
-      console.error('Error loading user from storage:', error)
+      console.error('저장소에서 사용자 로드 오류:', error)
       return null
     }
   }
@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await csrfAPI.getCSRFToken()
     } catch (error) {
-      console.error('Failed to get CSRF token:', error)
+      console.error('CSRF 토큰 가져오기 실패:', error)
     }
 
     if (TokenManager.hasToken()) {
@@ -56,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
         // Then verify with server and update if needed
         await getProfile()
       } catch (error) {
-        console.error('Failed to initialize auth:', error)
+        console.error('인증 초기화 실패:', error)
         logout()
       }
     }
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await authAPI.logout()
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('로그아웃 오류:', error)
     } finally {
       user.value = null
       error.value = null
@@ -143,10 +143,10 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = result.user
         saveUserToStorage(result.user)
       } else {
-        throw new Error(result.message || 'Failed to get profile')
+        throw new Error(result.message || '프로필을 가져오지 못했습니다')
       }
     } catch (err: any) {
-      console.error('Get profile error:', err)
+      console.error('프로필 가져오기 오류:', err)
       throw err
     }
   }

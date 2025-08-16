@@ -278,7 +278,7 @@ async function handleRegister() {
       }
     }
   } catch (error) {
-    console.error('Registration error:', error)
+    console.error('회원가입 오류:', error)
     alert('계정 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
   } finally {
     isSubmitting.value = false

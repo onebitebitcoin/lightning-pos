@@ -38,8 +38,8 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
       priceData.value = data
       lastUpdated.value = new Date()
     } catch (err: any) {
-      error.value = err.message || 'Failed to fetch Bitcoin price'
-      console.error('Bitcoin price fetch error:', err)
+      error.value = err.message || '비트코인 가격을 가져오는데 실패했습니다'
+      console.error('비트코인 가격 조회 오류:', err)
     } finally {
       isLoading.value = false
     }

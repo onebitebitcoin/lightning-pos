@@ -329,7 +329,7 @@ async function fetchUsers() {
     }
   } catch (err: any) {
     error.value = err.message || '사용자 목록을 불러오는 중 오류가 발생했습니다'
-    console.error('Error fetching users:', err)
+    console.error('사용자 목록 가져오기 오류:', err)
   } finally {
     isLoading.value = false
   }
@@ -346,11 +346,11 @@ async function viewUserDetail(user: User & { product_count: number }) {
     if (result.success) {
       userProducts.value = result.products || []
     } else {
-      console.error('Failed to load user detail:', result.message)
+      console.error('사용자 상세 로드 실패:', result.message)
       userProducts.value = []
     }
   } catch (error) {
-    console.error('Error loading user detail:', error)
+    console.error('사용자 상세 불러오기 오류:', error)
     userProducts.value = []
   } finally {
     isLoadingUserDetail.value = false
@@ -394,7 +394,7 @@ async function deleteUser(user: User & { product_count: number }) {
       alert(result.message || '사용자 삭제에 실패했습니다')
     }
   } catch (error) {
-    console.error('Error deleting user:', error)
+    console.error('사용자 삭제 오류:', error)
     alert('사용자 삭제 중 오류가 발생했습니다')
   } finally {
     isDeletingUser.value = false

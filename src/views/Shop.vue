@@ -764,7 +764,7 @@ async function handleAddToCart(product: Product) {
       alert(result.message || '장바구니 추가에 실패했습니다')
     }
   } catch (error) {
-    console.error('Error adding to cart:', error)
+    console.error('장바구니 추가 오류:', error)
     alert('장바구니 추가 중 오류가 발생했습니다')
   }
 }
@@ -791,7 +791,7 @@ function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
   
   // Log the failed URL for debugging
-  console.warn('Image failed to load:', img.src)
+  console.warn('이미지 로드 실패:', img.src)
   
   // Prevent infinite error loops by checking if we've already handled this error
   if (img.dataset.errorHandled === 'true') {
@@ -814,7 +814,7 @@ async function handleLogout() {
     await authStore.logout()
     await router.push('/login')
   } catch (error) {
-    console.error('Logout error:', error)
+    console.error('로그아웃 오류:', error)
     // Even if logout fails, redirect to login
     await router.push('/login')
   }
@@ -851,7 +851,7 @@ async function selectCategory(categoryId: string | number) {
     const filterCategoryId = categoryId || undefined
     await productStore.fetchAvailableProducts(filterCategoryId)
   } catch (error) {
-    console.error('Error filtering products by category:', error)
+    console.error('카테고리별 상품 필터링 오류:', error)
   }
 }
 
@@ -908,7 +908,7 @@ async function handleDirectInput() {
       alert(result.message || '장바구니 추가에 실패했습니다')
     }
   } catch (error) {
-    console.error('Error adding direct input to cart:', error)
+    console.error('직접 입력 장바구니 추가 오류:', error)
     alert('장바구니 추가 중 오류가 발생했습니다')
   } finally {
     isAddingDirectInput.value = false

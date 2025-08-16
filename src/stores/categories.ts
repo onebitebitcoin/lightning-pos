@@ -26,7 +26,7 @@ export const useCategoryStore = defineStore('categories', () => {
       categories.value = fetchedCategories
     } catch (err: any) {
       error.value = err.message || '카테고리를 불러오는데 실패했습니다'
-      console.error('Error fetching categories:', err)
+      console.error('카테고리 가져오기 오류:', err)
     } finally {
       isLoading.value = false
     }
@@ -42,7 +42,7 @@ export const useCategoryStore = defineStore('categories', () => {
       categories.value = fetchedCategories
     } catch (err: any) {
       error.value = err.message || '카테고리를 불러오는데 실패했습니다'
-      console.error('Error fetching user product categories:', err)
+      console.error('사용자 상품 카테고리 가져오기 오류:', err)
     } finally {
       isLoading.value = false
     }

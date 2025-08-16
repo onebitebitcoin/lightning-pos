@@ -40,7 +40,7 @@ export const useCartStore = defineStore('cart', () => {
       }
     } catch (err: any) {
       error.value = err.message || '장바구니를 불러오는데 실패했습니다'
-      console.error('Error fetching cart:', err)
+      console.error('장바구니 가져오기 오류:', err)
     } finally {
       isLoading.value = false
     }
@@ -156,9 +156,17 @@ export const useCartStore = defineStore('cart', () => {
     error.value = null
 
     try {
+      // Prepare cart items for the order
+      const cartItems = items.value.map(item => ({
+        product_id: item.product,
+        quantity: item.quantity,
+        unit_price: item.product_price
+      }))
+
       const result = await ordersAPI.createOrder({
         payment_method: paymentMethod,
-        discount_percentage: discount.value
+        discount_percentage: discount.value,
+        cart_items: cartItems
       })
 
       if (result.success) {

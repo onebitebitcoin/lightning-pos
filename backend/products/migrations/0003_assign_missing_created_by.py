@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 
 
 def assign_missing_created_by(apps, schema_editor):
-    """Assign created_by to products that don't have one"""
+    """created_by가 비어있는 상품에 사용자 지정"""
     Product = apps.get_model('products', 'Product')
     User = get_user_model()
     
@@ -17,13 +17,13 @@ def assign_missing_created_by(apps, schema_editor):
         first_user = User.objects.first()
         if first_user:
             products_without_creator.update(created_by=first_user)
-            print(f"Updated {products_without_creator.count()} products with created_by={first_user.username}")
+            print(f"created_by={first_user.username}로 업데이트된 상품 수: {products_without_creator.count()}개")
         else:
-            print("No users found - products will remain without created_by")
+            print("사용자를 찾지 못해 created_by 없이 유지됩니다")
 
 
 def reverse_assign_missing_created_by(apps, schema_editor):
-    """Reverse operation - set created_by to null for products"""
+    """역작업 - 상품의 created_by를 null로 설정"""
     # This is a data migration, reversal isn't strictly necessary
     pass
 

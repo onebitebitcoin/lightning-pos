@@ -87,7 +87,7 @@ router.beforeEach(async (to, from, next) => {
           return
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error)
+        console.error('인증 초기화 실패:', error)
       }
     }
     

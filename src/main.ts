@@ -35,7 +35,7 @@ async function initializeStores() {
       await cartStore.initialize()
     }
   } catch (error) {
-    console.error('Store initialization error:', error)
+    console.error('스토어 초기화 오류:', error)
   }
 }
 
