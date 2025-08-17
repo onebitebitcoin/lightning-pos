@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div class="min-h-screen bg-bg-secondary transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors duration-200">
+    <header class="bg-bg-primary shadow-sm border-b border-border-secondary transition-colors duration-200">
       <div class="container mx-auto px-4 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
           <div class="flex items-center space-x-2">
             <button
               @click="$router.push('/shop')"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors duration-200"
+              class="text-text-secondary hover:text-text-primary p-1 transition-colors duration-200"
             >
               <span class="text-lg">←</span>
             </button>
-            <h1 class="text-lg font-bold text-gray-800 dark:text-white">상품 관리</h1>
+            <h1 class="text-lg font-bold text-text-primary">상품 관리</h1>
           </div>
           <div class="flex items-center space-x-2">
             <!-- Mobile Bitcoin Price -->
@@ -39,7 +39,7 @@
             >
               <span class="text-lg">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
             </button>
-            <span class="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">{{ authStore.username }}님</span>
+            <span class="text-sm text-text-secondary hidden sm:inline">{{ authStore.username }}님</span>
           </div>
         </div>
 
@@ -48,17 +48,17 @@
           <div class="flex items-center space-x-4">
             <button
               @click="$router.push('/shop')"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center space-x-1 transition-colors duration-200"
+              class="text-text-secondary hover:text-text-primary flex items-center space-x-1 transition-colors duration-200"
             >
               <span>←</span>
               <span>상점으로 돌아가기</span>
             </button>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">상품 관리</h1>
+            <h1 class="text-2xl font-bold text-text-primary">상품 관리</h1>
           </div>
           <div class="flex items-center space-x-4">
             <!-- Bitcoin Price -->
             <div class="text-right">
-              <div class="text-sm text-gray-500 dark:text-gray-400">BTC 가격</div>
+              <div class="text-sm text-text-secondary">BTC 가격</div>
               <div class="flex items-center space-x-1 text-sm font-medium">
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
                   <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>

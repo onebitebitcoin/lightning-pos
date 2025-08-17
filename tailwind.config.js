@@ -22,6 +22,22 @@ export default {
     },
     extend: {
       colors: {
+        // Semantic colors powered by CSS variables (supporting slash opacity)
+        bg: {
+          primary: 'rgb(var(--bg-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--bg-secondary) / <alpha-value>)',
+          tertiary: 'rgb(var(--bg-tertiary) / <alpha-value>)',
+        },
+        text: {
+          primary: 'rgb(var(--text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+          disabled: 'rgb(var(--text-disabled) / <alpha-value>)',
+        },
+        border: {
+          primary: 'rgb(var(--border-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--border-secondary) / <alpha-value>)',
+        },
+        accent: 'rgb(var(--accent) / <alpha-value>)',
         // Modern neutral palette
         gray: {
           50: '#f8fafc',

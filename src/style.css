@@ -4,6 +4,43 @@
 
 /* Modern base styles */
 @layer base {
+  :root {
+    /* Surfaces */
+    --bg-primary: 255 255 255;          /* white */
+    --bg-secondary: 248 250 252;        /* gray-50 */
+    --bg-tertiary: 241 245 249;         /* gray-100 */
+
+    /* Text */
+    --text-primary: 15 23 42;           /* slate-900 */
+    --text-secondary: 100 116 139;      /* slate-500 */
+    --text-disabled: 148 163 184;       /* slate-400 */
+
+    /* Borders */
+    --border-primary: 226 232 240;      /* gray-200 */
+    --border-secondary: 203 213 225;    /* gray-300 */
+
+    /* Accents */
+    --accent: 59 130 246;               /* primary-500 */
+  }
+
+  .dark {
+    /* Surfaces */
+    --bg-primary: 17 24 39;             /* gray-900 */
+    --bg-secondary: 2 6 23;             /* gray-950 */
+    --bg-tertiary: 31 41 55;            /* gray-800 */
+
+    /* Text */
+    --text-primary: 241 245 249;        /* gray-100 */
+    --text-secondary: 203 213 225;      /* gray-300 */
+    --text-disabled: 148 163 184;       /* gray-400 */
+
+    /* Borders */
+    --border-primary: 55 65 81;         /* gray-700 */
+    --border-secondary: 75 85 99;       /* gray-600 */
+
+    /* Accents */
+    --accent: 96 165 250;               /* primary-400 */
+  }
   html {
     scroll-behavior: smooth;
   }
@@ -18,6 +55,36 @@
 
 /* Modern component styles */
 @layer components {
+  /* Inputs aligned to semantic surfaces */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-border-primary bg-bg-primary text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply bg-error-600 hover:bg-error-700 focus:ring-error-500 text-white shadow-soft hover:shadow-medium;
+  }
+
+  /* Category chip button */
+  .btn-category {
+    @apply px-3 py-1.5 rounded-full border border-border-secondary text-text-secondary bg-bg-primary hover:text-text-primary hover:border-border-primary transition-colors;
+  }
+  .btn-category.active {
+    @apply bg-primary-50 text-primary-700 border-primary-300 dark:bg-primary-900/30 dark:text-primary-200 dark:border-primary-700;
+  }
+
+  /* Quantity stepper button */
+  .btn-quantity {
+    @apply w-8 h-8 inline-flex items-center justify-center rounded-lg bg-bg-secondary hover:bg-bg-tertiary border border-border-primary text-text-primary touch-target;
+  }
+
+  /* Payment option card */
+  .payment-option {
+    @apply rounded-xl border border-border-primary bg-bg-primary p-4 hover:border-primary-300 hover:shadow-soft transition-all cursor-pointer;
+  }
+  .payment-option.active {
+    @apply ring-2 ring-primary-500 ring-offset-2; 
+  }
   /* Modern card component */
   .card {
     @apply bg-white dark:bg-gray-800 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700/50 transition-all duration-200;
@@ -77,6 +144,8 @@
 
 /* Custom responsive utilities */
 @layer utilities {
+  .shadow-soft-hover { @apply transition-shadow hover:shadow-soft; }
+
   /* Touch-friendly click targets */
   .touch-target {
     min-height: 44px;

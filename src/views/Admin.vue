@@ -1,20 +1,20 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div class="min-h-screen bg-bg-secondary transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors duration-200">
+    <header class="bg-bg-primary shadow-sm border-b border-border-secondary transition-colors duration-200">
       <div class="container mx-auto px-4 py-3">
         <div class="flex justify-between items-center">
           <!-- Left side -->
           <div class="flex items-center space-x-2 sm:space-x-4">
             <button
               @click="$router.push('/shop')"
-              class="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+              class="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-colors duration-200"
               title="상점으로 돌아가기"
             >
               <span class="text-lg sm:text-xl">←</span>
             </button>
             <div class="flex items-center space-x-2">
-              <h1 class="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white">
+              <h1 class="text-lg sm:text-2xl font-bold text-text-primary">
                 <span class="hidden sm:inline">관리자 패널</span>
                 <span class="sm:hidden">관리자</span>
               </h1>
@@ -25,7 +25,7 @@
           <div class="flex items-center space-x-2">
             <button
               @click="themeStore.toggleTheme"
-              class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+              class="p-2 rounded-lg hover:bg-bg-tertiary transition-colors duration-200"
               :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
             >
               <span class="text-lg sm:text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>

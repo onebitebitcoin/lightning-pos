@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center gradient-primary px-4 py-8">
+  <div class="min-h-screen flex items-center justify-center bg-bg-secondary px-4 py-8">
     <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
       <div class="text-center mb-6 tablet:mb-8">
-        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">한입 POS</h1>
-        <p class="text-sm xs:text-base text-gray-600 dark:text-gray-400">환영합니다! 계속하려면 로그인해주세요</p>
+        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">한입 POS</h1>
+        <p class="text-sm xs:text-base text-text-secondary">환영합니다! 계속하려면 로그인해주세요</p>
       </div>
       
       <form @submit.prevent="handleLogin" class="space-y-4 tablet:space-y-6">
         <div>
-          <label for="username" class="block text-sm tablet:text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
+          <label for="username" class="block text-sm tablet:text-base font-medium text-text-secondary mb-2">
             사용자명
           </label>
           <input
@@ -16,13 +16,13 @@
             v-model="username"
             type="text"
             required
-            class="input text-sm xs:text-base"
+            class="form-input text-sm xs:text-base"
             placeholder="사용자명을 입력하세요"
           />
         </div>
         
         <div>
-          <label for="password" class="block text-sm tablet:text-base font-medium text-gray-700 dark:text-gray-200 mb-2">
+          <label for="password" class="block text-sm tablet:text-base font-medium text-text-secondary mb-2">
             비밀번호
           </label>
           <input
@@ -30,7 +30,7 @@
             v-model="password"
             type="password"
             required
-            class="input text-sm xs:text-base"
+            class="form-input text-sm xs:text-base"
             placeholder="비밀번호를 입력하세요"
           />
         </div>
@@ -54,7 +54,7 @@
       </form>
       
       <div class="mt-4 xs:mt-6 text-center">
-        <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+        <p class="text-xs xs:text-sm text-text-secondary">
           계정이 없으신가요? 
           <button
             @click="$router.push('/register')"

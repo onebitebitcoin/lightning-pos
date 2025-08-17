@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+  <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 sticky top-0 z-10">
+    <header class="bg-bg-primary/80 backdrop-blur-xl border-b border-border-secondary transition-all duration-300 sticky top-0 z-10">
       <div class="container mx-auto px-4 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
@@ -12,7 +12,7 @@
             @mousedown="startLongPress"
             @mouseup="endLongPress"
             @mouseleave="endLongPress"
-            class="text-lg font-bold text-gray-900 dark:text-white select-none"
+            class="text-lg font-bold text-text-primary select-none"
           >
             한입 POS
           </h1>
@@ -26,14 +26,14 @@
 
         <!-- Mobile Menu -->
         <div v-if="showMobileMenu" class="md:hidden mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 animate-slide-up">
-          <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">환영합니다, {{ authStore.username }}님!</div>
+          <div class="text-sm text-text-secondary mb-3">환영합니다, {{ authStore.username }}님!</div>
           
           <!-- Mobile Bitcoin Price -->
           <div class="p-2 mb-2">
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">BTC 가격</div> 
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1 text-sm">
-                <span v-if="bitcoinStore.isLoading" class="text-gray-400">
+                <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                 </span>
                 <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
@@ -41,8 +41,8 @@
                 </span>
                 <template v-else>
                   <span class="text-orange-500">₿</span>
-                  <span class="text-gray-900 dark:text-white font-medium">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
-                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                  <span class="text-text-primary font-medium">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
+                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-text-secondary" title="가격 정보가 오래되었습니다">
                     ⚠️
                   </span>
                 </template>
@@ -50,7 +50,7 @@
               <button
                 @click="bitcoinStore.refresh()"
                 :disabled="bitcoinStore.isLoading"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1"
+                class="text-text-secondary hover:text-text-primary transition-colors p-1"
                 title="가격 새로고침"
               >
                 ↻
@@ -87,7 +87,7 @@
             >
               로그아웃
             </button>
-            <div v-if="!showAdminControls" class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+            <div v-if="!showAdminControls" class="text-xs text-text-secondary text-center mt-2">
               로고를 길게 눌러 관리자 메뉴 표시
             </div>
           </div>
@@ -100,16 +100,16 @@
               @mousedown="startLongPress"
               @mouseup="endLongPress"
               @mouseleave="endLongPress"
-              class="text-2xl font-bold text-gray-900 dark:text-white select-none cursor-default"
+              class="text-2xl font-bold text-text-primary select-none cursor-default"
             >
               한입 POS
             </h1>
             <!-- Bitcoin Price Indicator -->
             <div class="flex items-center space-x-3">
               <div class="text-right">
-                <div class="text-sm text-gray-500 dark:text-gray-400">BTC 가격</div>
+                <div class="text-sm text-text-secondary">BTC 가격</div>
                 <div class="flex items-center space-x-1 text-sm font-medium">
-                  <span v-if="bitcoinStore.isLoading" class="text-gray-400">
+                  <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
                   <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
@@ -117,8 +117,8 @@
                   </span>
                   <template v-else>
                     <span class="text-orange-500">₿</span>
-                    <span class="text-gray-900 dark:text-white">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
-                    <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                    <span class="text-text-primary">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
+                    <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-text-secondary" title="가격 정보가 오래되었습니다">
                       ⚠️
                     </span>
                   </template>
@@ -127,7 +127,7 @@
               <button
                 @click="bitcoinStore.refresh()"
                 :disabled="bitcoinStore.isLoading"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors p-1"
+                class="text-text-secondary hover:text-text-primary transition-colors p-1"
                 title="가격 새로고침"
               >
                 ↻
@@ -135,10 +135,10 @@
             </div>
           </div>
           <div class="flex items-center space-x-3">
-            <span class="text-gray-600 dark:text-gray-400">환영합니다, {{ authStore.username }}님!</span>
+            <span class="text-text-secondary">환영합니다, {{ authStore.username }}님!</span>
             <button
               @click="themeStore.toggleTheme"
-              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+              class="p-2 hover:bg-bg-tertiary rounded-xl transition-colors"
               :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
             >
               <span class="text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
@@ -164,7 +164,7 @@
             >
               로그아웃
             </button>
-            <div v-if="!showAdminControls" class="text-xs text-gray-500 dark:text-gray-400">
+            <div v-if="!showAdminControls" class="text-xs text-text-secondary">
               로고 길게 누르기
             </div>
           </div>

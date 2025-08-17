@@ -1,5 +1,5 @@
 {
-  "name": "한입 POS - Bitcoin Lightning POS System",
+  "name": "한입 POS - 비트코인 결제 시스템",
   "short_name": "한입 POS",
   "description": "Bitcoin Lightning 네트워크를 지원하는 현대적인 POS 시스템",
   "start_url": "/",

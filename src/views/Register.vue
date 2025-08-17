@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center gradient-success px-4 py-8">
+  <div class="min-h-screen flex items-center justify-center bg-bg-secondary px-4 py-8">
     <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
       <div class="text-center mb-6 tablet:mb-8">
-        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-white mb-2">계정 생성</h1>
-        <p class="text-sm xs:text-base text-white">한입 POS에 오신 것을 환영합니다</p>
+        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">계정 생성</h1>
+        <p class="text-sm xs:text-base text-text-secondary">한입 POS에 오신 것을 환영합니다</p>
       </div>
       
       <form @submit.prevent="handleRegister" class="space-y-4 tablet:space-y-6">
         <!-- Username Field -->
         <div>
-          <label for="username" class="block text-sm font-medium text-white mb-2">
+          <label for="username" class="block text-sm font-medium text-text-secondary mb-2">
             사용자명 *
           </label>
           <input
@@ -18,8 +18,8 @@
             type="text"
             required
             :class="[
-              'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all',
-              formErrors.username ? 'border-red-500' : 'border-gray-300'
+              'form-input',
+              formErrors.username ? 'ring-2 ring-error-500 border-transparent' : ''
             ]"
             placeholder="사용자명을 입력하세요"
           />
@@ -28,7 +28,7 @@
 
         <!-- Email Field -->
         <div>
-          <label for="email" class="block text-sm font-medium text-white mb-2">
+          <label for="email" class="block text-sm font-medium text-text-secondary mb-2">
             이메일 *
           </label>
           <input
@@ -37,17 +37,17 @@
             type="email"
             required
             :class="[
-              'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all',
-              formErrors.email ? 'border-red-500' : 'border-gray-300'
+              'form-input',
+              formErrors.email ? 'ring-2 ring-error-500 border-transparent' : ''
             ]"
             placeholder="이메일을 입력하세요"
           />
-          <p v-if="formErrors.email" class="text-red-500 text-sm mt-1">{{ formErrors.email }}</p>
+          <p v-if="formErrors.email" class="text-error-600 text-sm mt-1">{{ formErrors.email }}</p>
         </div>
         
         <!-- Password Field -->
         <div>
-          <label for="password" class="block text-sm font-medium text-white mb-2">
+          <label for="password" class="block text-sm font-medium text-text-secondary mb-2">
             비밀번호 *
           </label>
           <input
@@ -56,18 +56,18 @@
             type="password"
             required
             :class="[
-              'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all',
-              formErrors.password ? 'border-red-500' : 'border-gray-300'
+              'form-input',
+              formErrors.password ? 'ring-2 ring-error-500 border-transparent' : ''
             ]"
             placeholder="비밀번호를 입력하세요"
           />
-          <p v-if="formErrors.password" class="text-red-500 text-sm mt-1">{{ formErrors.password }}</p>
-          <p class="text-xs text-white/80 mt-1">최소 6자 이상, 영문과 숫자를 포함해주세요</p>
+          <p v-if="formErrors.password" class="text-error-600 text-sm mt-1">{{ formErrors.password }}</p>
+          <p class="text-xs text-text-secondary mt-1">최소 6자 이상, 영문과 숫자를 포함해주세요</p>
         </div>
 
         <!-- Confirm Password Field -->
         <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-white mb-2">
+          <label for="confirmPassword" class="block text-sm font-medium text-text-secondary mb-2">
             비밀번호 확인 *
           </label>
           <input
@@ -76,12 +76,12 @@
             type="password"
             required
             :class="[
-              'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all',
-              formErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+              'form-input',
+              formErrors.confirmPassword ? 'ring-2 ring-error-500 border-transparent' : ''
             ]"
             placeholder="비밀번호를 다시 입력하세요"
           />
-          <p v-if="formErrors.confirmPassword" class="text-red-500 text-sm mt-1">{{ formErrors.confirmPassword }}</p>
+          <p v-if="formErrors.confirmPassword" class="text-error-600 text-sm mt-1">{{ formErrors.confirmPassword }}</p>
         </div>
 
         <!-- Terms and Conditions -->
@@ -93,24 +93,19 @@
             required
             class="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
           />
-          <label for="agreeTerms" class="text-sm text-white">
-            <span class="text-red-300">*</span> 
-            <span class="underline cursor-pointer hover:text-green-200">이용약관</span>과 
-            <span class="underline cursor-pointer hover:text-green-200">개인정보 처리방침</span>에 동의합니다
+          <label for="agreeTerms" class="text-sm text-text-secondary">
+            <span class="text-error-400">*</span> 
+            <span class="underline cursor-pointer hover:text-primary-500">이용약관</span>과 
+            <span class="underline cursor-pointer hover:text-primary-500">개인정보 처리방침</span>에 동의합니다
           </label>
         </div>
-        <p v-if="formErrors.agreeTerms" class="text-red-500 text-sm">{{ formErrors.agreeTerms }}</p>
+        <p v-if="formErrors.agreeTerms" class="text-error-600 text-sm">{{ formErrors.agreeTerms }}</p>
         
         <!-- Submit Button -->
         <button
           type="submit"
           :disabled="isSubmitting"
-          :class="[
-            'w-full py-3 px-4 rounded-lg focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all font-medium text-lg text-white',
-            isSubmitting 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-green-600 hover:bg-green-700'
-          ]"
+          class="btn btn-primary w-full py-3 px-4 focus:ring-offset-2 text-lg"
         >
           <span v-if="isSubmitting">계정 생성 중...</span>
           <span v-else>계정 생성</span>
@@ -118,11 +113,11 @@
       </form>
       
       <div class="mt-6 text-center">
-        <p class="text-sm text-white">
+        <p class="text-sm text-text-secondary">
           이미 계정이 있으신가요? 
           <button
             @click="$router.push('/login')"
-            class="text-green-200 hover:text-green-100 underline font-medium"
+            class="text-primary-600 hover:text-primary-700 underline font-medium"
           >
             로그인
           </button>

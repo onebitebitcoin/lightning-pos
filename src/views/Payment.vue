@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+  <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 sticky top-0 z-10">
+    <header class="bg-bg-primary/80 backdrop-blur-xl border-b border-border-secondary transition-all duration-300 sticky top-0 z-10">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center">
         <div class="flex items-center space-x-4">
           <button
             @click="$router.push('/shop')"
-            class="flex items-center space-x-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+            class="flex items-center space-x-2 px-3 py-2 hover:bg-bg-tertiary rounded-xl transition-colors text-text-secondary hover:text-text-primary"
           >
             <span>←</span>
             <span>상점으로 돌아가기</span>
           </button>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">결제</h1>
+          <h1 class="text-2xl font-bold text-text-primary">결제</h1>
         </div>
-        <span class="text-gray-600 dark:text-gray-400">{{ authStore.username }}</span>
+        <span class="text-text-secondary">{{ authStore.username }}</span>
       </div>
     </header>
 
