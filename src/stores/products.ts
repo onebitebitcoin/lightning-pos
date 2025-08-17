@@ -181,6 +181,13 @@ export const useProductStore = defineStore('products', () => {
     error.value = null
   }
 
+  // Reset local state (used on logout)
+  function resetLocal() {
+    products.value = []
+    error.value = null
+    isLoading.value = false
+  }
+
   // Initialize store for shop (loads all available products)
   async function initialize() {
     if (products.value.length === 0) {
@@ -215,6 +222,7 @@ export const useProductStore = defineStore('products', () => {
     updateProduct,
     deleteProduct,
     getProduct,
-    clearError
+    clearError,
+    resetLocal
   }
 })

@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI, csrfAPI, TokenManager, type User } from '@/services/api'
 import { useCartStore } from '@/stores/cart'
+import { useProductStore } from '@/stores/products'
+import { useCategoryStore } from '@/stores/categories'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -137,6 +139,13 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         const cartStore = useCartStore()
         cartStore.resetLocal()
+      } catch {}
+      // Reset product and category stores so next login fetches fresh data
+      try {
+        useProductStore().resetLocal()
+      } catch {}
+      try {
+        useCategoryStore().resetLocal()
       } catch {}
       user.value = null
       error.value = null

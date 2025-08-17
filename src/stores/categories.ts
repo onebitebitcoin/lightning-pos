@@ -118,6 +118,13 @@ export const useCategoryStore = defineStore('categories', () => {
     error.value = null
   }
 
+  // Reset local state (used on logout)
+  function resetLocal() {
+    categories.value = []
+    error.value = null
+    isLoading.value = false
+  }
+
   // Initialize store
   async function initialize() {
     if (categories.value.length === 0) {
@@ -143,6 +150,7 @@ export const useCategoryStore = defineStore('categories', () => {
     updateCategory,
     deleteCategory,
     getCategory,
-    clearError
+    clearError,
+    resetLocal
   }
 })
