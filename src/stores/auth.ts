@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI, csrfAPI, TokenManager, type User } from '@/services/api'
+import { useCartStore } from '@/stores/cart'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -68,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
     email: string
     password: string
     password_confirm: string
+    lightning_address: string
   }): Promise<{ success: boolean; message: string; errors?: any }> {
     isLoading.value = true
     error.value = null
@@ -120,10 +122,22 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     
     try {
+      // Clear cart before invalidating the auth token
+      try {
+        const cartStore = useCartStore()
+        await cartStore.clearCart()
+      } catch (e) {
+        console.warn('장바구니 비우기 실패(무시):', e)
+      }
       await authAPI.logout()
     } catch (error) {
       console.error('로그아웃 오류:', error)
     } finally {
+      // Ensure cart is cleared locally regardless of API result
+      try {
+        const cartStore = useCartStore()
+        cartStore.resetLocal()
+      } catch {}
       user.value = null
       error.value = null
       isLoading.value = false

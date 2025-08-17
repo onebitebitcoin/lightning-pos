@@ -245,6 +245,7 @@ export const authAPI = {
     email: string
     password: string
     password_confirm: string
+    lightning_address: string
   }): Promise<{ success: boolean; message: string; user?: User; token?: string; errors?: any }> {
     try {
       const response = await apiClient.post('/auth/register/', userData)

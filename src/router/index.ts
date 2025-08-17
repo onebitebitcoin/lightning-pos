@@ -6,6 +6,8 @@ import Shop from '../views/Shop.vue'
 import Payment from '../views/Payment.vue'
 import Settings from '../views/Settings.vue'
 import Admin from '../views/Admin.vue'
+import Terms from '../views/Terms.vue'
+import Privacy from '../views/Privacy.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,6 +19,16 @@ const router = createRouter({
         const token = localStorage.getItem('auth_token')
         return token ? '/shop' : '/login'
       }
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: Terms
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: Privacy
     },
     {
       path: '/login',

@@ -191,6 +191,12 @@ export const useCartStore = defineStore('cart', () => {
     discount.value = percentage
   }
 
+  // Clear cart locally without API
+  function resetLocal() {
+    items.value = []
+    discount.value = 0
+  }
+
   // Clear error
   function clearError() {
     error.value = null
@@ -285,6 +291,7 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     createOrder,
     setDiscount,
+    resetLocal,
     clearError,
     isAddingToCart
   }
