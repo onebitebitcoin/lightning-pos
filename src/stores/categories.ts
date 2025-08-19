@@ -36,6 +36,7 @@ export const useCategoryStore = defineStore('categories', () => {
   async function fetchUserProductCategories() {
     isLoading.value = true
     error.value = null
+    categories.value = [] // Clear categories before fetching
 
     try {
       const fetchedCategories = await categoriesAPI.getUserProductCategories()
@@ -128,7 +129,7 @@ export const useCategoryStore = defineStore('categories', () => {
   // Initialize store
   async function initialize() {
     if (categories.value.length === 0) {
-      await fetchCategories()
+      await fetchUserProductCategories()
     }
   }
 
