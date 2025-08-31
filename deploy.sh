@@ -80,8 +80,8 @@ if [ -d "backend" ] && [ -f "backend/requirements.txt" ]; then
     echo "정적 파일을 프론트엔드 배포 디렉터리로 복사 중..."
     sudo mkdir -p $FRONTEND_DEPLOY_DIR/staticfiles
     sudo cp -r staticfiles/* $FRONTEND_DEPLOY_DIR/staticfiles/ 2>/dev/null || true
-    sudo mkdir -p $FRONTEND_DEPLOY_DIR/media
-    sudo cp -r media/* $FRONTEND_DEPLOY_DIR/media/ 2>/dev/null || true
+    sudo mkdir -p /var/www/pos/media
+    sudo cp -r media/* /var/www/pos/media/ 2>/dev/null || true
     
     echo "Django 슈퍼유저 생성(필요 시)..."
     python manage.py shell -c "
@@ -277,7 +277,7 @@ server {
 
     # Serve media files
     location /media/ {
-        alias $FRONTEND_DEPLOY_DIR/media/;
+        alias /var/www/pos/media/;
         access_log off;
         expires 30d;
         add_header Cache-Control "public, max-age=2592000";
