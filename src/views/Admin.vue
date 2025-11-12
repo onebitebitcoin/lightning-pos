@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-bg-secondary transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-bg-primary shadow-sm border-b border-border-secondary transition-colors duration-200">
+    <header class="glass-header transition-colors duration-200">
       <div class="container mx-auto px-4 py-3">
         <div class="flex justify-between items-center">
           <!-- Left side -->
@@ -11,7 +11,7 @@
               class="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-colors duration-200"
               title="상점으로 돌아가기"
             >
-              <span class="text-lg sm:text-xl">←</span>
+              <UiIcon name="arrowLeft" class="h-5 w-5" />
             </button>
             <div class="flex items-center space-x-2">
               <h1 class="text-lg sm:text-2xl font-bold text-text-primary">
@@ -28,7 +28,7 @@
               class="p-2 rounded-lg hover:bg-bg-tertiary transition-colors duration-200"
               :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
             >
-              <span class="text-lg sm:text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <UiIcon :name="themeStore.isDark ? 'sun' : 'moon'" class="h-5 w-5" />
             </button>
             
             <!-- User info - responsive -->
@@ -51,7 +51,7 @@
         @click="closeUserDetail"
       >
         <div 
-          class="bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden transition-colors duration-200"
+          class="card max-w-4xl w-full max-h-[90vh] overflow-hidden transition-colors duration-200"
           @click.stop
         >
           <!-- Modal Header -->
@@ -63,7 +63,7 @@
               @click="closeUserDetail"
               class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
             >
-              <span class="text-xl text-gray-500 dark:text-gray-400">✕</span>
+              <UiIcon name="close" class="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
 
@@ -117,7 +117,9 @@
               </div>
 
               <div v-else-if="userProducts.length === 0" class="text-center py-8">
-                <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2">📦</div>
+                <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2 flex justify-center">
+                  <UiIcon name="box" class="h-10 w-10" />
+                </div>
                 <p class="text-gray-500 dark:text-gray-400">등록된 상품이 없습니다</p>
               </div>
 
@@ -167,7 +169,7 @@
       </div>
 
       <!-- Users List -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-colors duration-200">
+      <div class="card overflow-hidden transition-colors duration-200">
         <div class="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">
@@ -183,7 +185,7 @@
                 class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                 title="새로고침"
               >
-                🔄
+                <UiIcon name="refresh" class="h-5 w-5" />
               </button>
             </div>
           </div>
@@ -197,7 +199,9 @@
 
         <!-- Error State -->
         <div v-else-if="error" class="p-8 text-center">
-          <div class="text-red-500 dark:text-red-400 mb-4">⚠️</div>
+          <div class="text-red-500 dark:text-red-400 mb-4 flex justify-center">
+            <UiIcon name="warning" class="h-8 w-8" />
+          </div>
           <p class="text-red-600 dark:text-red-400 mb-4">{{ error }}</p>
           <button
             @click="fetchUsers"
@@ -212,7 +216,7 @@
           <div
             v-for="user in users"
             :key="user.id"
-            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200"
+            class="glass-panel rounded-2xl p-4 hover:shadow-medium transition-all duration-200"
           >
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <!-- User Info -->
@@ -259,7 +263,7 @@
                   class="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
                   title="상세 보기"
                 >
-                  <span class="mr-1">👁️</span>
+                  <UiIcon name="eye" class="h-5 w-5 mr-1" />
                   <span class="hidden sm:inline">상세</span>
                 </button>
                 <button
@@ -268,7 +272,7 @@
                   class="flex items-center justify-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="사용자 삭제"
                 >
-                  <span class="mr-1">🗑️</span>
+                  <UiIcon name="trash" class="h-5 w-5 mr-1" />
                   <span class="hidden sm:inline">삭제</span>
                 </button>
               </div>
@@ -282,6 +286,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import UiIcon from '@/components/ui/Icon.vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'

@@ -3,7 +3,9 @@
     <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
       <div class="text-center mb-6 tablet:mb-8">
         <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">계정 생성</h1>
-        <p class="text-sm xs:text-base text-text-secondary">한입 POS에 오신 것을 환영합니다</p>
+        <p class="text-sm xs:text-base text-text-secondary">
+          {{ localeStore.t('brand.name', '한입 POS') }}에 오신 것을 환영합니다
+        </p>
       </div>
       
       <form @submit.prevent="handleRegister" class="space-y-4 tablet:space-y-6">
@@ -154,13 +156,15 @@
         v-if="showSuccess"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       >
-        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
-          <div class="text-6xl mb-4">🎉</div>
+        <div class="card p-8 max-w-md w-full mx-4 text-center">
+          <div class="text-6xl mb-4 text-primary-500 flex justify-center">
+            <UiIcon name="celebration" class="h-12 w-12" />
+          </div>
           <h3 class="text-2xl font-semibold text-gray-800 mb-2">계정 생성 완료!</h3>
           <p class="text-gray-600 mb-6">{{ successMessage }}</p>
           <button
             @click="goToLogin"
-            class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+            class="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 font-medium"
           >
             로그인 페이지로 이동
           </button>
@@ -172,10 +176,12 @@
         v-if="showWalletGuide"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       >
-        <div class="rounded-xl p-6 md:p-8 max-w-2xl w-full mx-4 bg-bg-primary text-text-primary border border-border-primary">
+        <div class="card p-6 md:p-8 max-w-2xl w-full mx-4 text-text-primary">
           <div class="flex items-start justify-between mb-4">
             <h3 class="text-xl md:text-2xl font-semibold text-text-primary">라이트닝 지갑 설정 가이드</h3>
-            <button @click="showWalletGuide = false" aria-label="닫기" class="text-text-secondary hover:text-text-primary">✕</button>
+            <button @click="showWalletGuide = false" aria-label="닫기" class="text-text-secondary hover:text-text-primary">
+              <UiIcon name="close" class="h-5 w-5" />
+            </button>
           </div>
 
           <!-- Tabs -->
@@ -243,11 +249,14 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import UiIcon from '@/components/ui/Icon.vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLocaleStore } from '@/stores/locale'
 
-  const router = useRouter()
-  const authStore = useAuthStore()
+const router = useRouter()
+const authStore = useAuthStore()
+const localeStore = useLocaleStore()
 
   const isSubmitting = ref(false)
   const showSuccess = ref(false)

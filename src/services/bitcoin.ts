@@ -1,8 +1,11 @@
 import axios from "axios";
 
+export type FiatCurrency = 'KRW' | 'USD' | 'JPY'
+
 export interface BitcoinPriceData {
   krw: number
   usd: number
+  jpy: number
   timestamp: number
 }
 
@@ -10,13 +13,14 @@ export interface BitcoinPriceResponse {
   bitcoin: {
     krw: number
     usd: number
+    jpy: number
   }
 }
 
 class BitcoinService {
   private cache: BitcoinPriceData | null = null
   private cacheExpiration = 5 * 60 * 1000 // 5 minutes
-  private apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=krw,usd'
+  private apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=krw,usd,jpy'
 
   async getCurrentPrice(): Promise<BitcoinPriceData> {
     // Return cached data if still valid
@@ -35,6 +39,7 @@ class BitcoinService {
       this.cache = {
         krw: data.bitcoin.krw,
         usd: data.bitcoin.usd,
+        jpy: data.bitcoin.jpy,
         timestamp: Date.now()
       }
       
@@ -46,6 +51,7 @@ class BitcoinService {
       const fallbackPrice: BitcoinPriceData = {
         krw: 100000000,
         usd: 75000,
+        jpy: 11000000,
         timestamp: Date.now()
       }
       
@@ -54,10 +60,16 @@ class BitcoinService {
     }
   }
 
-  // Convert KRW amount to satoshis
-  krwToSats(krwAmount: number, btcPriceKrw: number): number {
-    const btcAmount = krwAmount / btcPriceKrw
+  // Generic helper for any fiat amount
+  convertToSats(fiatAmount: number, btcPriceFiat: number): number {
+    if (!btcPriceFiat) return 0
+    const btcAmount = fiatAmount / btcPriceFiat
     return Math.round(btcAmount * 100000000) // 1 BTC = 100,000,000 sats
+  }
+
+  // Convert KRW amount to satoshis (legacy helper)
+  krwToSats(krwAmount: number, btcPriceKrw: number): number {
+    return this.convertToSats(krwAmount, btcPriceKrw)
   }
 
   // Convert satoshis to KRW

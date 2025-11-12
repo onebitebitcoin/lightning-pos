@@ -60,6 +60,7 @@ export const useProductStore = defineStore('products', () => {
     name: string
     description?: string
     price: number
+    regular_price?: number | null
     image_url?: string
     category?: number
     stock_quantity?: number
@@ -94,6 +95,7 @@ export const useProductStore = defineStore('products', () => {
     name: string
     description?: string
     price: number
+    regular_price?: number | null
     category?: number
     stock_quantity: number
     is_available: boolean

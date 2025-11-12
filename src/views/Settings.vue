@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-bg-secondary transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-bg-primary shadow-sm border-b border-border-secondary transition-colors duration-200">
+    <header class="glass-header transition-colors duration-200">
       <div class="container mx-auto px-4 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
@@ -10,9 +10,11 @@
               @click="$router.push('/shop')"
               class="text-text-secondary hover:text-text-primary p-1 transition-colors duration-200"
             >
-              <span class="text-lg">←</span>
+              <UiIcon name="arrowLeft" class="h-5 w-5" />
             </button>
-            <h1 class="text-lg font-bold text-text-primary">상품 관리</h1>
+            <h1 class="text-lg font-bold text-text-primary">
+              {{ t('settings.pageTitle', '상품 관리') }}
+            </h1>
           </div>
           <div class="flex items-center space-x-2">
             <!-- Mobile Bitcoin Price -->
@@ -22,13 +24,13 @@
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                 </span>
                 <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                  ⚠️
+                  <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
-                  <span class="text-orange-500">₿</span>
-                  <span class="text-gray-900 dark:text-white">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
+                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
+                  <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
                   <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
-                    ⚠️
+                    <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                 </template>
               </div>
@@ -37,7 +39,7 @@
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
             >
-              <span class="text-lg">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <UiIcon :name="themeStore.isDark ? 'sun' : 'moon'" class="h-5 w-5" />
             </button>
             <span class="text-sm text-text-secondary hidden sm:inline">{{ authStore.username }}님</span>
           </div>
@@ -50,27 +52,31 @@
               @click="$router.push('/shop')"
               class="text-text-secondary hover:text-text-primary flex items-center space-x-1 transition-colors duration-200"
             >
-              <span>←</span>
-              <span>상점으로 돌아가기</span>
+              <UiIcon name="arrowLeft" class="h-4 w-4" />
+              <span>{{ t('settings.backToShop', '상점으로 돌아가기') }}</span>
             </button>
-            <h1 class="text-2xl font-bold text-text-primary">상품 관리</h1>
+            <h1 class="text-2xl font-bold text-text-primary">
+              {{ t('settings.pageTitle', '상품 관리') }}
+            </h1>
           </div>
           <div class="flex items-center space-x-4">
             <!-- Bitcoin Price -->
             <div class="text-right">
-              <div class="text-sm text-text-secondary">BTC 가격</div>
+              <div class="text-sm text-text-secondary">
+                {{ t('header.btcPrice', 'BTC 가격') }}
+              </div>
               <div class="flex items-center space-x-1 text-sm font-medium">
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
                   <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                 </span>
                 <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                  ⚠️
+                  <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
-                  <span class="text-orange-500">₿</span>
-                  <span class="text-gray-900 dark:text-white">₩{{ bitcoinStore.btcPriceKrw.toLocaleString('ko-KR') }}</span>
+                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
+                  <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
                   <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
-                    ⚠️
+                    <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                 </template>
               </div>
@@ -80,7 +86,7 @@
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
               :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
             >
-              <span class="text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <UiIcon :name="themeStore.isDark ? 'sun' : 'moon'" class="h-5 w-5" />
             </button>
             <span class="text-gray-600 dark:text-gray-300">{{ authStore.username }}님</span>
           </div>
@@ -90,9 +96,11 @@
 
     <div class="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
       <!-- User Profile Settings -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 md:p-6 mb-6 transition-colors duration-200">
+      <div class="card p-4 md:p-6 mb-6 transition-colors duration-200">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">사용자 설정</h2>
+          <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">
+            {{ t('settings.userSection.title', '사용자 설정') }}
+          </h2>
           <button
             v-if="!showUserSettings"
             @click="showUserSettings = true"
@@ -202,19 +210,76 @@
         </div>
       </div>
 
-      <!-- Add Product Button -->
-      <div class="mb-4 md:mb-6">
-        <button
-          @click="openAddModal"
-          class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-4 md:px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-medium flex items-center justify-center sm:justify-start space-x-2"
-        >
-          <span>+</span>
-          <span>새 상품 추가</span>
-        </button>
+      <div class="card mb-4 p-4 md:p-6">
+        <div class="flex flex-col gap-1 mb-6">
+          <h3 class="text-base font-semibold text-text-primary">
+            {{ t('settings.environment.title', '환경 설정') }}
+          </h3>
+          <p class="text-sm text-text-secondary">
+            {{ t('settings.environment.helper', '결제에 사용할 법정통화와 화면 표시 언어를 선택하세요.') }}
+          </p>
+        </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="space-y-2">
+            <label for="fiatCurrencySelect" class="text-sm font-medium text-text-primary">
+              {{ t('settings.currency.label', '법정통화 선택') }}
+            </label>
+            <p class="text-xs text-text-secondary">
+              {{ t('settings.currency.description', '상품의 기본 가격과 환산 정보를 표시할 통화를 고릅니다.') }}
+            </p>
+            <div class="relative">
+              <select
+                id="fiatCurrencySelect"
+                v-model="selectedFiatCurrency"
+                class="w-full rounded-xl border border-border-primary bg-white/90 dark:bg-gray-800/70 px-3 py-2.5 text-sm font-medium text-text-primary appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+              >
+                <option
+                  v-for="currency in fiatCurrencies"
+                  :key="currency"
+                  :value="currency"
+                >
+                  {{ t(currencyTranslationKeys[currency], currencyDisplayNames[currency]) }}
+                </option>
+              </select>
+              <UiIcon name="chevronDown" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+            </div>
+            <div class="text-xs text-text-secondary flex items-center gap-2">
+              <span>1 BTC ≈ {{ formattedBtcPrice }}</span>
+              <span v-if="bitcoinStore.priceStatus === 'stale' || bitcoinStore.error">
+                <UiIcon name="warning" class="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label for="languageSelect" class="text-sm font-medium text-text-primary">
+              {{ t('settings.language.label', '표시 언어') }}
+            </label>
+            <p class="text-xs text-text-secondary">
+              {{ t('settings.language.description', '홈페이지에 표시되는 언어를 변경합니다.') }}
+            </p>
+            <div class="relative">
+              <select
+                id="languageSelect"
+                :value="localeStore.language"
+                @change="handleLanguageSelect"
+                class="w-full rounded-xl border border-border-primary bg-white/90 dark:bg-gray-800/70 px-3 py-2.5 text-sm font-medium text-text-primary appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+              >
+                <option
+                  v-for="option in localeStore.availableLanguages"
+                  :key="option.code"
+                  :value="option.code"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <UiIcon name="chevronDown" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Products Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+      <div class="card overflow-hidden">
         <!-- Mobile Card View -->
         <div class="md:hidden space-y-4 p-4">
           <div
@@ -239,21 +304,43 @@
                 
                 <!-- Prices -->
                 <div class="space-y-1 mb-3">
-                  <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    ₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}
+                  <div class="flex items-center gap-2">
+                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {{ formatFiatPrice(Number(product.price || 0)) }}
+                    </div>
+                    <span
+                      v-if="productHasDiscount(product)"
+                      class="inline-flex items-center rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300 px-2 py-0.5 text-xs font-semibold"
+                    >
+                      {{ t('shop.product.discountBadge', '{percent}% 할인', { percent: productDiscountPercent(product) }) }}
+                    </span>
+                  </div>
+                  <div
+                    v-if="productHasDiscount(product)"
+                    class="text-xs text-gray-500 dark:text-gray-400 line-through"
+                  >
+                    {{ formatFiatPrice(Number(product.regular_price || 0)) }}
                   </div>
                   <div class="flex items-center space-x-2">
                     <div class="text-xs font-medium text-warning-600 dark:text-warning-400">
-                      {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
+                      {{ bitcoinStore.formatSats(bitcoinStore.fiatToSats(Number(product.price || 0), selectedFiatCurrency)) }}
                     </div>
                     <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
                       <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                     </span>
-                    <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                      ⚠️
+                    <span
+                      v-else-if="bitcoinStore.error"
+                      class="text-red-500"
+                      :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
+                    >
+                      <UiIcon name="warning" class="h-4 w-4" />
                     </span>
-                    <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="비트코인 가격 정보가 오래되었습니다">
-                      ⚠️
+                    <span
+                      v-else-if="bitcoinStore.priceStatus === 'stale'"
+                      class="text-xs text-gray-400"
+                      :title="t('common.priceStale', '비트코인 가격 정보가 오래되었습니다')"
+                    >
+                      <UiIcon name="warning" class="h-4 w-4" />
                     </span>
                   </div>
                 </div>
@@ -284,19 +371,22 @@
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  이미지
+                  {{ t('settings.table.image', '이미지') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  상품명
+                  {{ t('settings.table.product', '상품명') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  KRW 가격
+                  {{ selectedFiatCurrency }} {{ t('settings.table.price', '가격') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Sats 가격
+                  {{ t('settings.table.discount', '할인') }}
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  {{ t('settings.table.satsPrice', 'Sats 가격') }}
                 </th>
                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  작업
+                  {{ t('settings.table.actions', '작업') }}
                 </th>
               </tr>
             </thead>
@@ -321,22 +411,39 @@
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    ₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}
+                    {{ formatFiatPrice(Number(product.price || 0)) }}
                   </div>
+                  <div
+                    v-if="productHasDiscount(product)"
+                    class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    <span class="line-through">
+                      {{ formatFiatPrice(Number(product.regular_price || 0)) }}
+                    </span>
+                    <span class="inline-flex items-center rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300 px-2 py-0.5">
+                      {{ t('shop.product.discountBadge', '{percent}% 할인', { percent: productDiscountPercent(product) }) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <span v-if="productHasDiscount(product)" class="text-sm font-semibold text-success-600 dark:text-success-400">
+                    -{{ productDiscountPercent(product) }}%
+                  </span>
+                  <span v-else class="text-sm text-gray-500 dark:text-gray-400">--</span>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <div class="flex items-center space-x-2">
                     <div class="text-sm font-medium text-warning-600 dark:text-warning-400">
-                      {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
+                      {{ bitcoinStore.formatSats(bitcoinStore.fiatToSats(Number(product.price || 0), selectedFiatCurrency)) }}
                     </div>
                     <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
                       <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                     </span>
                     <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                      ⚠️
+                      <UiIcon name="warning" class="h-4 w-4" />
                     </span>
                     <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="비트코인 가격 정보가 오래되었습니다">
-                      ⚠️
+                      <UiIcon name="warning" class="h-4 w-4" />
                     </span>
                   </div>
                 </td>
@@ -347,20 +454,29 @@
                       class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                       title="수정"
                     >
-                      ✏️
+                      <UiIcon name="edit" class="h-5 w-5" />
                     </button>
                     <button
                       @click="openDeleteModal(product)"
                       class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       title="삭제"
                     >
-                      🗑️
+                      <UiIcon name="trash" class="h-5 w-5" />
                     </button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="flex justify-end border-t border-border-secondary/60 bg-white/80 dark:bg-gray-900/40 px-4 py-4">
+          <button
+            @click="openAddModal"
+            class="inline-flex items-center space-x-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium shadow-soft transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400 dark:focus:ring-blue-400"
+          >
+            <UiIcon name="plus" class="h-4 w-4" />
+            <span>{{ t('settings.newProduct', '새 상품 추가') }}</span>
+          </button>
         </div>
       </div>
 
@@ -370,7 +486,7 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
         @click="closeProductModal"
       >
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-8 max-w-md w-full mx-4 transition-colors duration-200" @click.stop>
+        <div class="card p-4 md:p-8 max-w-md w-full mx-4 transition-colors duration-200" @click.stop>
           <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 md:mb-6">
             {{ editingProduct ? '상품 수정' : '새 상품 추가' }}
           </h3>
@@ -394,10 +510,35 @@
               <p v-if="formErrors.name" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.name }}</p>
             </div>
 
+            <!-- Regular Price -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('settings.product.regularPrice', '정가') }} ({{ currencySymbols[selectedFiatCurrency] }})
+              </label>
+              <input
+                v-model.number="productForm.regularPrice"
+                type="number"
+                step="1"
+                min="0"
+                max="999999"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  formErrors.regularPrice ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                :placeholder="t('settings.product.regularPrice', '정가')"
+              />
+              <p v-if="formErrors.regularPrice" class="text-red-500 dark:text-red-400 text-sm mt-1">
+                {{ formErrors.regularPrice }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {{ t('settings.product.discountHint', '정가보다 낮은 판매 가격을 입력하면 자동으로 할인율이 계산됩니다.') }}
+              </p>
+            </div>
+
             <!-- Product Price -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                가격 (₩)
+                {{ t('settings.product.salePrice', '판매 가격') }} ({{ currencySymbols[selectedFiatCurrency] }})
               </label>
               <input
                 v-model.number="productForm.price"
@@ -413,6 +554,9 @@
                 placeholder="0.00"
               />
               <p v-if="formErrors.price" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.price }}</p>
+              <p v-if="formDiscountPercent > 0" class="text-xs text-success-600 dark:text-success-400 mt-1">
+                {{ t('settings.product.discountPreview', '{percent}% 할인 적용 예정', { percent: formDiscountPercent }) }}
+              </p>
             </div>
 
             <!-- Product Category -->
@@ -535,8 +679,10 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
         @click="closeDeleteModal"
       >
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-8 max-w-md w-full mx-4 text-center transition-colors duration-200" @click.stop>
-          <div class="text-4xl md:text-6xl mb-3 md:mb-4">⚠️</div>
+        <div class="card p-4 md:p-8 max-w-md w-full mx-4 text-center transition-colors duration-200" @click.stop>
+          <div class="text-4xl md:text-6xl mb-3 md:mb-4 text-warning-500 flex justify-center">
+            <UiIcon name="warning" class="h-12 w-12" />
+          </div>
           <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-2">상품 삭제</h3>
           <p class="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-4 md:mb-6">
             "{{ productToDelete?.name }}"을(를) 삭제하시겠습니까?<br>
@@ -562,10 +708,10 @@
       <!-- Success Notification -->
       <div
         v-if="showSuccess"
-        class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all"
+        class="fixed top-4 right-4 bg-primary-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all"
       >
         <div class="flex items-center space-x-2">
-          <span>✅</span>
+          <UiIcon name="checkCircle" class="h-5 w-5" />
           <span>{{ successMessage }}</span>
         </div>
       </div>
@@ -575,6 +721,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import UiIcon from '@/components/ui/Icon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProductStore } from '@/stores/products'
 import { useThemeStore } from '@/stores/theme'
@@ -582,12 +730,34 @@ import { useBitcoinStore } from '@/stores/bitcoin'
 import { useCategoryStore } from '@/stores/categories'
 import type { Product } from '@/services/api'
 import { authAPI } from '@/services/api'
+import { useLocaleStore } from '@/stores/locale'
+import { useFiatCurrencyStore } from '@/stores/fiatCurrency'
+import type { FiatCurrency } from '@/services/bitcoin'
+import type { LanguageCode } from '@/locales/translations'
 
 const authStore = useAuthStore()
 const productStore = useProductStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const categoryStore = useCategoryStore()
+const localeStore = useLocaleStore()
+const t = localeStore.t
+const fiatCurrencyStore = useFiatCurrencyStore()
+const { selectedCurrency, formatter } = storeToRefs(fiatCurrencyStore)
+
+const selectedFiatCurrency = computed<FiatCurrency>({
+  get: () => selectedCurrency.value,
+  set: value => fiatCurrencyStore.setCurrency(value)
+})
+
+const fiatCurrencies = fiatCurrencyStore.availableCurrencies
+const currencySymbols = fiatCurrencyStore.currencySymbols
+const currencyDisplayNames = fiatCurrencyStore.currencyDisplayNames
+const currencyTranslationKeys: Record<FiatCurrency, string> = {
+  KRW: 'settings.currency.option.krw',
+  USD: 'settings.currency.option.usd',
+  JPY: 'settings.currency.option.jpy'
+}
 
 // Initialize products and Bitcoin price when component mounts
 onMounted(async () => {
@@ -616,10 +786,42 @@ const showSuccess = ref(false)
 const showUserSettings = ref(false)
 const isUpdatingProfile = ref(false)
 
+const formatFiatPrice = (value: number): string => formatter.value.format(Number(value) || 0)
+
+const currentBtcPrice = computed(() => bitcoinStore.getBtcPriceByCurrency(selectedFiatCurrency.value))
+const formattedBtcPrice = computed(() => {
+  const price = currentBtcPrice.value
+  if (!price) return '--'
+  return formatter.value.format(price)
+})
+
+function productHasDiscount(product: Product): boolean {
+  const regular = Number(product.regular_price)
+  const sale = Number(product.price)
+  if (!regular || !sale) return false
+  return regular > sale
+}
+
+function productDiscountPercent(product: Product): number {
+  if (!productHasDiscount(product)) {
+    return 0
+  }
+  const regular = Number(product.regular_price)
+  const sale = Number(product.price)
+  return Math.round(((regular - sale) / regular) * 100)
+}
+
+const handleLanguageSelect = (event: Event) => {
+  const target = event.target as HTMLSelectElement | null
+  if (!target) return
+  localeStore.setLanguage(target.value as LanguageCode)
+}
+
 // Product form
 const productForm = reactive({
   name: '',
   price: 0,
+  regularPrice: 0,
   category: '',
   categoryName: '',
   image: ''
@@ -632,8 +834,18 @@ const selectedFile = ref<File | null>(null)
 const formErrors = reactive({
   name: '',
   price: '',
+  regularPrice: '',
   category: '',
   image: ''
+})
+
+const formDiscountPercent = computed(() => {
+  const regular = Number(productForm.regularPrice)
+  const sale = Number(productForm.price)
+  if (!regular || regular <= 0 || sale <= 0 || regular <= sale) {
+    return 0
+  }
+  return Math.round(((regular - sale) / regular) * 100)
 })
 
 // User form
@@ -694,6 +906,7 @@ async function findOrCreateCategory(categoryName: string): Promise<number | null
 function resetForm() {
   productForm.name = ''
   productForm.price = 0
+  productForm.regularPrice = 0
   productForm.category = ''
   productForm.categoryName = ''
   productForm.image = ''
@@ -706,6 +919,7 @@ function resetForm() {
 function clearErrors() {
   formErrors.name = ''
   formErrors.price = ''
+  formErrors.regularPrice = ''
   formErrors.category = ''
   formErrors.image = ''
 }
@@ -732,6 +946,10 @@ function validateForm(): boolean {
     formErrors.price = '가격은 ₩999,999를 초과할 수 없습니다'
     isValid = false
   }
+  if (productForm.regularPrice && productForm.regularPrice < productForm.price) {
+    formErrors.regularPrice = t('settings.product.error.regularLessThanSale', '정가는 판매 가격보다 크거나 같아야 합니다.')
+    isValid = false
+  }
 
   // Validate image
   if (!productForm.image.trim()) {
@@ -747,6 +965,12 @@ watch(() => productForm.image, () => {
   imageError.value = false
 })
 
+watch(() => productForm.price, value => {
+  if (!productForm.regularPrice) {
+    productForm.regularPrice = value
+  }
+})
+
 // Open modals
 function openAddModal() {
   editingProduct.value = null
@@ -758,6 +982,7 @@ function openEditModal(product: any) {
   editingProduct.value = product
   productForm.name = product.name
   productForm.price = product.price
+  productForm.regularPrice = product.regular_price || product.price || 0
   productForm.category = product.category || ''
   // Set the category name based on the category ID
   productForm.categoryName = product.category_name || ''
@@ -848,6 +1073,10 @@ async function saveProduct() {
   try {
     // Handle category: find existing or create new
     const categoryId = await findOrCreateCategory(productForm.categoryName)
+    const regularPriceValue =
+      productForm.regularPrice && productForm.regularPrice > 0
+        ? productForm.regularPrice
+        : null
     
     let result
     if (editingProduct.value) {
@@ -855,6 +1084,7 @@ async function saveProduct() {
       result = await productStore.updateProduct(editingProduct.value.id, {
         name: productForm.name.trim(),
         price: productForm.price,
+        regular_price: regularPriceValue,
         category: categoryId,
         image_url: productForm.image.trim()
       })
@@ -865,6 +1095,7 @@ async function saveProduct() {
         result = await productStore.addProductWithFile({
           name: productForm.name.trim(),
           price: productForm.price,
+          regular_price: regularPriceValue,
           category: categoryId,
           stock_quantity: 100, // Default stock
           is_available: true
@@ -874,6 +1105,7 @@ async function saveProduct() {
         result = await productStore.addProduct({
           name: productForm.name.trim(),
           price: productForm.price,
+          regular_price: regularPriceValue,
           category: categoryId,
           image_url: productForm.image.trim()
         })

@@ -1,27 +1,34 @@
 <template>
   <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-bg-primary/80 backdrop-blur-xl border-b border-border-secondary transition-all duration-300 sticky top-0 z-10">
-      <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-4">
+    <header class="glass-header transition-all duration-300 sticky top-0 z-20">
+      <div class="container mx-auto px-4 py-4 flex flex-wrap items-center gap-3 justify-between">
+        <div class="flex items-center space-x-4 flex-1 min-w-0">
           <button
             @click="$router.push('/shop')"
             class="flex items-center space-x-2 px-3 py-2 hover:bg-bg-tertiary rounded-xl transition-colors text-text-secondary hover:text-text-primary"
           >
-            <span>←</span>
-            <span>상점으로 돌아가기</span>
+            <UiIcon name="arrowLeft" class="h-4 w-4" />
+            <span>{{ t('payment.backToShop', '상점으로 돌아가기') }}</span>
           </button>
-          <h1 class="text-2xl font-bold text-text-primary">결제</h1>
+          <h1 class="text-2xl font-bold text-text-primary">
+            {{ t('payment.title', '결제') }}
+          </h1>
         </div>
-        <span class="text-text-secondary">{{ authStore.username }}</span>
+        <div class="flex items-center gap-2 text-sm text-text-secondary">
+          <UiIcon name="user" class="h-4 w-4" />
+          <span class="truncate max-w-[160px] sm:max-w-none">{{ authStore.username }}</span>
+        </div>
       </div>
     </header>
 
-    <div class="container mx-auto px-3 xs:px-4 py-4 xs:py-6 tablet:py-8 max-w-4xl">
+    <div class="container mx-auto px-3 xs:px-4 pt-4 xs:pt-6 tablet:pt-8 pb-32 sm:pb-12 max-w-4xl safe-area-bottom">
       <div class="grid grid-cols-1 tablet:grid-cols-2 gap-4 xs:gap-6 tablet:gap-8">
         <!-- Order Summary -->
         <div class="card p-4 xs:p-6 animate-fade-in">
-          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">주문 내역</h2>
+          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">
+            {{ t('payment.orderSummary', '주문 내역') }}
+          </h2>
           
           <div class="space-y-3 mb-6">
             <div
@@ -31,15 +38,21 @@
             >
               <div>
                 <p class="font-medium text-gray-800 dark:text-white">{{ item.product_name }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-300">{{ item.quantity }} × ₩{{ Number(item.product_price || 0).toLocaleString('ko-KR') }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                  {{ item.quantity }} × {{ formatPrice(Number(item.product_price || 0)) }}
+                </p>
               </div>
-              <p class="font-medium text-gray-800 dark:text-white">₩{{ Number(item.total_price || 0).toLocaleString('ko-KR') }}</p>
+              <p class="font-medium text-gray-800 dark:text-white">
+                {{ formatPrice(Number(item.total_price || 0)) }}
+              </p>
             </div>
           </div>
 
           <!-- Discount Section -->
           <div class="mb-4 xs:mb-6">
-            <h3 class="text-base xs:text-lg font-medium text-gray-800 dark:text-white mb-2 xs:mb-3">할인 적용</h3>
+            <h3 class="text-base xs:text-lg font-medium text-gray-800 dark:text-white mb-2 xs:mb-3">
+              {{ t('payment.discounts.title', '할인 적용') }}
+            </h3>
             <div class="grid grid-cols-2 gap-2 xs:gap-3 mb-2 xs:mb-3">
               <button
                 v-for="discountOption in discountOptions"
@@ -52,7 +65,7 @@
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                 ]"
               >
-                {{ discountOption }}% 할인
+                {{ t('payment.discounts.optionPercent', '{percent}% 할인', { percent: discountOption }) }}
               </button>
               <button
                 @click="selectPresetDiscount(0)"
@@ -63,14 +76,14 @@
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                 ]"
               >
-                할인 없음
+                {{ t('payment.discounts.none', '할인 없음') }}
               </button>
             </div>
             
             <!-- Custom Discount Input -->
             <div class="mt-3">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                커스텀 할인율 (%)
+                {{ t('payment.discounts.customLabel', '커스텀 할인율 (%)') }}
               </label>
               <div class="flex space-x-2">
                 <input
@@ -80,7 +93,7 @@
                   min="0"
                   max="100"
                   step="0.1"
-                  placeholder="할인율 입력"
+                  :placeholder="t('payment.discounts.customPlaceholder', '할인율 입력')"
                   :class="[
                     'flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
                     isCustomDiscount ? 'border-blue-500 bg-blue-50 dark:bg-blue-900' : 'border-gray-300 dark:border-gray-600'
@@ -89,39 +102,41 @@
                 <button
                   @click="applyCustomDiscount"
                   :disabled="!customDiscountValue || customDiscountValue < 0 || customDiscountValue > 100"
-                  class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                >
-                  적용
-                </button>
-              </div>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">0-100% 사이의 값을 입력하세요</p>
+                class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ t('common.apply', '적용') }}
+              </button>
             </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ t('payment.discounts.hint', '0-100% 사이의 값을 입력하세요') }}
+            </p>
           </div>
+        </div>
 
           <!-- Price Breakdown -->
           <div class="space-y-2 pt-4 border-t">
             <div class="flex justify-between text-gray-600 dark:text-gray-300">
-              <span>소계:</span>
+              <span>{{ t('payment.summary.subtotal', '소계') }}:</span>
               <div class="text-right">
-                <div>₩{{ cartStore.subtotal.toLocaleString('ko-KR') }}</div>
+                <div>{{ formatPrice(cartStore.subtotal) }}</div>
                 <div class="text-xs text-warning-600 dark:text-warning-400">
                   {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}
                 </div>
               </div>
             </div>
             <div v-if="cartStore.discount > 0" class="flex justify-between text-green-600 dark:text-green-400">
-              <span>할인 ({{ cartStore.discount }}%):</span>
+              <span>{{ t('payment.summary.discount', '할인 ({percent}%)', { percent: cartStore.discount }) }}:</span>
               <div class="text-right">
-                <div>-₩{{ (cartStore.subtotal * cartStore.discount / 100).toLocaleString('ko-KR') }}</div>
+                <div>-{{ formatPrice(cartStore.subtotal * cartStore.discount / 100) }}</div>
                 <div class="text-xs">
                   -{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal * cartStore.discount / 100)) }}
                 </div>
               </div>
             </div>
             <div class="flex justify-between text-xl font-bold text-gray-800 dark:text-white pt-2 border-t dark:border-gray-600">
-              <span>총액:</span>
+              <span>{{ t('payment.summary.total', '총액') }}:</span>
               <div class="text-right">
-                <div>₩{{ cartStore.total.toLocaleString('ko-KR') }}</div>
+                <div>{{ formatPrice(cartStore.total) }}</div>
                 <div class="text-sm text-warning-600 dark:text-warning-400 font-medium">
                   {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
                 </div>
@@ -132,7 +147,9 @@
 
         <!-- Payment Methods -->
         <div class="card p-4 xs:p-6 animate-fade-in">
-          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">결제 방법</h2>
+          <h2 class="text-lg xs:text-xl font-semibold text-gray-900 dark:text-white mb-3 xs:mb-4">
+            {{ t('payment.methods.title', '결제 방법') }}
+          </h2>
           
           <div class="space-y-3 xs:space-y-4 mb-4 xs:mb-6">
             <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -143,10 +160,14 @@
                 class="w-4 h-4 text-blue-600 dark:text-blue-400"
               />
               <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">라이트닝 네트워크</p>
-                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">빠른 비트코인 결제</p>
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
+                  {{ t('payment.methods.lightning.title', '라이트닝 네트워크') }}
+                </p>
+                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('payment.methods.lightning.subtitle', '빠른 비트코인 결제') }}
+                </p>
               </div>
-              <span class="text-xl xs:text-2xl">⚡</span>
+              <UiIcon name="lightning" class="h-6 w-6 text-primary-500" />
             </label>
             
             <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-not-allowed opacity-50 transition-colors duration-200">
@@ -157,10 +178,14 @@
                 class="w-4 h-4 text-gray-400 cursor-not-allowed"
               />
               <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">e-cash 결제</p>
-                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">라이트닝 네트워크 기반 익명 결제 (곧 출시 예정)</p>
+                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('payment.methods.ecash.title', 'e-cash 결제') }}
+                </p>
+                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">
+                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (곧 출시 예정)') }}
+                </p>
               </div>
-              <span class="text-xl xs:text-2xl opacity-50">💰</span>
+              <UiIcon name="coin" class="h-6 w-6 opacity-70" />
             </label>
             
             <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-not-allowed opacity-50 transition-colors duration-200">
@@ -171,25 +196,29 @@
                 class="w-4 h-4 text-gray-400 cursor-not-allowed"
               />
               <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">USDT 테더 결제</p>
-                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">라이트닝 네트워크 기반 스테이블코인 결제 (곧 출시 예정)</p>
+                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('payment.methods.usdt.title', 'USDT 테더 결제') }}
+                </p>
+                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">
+                  {{ t('payment.methods.usdt.subtitle', '라이트닝 네트워크 기반 스테이블코인 결제 (곧 출시 예정)') }}
+                </p>
               </div>
-              <span class="text-xl xs:text-2xl opacity-50">💵</span>
+              <UiIcon name="banknote" class="h-6 w-6 opacity-70" />
             </label>
           </div>
 
           <button
             @click="handlePayment"
             :disabled="!paymentMethod || isGeneratingInvoice"
-            class="btn btn-success w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg"
+            class="btn btn-success w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg hidden sm:inline-flex sm:justify-center"
           >
             <div class="text-center">
               <div v-if="isGeneratingInvoice" class="flex items-center justify-center space-x-2">
                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>인보이스 생성 중...</span>
+                <span>{{ t('payment.purchase.generating', '인보이스 생성 중...') }}</span>
               </div>
               <div v-else>
-                <div>₩{{ cartStore.total.toLocaleString('ko-KR') }} 결제하기</div>
+                <div>{{ t('payment.purchase.payAmount', '{amount} 결제하기', { amount: formatPrice(cartStore.total) }) }}</div>
                 <div class="text-xs opacity-90">
                   {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
                 </div>
@@ -197,7 +226,62 @@
             </div>
           </button>
         </div>
-      </div>
+    </div>
+
+    <Teleport to="body">
+      <Transition name="mobile-sheet">
+        <div
+          v-if="mobilePaySummaryVisible"
+          class="sm:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
+        >
+          <div class="pointer-events-auto card rounded-3xl shadow-large border border-border-primary bg-white/95 dark:bg-gray-950/90">
+            <div class="p-4 space-y-3">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                    {{ t('payment.summary.total', '총액') }}
+                  </p>
+                  <p class="text-2xl font-bold text-text-primary">
+                    {{ formattedTotal }}
+                  </p>
+                  <p
+                    v-if="satsTotal"
+                    class="text-xs text-warning-600 dark:text-warning-400 font-medium"
+                  >
+                    {{ satsTotal }}
+                  </p>
+                  <p
+                    v-if="cartStore.discount > 0"
+                    class="text-[11px] font-medium text-success-600 dark:text-success-400"
+                  >
+                    {{ t('payment.discounts.applied', '{percent}% 할인 적용', { percent: cartStore.discount }) }}
+                  </p>
+                </div>
+                <button
+                  @click="handlePayment"
+                  :disabled="!paymentMethod || isGeneratingInvoice"
+                  class="btn btn-primary flex-1 py-3 px-4 text-sm font-semibold"
+                >
+                  <span v-if="isGeneratingInvoice" class="flex items-center justify-center gap-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{{ t('payment.purchase.generating', '인보이스 생성 중...') }}</span>
+                  </span>
+                  <span v-else>{{ t('payment.purchase.payAmount', '{amount} 결제하기', { amount: formattedTotal }) }}</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="$router.push('/shop')"
+                class="w-full flex items-center justify-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <UiIcon name="arrowLeft" class="h-4 w-4" />
+                <span>{{ t('payment.actions.editCart', '상품 수정하기') }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
       <!-- QR Code Modal -->
       <div
@@ -214,9 +298,12 @@
             <!-- Lightning Address Display -->
             <div v-if="paymentMethod === 'lightning' && activeLightningAddress" class="mb-4">
               <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                <div class="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">결제 대상 지갑</div>
-                <div class="text-sm font-mono text-blue-800 dark:text-blue-300 break-all">
-                  ⚡ {{ activeLightningAddress }}
+            <div class="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+              {{ t('payment.wallet.target', '결제 대상 지갑') }}
+            </div>
+                <div class="text-sm font-mono text-blue-800 dark:text-blue-300 break-all flex items-center gap-1">
+                  <UiIcon name="lightning" class="h-4 w-4" />
+                  <span>{{ activeLightningAddress }}</span>
                 </div>
               </div>
             </div>
@@ -249,13 +336,13 @@
                 @click="closeQRCode"
                 class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
               >
-                취소
+                {{ t('payment.actions.cancel', '취소') }}
               </button>
               <button
                 @click="completePayment"
-                class="flex-1 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors duration-200"
+                class="flex-1 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors duration-200"
               >
-                결제 완료
+                {{ t('payment.actions.complete', '결제 완료') }}
               </button>
             </div>
           </div>
@@ -268,14 +355,20 @@
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       >
         <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 text-center transition-colors duration-200">
-          <div class="text-6xl mb-4">✅</div>
-          <h3 class="text-2xl font-semibold text-gray-800 dark:text-white mb-2">결제 성공!</h3>
-          <p class="text-gray-600 dark:text-gray-300 mb-6">구매해 주셔서 감사합니다</p>
+        <div class="text-6xl mb-4 text-success-500 flex justify-center">
+          <UiIcon name="checkCircle" class="h-12 w-12" />
+        </div>
+          <h3 class="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
+            {{ t('payment.success.title', '결제 성공!') }}
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 mb-6">
+            {{ t('payment.success.message', '구매해 주셔서 감사합니다') }}
+          </p>
           <button
             @click="returnToShop"
             class="w-full bg-blue-600 dark:bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-medium transition-colors duration-200"
           >
-            쇼핑 계속하기
+            {{ t('payment.success.continue', '쇼핑 계속하기') }}
           </button>
         </div>
       </div>
@@ -284,7 +377,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
@@ -292,12 +385,16 @@ import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import { bitcoinService } from '@/services/bitcoin'
 import QRCode from 'qrcode'
+import UiIcon from '@/components/ui/Icon.vue'
+import { useLocaleStore } from '@/stores/locale'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
+const localeStore = useLocaleStore()
+const t = localeStore.t
 
 const paymentMethod = ref('lightning')
 const showQRCode = ref(false)
@@ -309,6 +406,24 @@ const activeLightningAddress = ref<string>('')
 const discountOptions = [5, 10, 15, 20, 25]
 const customDiscountValue = ref<number | null>(null)
 const isCustomDiscount = ref(false)
+const hasCartItems = computed(() => cartStore.itemCount > 0)
+const formattedTotal = computed(() => formatPrice(cartStore.total))
+const satsTotal = computed(() => {
+  const total = Number(cartStore.total || 0)
+  if (total <= 0) return ''
+  const sats = bitcoinStore.krwToSats(total)
+  if (!sats) return ''
+  return bitcoinStore.formatSats(sats)
+})
+const mobilePaySummaryVisible = computed(() => hasCartItems.value && !showQRCode.value && !showSuccess.value)
+
+const formatPrice = (value: number | string): string => {
+  const numeric = Number(value || 0)
+  if (Number.isNaN(numeric)) {
+    return '₩0'
+  }
+  return `₩${numeric.toLocaleString('ko-KR')}`
+}
 
 // Lightning Network configuration
 const DEFAULT_LIGHTNING_DOMAIN = 'walletofsatoshi.com' // Default Lightning domain
@@ -451,7 +566,7 @@ async function handlePayment() {
           } catch (qrError) {
             console.error('💥 QR 코드 생성 오류:', qrError)
             isGeneratingInvoice.value = false
-            alert('QR 코드 생성에 실패했습니다.')
+            alert(t('payment.errors.qr', 'QR 코드 생성에 실패했습니다.'))
             showQRCode.value = false
             return
           }
@@ -465,20 +580,28 @@ async function handlePayment() {
           activeLightningAddress.value = ''
           
           // Show user-friendly error message based on error type
-          let errorMessage = 'Lightning 인보이스 생성에 실패했습니다.'
+          let errorMessage = t('payment.errors.invoice', 'Lightning 인보이스 생성에 실패했습니다.')
           
           switch (result.errorType) {
             case 'WALLET_NOT_FOUND':
-              errorMessage = `Lightning 지갑을 찾을 수 없습니다.\n주소: ${primaryAddress}\n\n설정에서 올바른 Lightning 주소를 설정하거나\n다른 결제 방법을 선택해주세요.`
+              errorMessage = t('payment.errors.invoiceWallet', 'Lightning 지갑을 찾을 수 없습니다.\n주소: {address}\n\n설정에서 올바른 Lightning 주소를 설정하거나\n다른 결제 방법을 선택해주세요.', {
+                address: primaryAddress,
+              })
               break
             case 'INVALID_AMOUNT':
-              errorMessage = `결제 금액이 Lightning 지갑 한도를 벗어납니다.\n${result.error}\n\n다른 결제 방법을 선택해주세요.`
+              errorMessage = t('payment.errors.invoiceLimit', '결제 금액이 Lightning 지갑 한도를 벗어납니다.\n{detail}\n\n다른 결제 방법을 선택해주세요.', {
+                detail: result.error ?? '',
+              })
               break
             case 'NETWORK_ERROR':
-              errorMessage = `네트워크 오류가 발생했습니다.\n${result.error}\n\n잠시 후 다시 시도하거나 다른 결제 방법을 선택해주세요.`
+              errorMessage = t('payment.errors.invoiceNetwork', '네트워크 오류가 발생했습니다.\n{detail}\n\n잠시 후 다시 시도하거나 다른 결제 방법을 선택해주세요.', {
+                detail: result.error ?? '',
+              })
               break
             default:
-              errorMessage = `${result.error}\n\n다른 결제 방법을 선택해주세요.`
+              errorMessage = t('payment.errors.invoiceGeneric', '{detail}\n\n다른 결제 방법을 선택해주세요.', {
+                detail: result.error ?? '',
+              })
           }
           
           alert(errorMessage)
@@ -490,7 +613,7 @@ async function handlePayment() {
         // Stop loading state on unexpected error
         isGeneratingInvoice.value = false
         activeLightningAddress.value = ''
-        alert('예상치 못한 오류가 발생했습니다.\n다른 결제 방법을 선택해주세요.')
+        alert(t('payment.errors.unexpected', '예상치 못한 오류가 발생했습니다.\n다른 결제 방법을 선택해주세요.'))
         showQRCode.value = false
         return
       }
@@ -518,7 +641,7 @@ async function handlePayment() {
       } catch (error) {
         console.error('💥 QR 코드 생성 오류:', error)
         isGeneratingInvoice.value = false
-        alert('QR 코드 생성에 실패했습니다.')
+        alert(t('payment.errors.qr', 'QR 코드 생성에 실패했습니다.'))
         showQRCode.value = false
       }
     }
@@ -541,11 +664,11 @@ async function completePayment() {
     if (result.success) {
       showSuccess.value = true
     } else {
-      alert(result.message || '주문 생성에 실패했습니다')
+      alert(result.message || t('payment.errors.orderCreation', '주문 생성에 실패했습니다'))
     }
   } catch (error) {
     console.error('결제 완료 처리 오류:', error)
-    alert('결제 처리 중 오류가 발생했습니다')
+    alert(t('payment.errors.completion', '결제 처리 중 오류가 발생했습니다'))
   }
 }
 
@@ -579,50 +702,50 @@ function applyCustomDiscount() {
 function getPaymentModalTitle(): string {
   switch (paymentMethod.value) {
     case 'lightning':
-      return '라이트닝 인보이스'
+      return t('payment.modal.lightningTitle', '라이트닝 인보이스')
     case 'ecash':
-      return 'e-cash 결제'
+      return t('payment.modal.ecashTitle', 'e-cash 결제')
     case 'usdt':
-      return 'USDT 결제'
+      return t('payment.modal.usdtTitle', 'USDT 결제')
     default:
-      return '결제 QR 코드'
+      return t('payment.modal.defaultTitle', '결제 QR 코드')
   }
 }
 
 function getLoadingMessage(): string {
   switch (paymentMethod.value) {
     case 'lightning':
-      return '잠시만 기다려주세요. 라이트닝 인보이스를 생성하고 있습니다...'
+      return t('payment.status.lightning', '잠시만 기다려주세요. 라이트닝 인보이스를 생성하고 있습니다...')
     case 'ecash':
-      return '잠시만 기다려주세요. e-cash 인보이스를 생성하고 있습니다...'
+      return t('payment.status.ecash', '잠시만 기다려주세요. e-cash 인보이스를 생성하고 있습니다...')
     case 'usdt':
-      return '잠시만 기다려주세요. USDT 인보이스를 생성하고 있습니다...'
+      return t('payment.status.usdt', '잠시만 기다려주세요. USDT 인보이스를 생성하고 있습니다...')
     default:
-      return 'QR 코드를 생성하고 있습니다...'
+      return t('payment.status.generic', 'QR 코드를 생성하고 있습니다...')
   }
 }
 
 function getQRScanMessage(): string {
   switch (paymentMethod.value) {
     case 'lightning':
-      return '라이트닝 지갑으로 QR 코드를 스캔하세요'
+      return t('payment.instructions.lightning', '라이트닝 지갑으로 QR 코드를 스캔하세요')
     case 'ecash':
-      return 'e-cash 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)'
+      return t('payment.instructions.ecash', 'e-cash 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)')
     case 'usdt':
-      return 'USDT 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)'
+      return t('payment.instructions.usdt', 'USDT 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)')
     default:
-      return '결제를 완료하려면 QR 코드를 스캔하세요'
+      return t('payment.instructions.generic', '결제를 완료하려면 QR 코드를 스캔하세요')
   }
 }
 
 function getPaymentTypeLabel(): string {
   switch (paymentMethod.value) {
     case 'lightning':
-      return 'Lightning Payment'
+      return t('payment.modal.memo.lightning', 'Lightning Payment')
     case 'ecash':
-      return 'e-cash Payment'
+      return t('payment.modal.memo.ecash', 'e-cash Payment')
     case 'usdt':
-      return 'USDT Payment'
+      return t('payment.modal.memo.usdt', 'USDT Payment')
     default:
       return DEFAULT_MEMO
   }

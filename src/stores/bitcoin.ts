@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { bitcoinService, type BitcoinPriceData } from '@/services/bitcoin'
+import { bitcoinService, type BitcoinPriceData, type FiatCurrency } from '@/services/bitcoin'
 
 export const useBitcoinStore = defineStore('bitcoin', () => {
   const priceData = ref<BitcoinPriceData | null>(null)
@@ -11,6 +11,7 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
   // Computed properties
   const btcPriceKrw = computed(() => priceData.value?.krw || 0)
   const btcPriceUsd = computed(() => priceData.value?.usd || 0)
+  const btcPriceJpy = computed(() => priceData.value?.jpy || 0)
   
   const isDataStale = computed(() => {
     if (!lastUpdated.value) return true
@@ -98,6 +99,23 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     return () => clearInterval(interval)
   }
 
+  function getBtcPriceByCurrency(currency: FiatCurrency): number {
+    switch (currency) {
+      case 'USD':
+        return btcPriceUsd.value
+      case 'JPY':
+        return btcPriceJpy.value
+      case 'KRW':
+      default:
+        return btcPriceKrw.value
+    }
+  }
+
+  function fiatToSats(amount: number, currency: FiatCurrency = 'KRW'): number {
+    const price = getBtcPriceByCurrency(currency) || btcPriceKrw.value
+    return bitcoinService.convertToSats(amount, price)
+  }
+
   return {
     // State
     priceData,
@@ -108,6 +126,7 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     // Computed
     btcPriceKrw,
     btcPriceUsd,
+    btcPriceJpy,
     isDataStale,
     priceStatus,
 
@@ -120,6 +139,8 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     krwToSats,
     satsToKrw,
     formatSats,
-    formatBtcPrice
+    formatBtcPrice,
+    fiatToSats,
+    getBtcPriceByCurrency
   }
 })

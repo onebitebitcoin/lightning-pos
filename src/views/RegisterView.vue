@@ -100,11 +100,10 @@
       v-if="showSuccess"
       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
     >
-      <div
-        class="bg-bg-primary rounded-2xl p-8 max-w-sm w-full m-4 text-center"
-        @click.stop
-      >
-        <div class="text-6xl mb-4">🎉</div>
+      <div class="card p-8 max-w-sm w-full m-4 text-center" @click.stop>
+        <div class="text-6xl mb-4 text-primary-500 flex justify-center">
+          <UiIcon name="celebration" class="h-12 w-12" />
+        </div>
         <h3 class="text-2xl font-semibold text-text-primary mb-2">
           회원가입 완료!
         </h3>
@@ -121,6 +120,7 @@
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import UiIcon from "@/components/ui/Icon.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();

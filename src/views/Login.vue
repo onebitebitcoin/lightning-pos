@@ -2,7 +2,9 @@
   <div class="min-h-screen flex items-center justify-center bg-bg-secondary px-4 py-8">
     <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
       <div class="text-center mb-6 tablet:mb-8">
-        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">한입 POS</h1>
+        <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">
+          {{ localeStore.t('brand.name', '한입 POS') }}
+        </h1>
         <p class="text-sm xs:text-base text-text-secondary">환영합니다! 계속하려면 로그인해주세요</p>
       </div>
       
@@ -73,9 +75,11 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { useLocaleStore } from '@/stores/locale'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const localeStore = useLocaleStore()
 
 const username = ref('')
 const password = ref('')

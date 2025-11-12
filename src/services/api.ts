@@ -170,6 +170,7 @@ export interface Product {
   name: string
   description?: string
   price: number
+  regular_price?: number | null
   image_url?: string
   image?: string
   image_display_url: string
@@ -467,6 +468,7 @@ export const productsAPI = {
     name: string
     description?: string
     price: number
+    regular_price?: number | null
     category?: number
     stock_quantity: number
     is_available: boolean
@@ -478,6 +480,9 @@ export const productsAPI = {
       formData.append('name', productData.name)
       if (productData.description) formData.append('description', productData.description)
       formData.append('price', productData.price.toString())
+      if (productData.regular_price != null) {
+        formData.append('regular_price', productData.regular_price.toString())
+      }
       if (productData.category) formData.append('category', productData.category.toString())
       formData.append('stock_quantity', productData.stock_quantity.toString())
       formData.append('is_available', productData.is_available.toString())

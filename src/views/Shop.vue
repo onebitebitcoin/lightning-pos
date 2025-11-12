@@ -1,49 +1,56 @@
 <template>
   <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-bg-primary/80 backdrop-blur-xl border-b border-border-secondary transition-all duration-300 sticky top-0 z-10">
+    <header class="glass-header transition-all duration-300 sticky top-0 z-20">
       <div class="container mx-auto px-4 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
-          <h1 
-            @touchstart="startLongPress"
-            @touchend="endLongPress"
-            @touchcancel="endLongPress"
-            @mousedown="startLongPress"
-            @mouseup="endLongPress"
-            @mouseleave="endLongPress"
-            class="text-lg font-bold text-text-primary select-none"
-          >
-            한입 POS
+          <h1 class="text-lg font-bold text-text-primary select-none">
+            {{ t('brand.name', '한입 POS') }}
           </h1>
           <button
             @click="showMobileMenu = !showMobileMenu"
             class="btn btn-secondary p-2 rounded-xl"
+            :aria-expanded="showMobileMenu"
+            :aria-label="t('header.toggleMenu', '모바일 메뉴 토글')"
           >
-            <span class="text-lg">{{ showMobileMenu ? '✕' : '☰' }}</span>
+            <UiIcon
+              :name="showMobileMenu ? 'close' : 'menu'"
+              class="h-5 w-5"
+            />
           </button>
         </div>
 
         <!-- Mobile Menu -->
         <div v-if="showMobileMenu" class="md:hidden mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 animate-slide-up">
-          <div class="text-sm text-text-secondary mb-3">환영합니다, {{ authStore.username }}님!</div>
+          <div class="text-sm text-text-primary dark:text-white mb-3">
+            {{ t('header.welcome', '환영합니다, {name}님!', { name: authStore.username }) }}
+          </div>
           
           <!-- Mobile Bitcoin Price -->
           <div class="p-2 mb-2">
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">BTC 가격</div> 
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('header.btcPrice', 'BTC 가격') }}</div> 
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1 text-sm">
                 <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                 </span>
-                <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                  ⚠️
+                <span
+                  v-else-if="bitcoinStore.error"
+                  class="text-red-500"
+                  :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
+                >
+                  <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
-                  <span class="text-orange-500">₿</span>
-                  <span class="text-text-primary font-medium">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
-                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-text-secondary" title="가격 정보가 오래되었습니다">
-                    ⚠️
+                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
+                  <span class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
+                  <span
+                    v-if="bitcoinStore.priceStatus === 'stale'"
+                    class="text-text-secondary"
+                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                  >
+                    <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                 </template>
               </div>
@@ -51,9 +58,9 @@
                 @click="bitcoinStore.refresh()"
                 :disabled="bitcoinStore.isLoading"
                 class="text-text-secondary hover:text-text-primary transition-colors p-1"
-                title="가격 새로고침"
+                :title="t('header.refreshPrice', '가격 새로고침')"
               >
-                ↻
+                <UiIcon name="refresh" class="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -63,63 +70,77 @@
               @click="themeStore.toggleTheme"
               class="btn btn-outline flex items-center justify-between w-full p-3 text-sm"
             >
-              <span>{{ themeStore.isDark ? '라이트 모드' : '다크 모드' }}</span>
-              <span class="text-lg">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <span>{{ themeStore.isDark ? t('header.theme.light', '라이트 모드') : t('header.theme.dark', '다크 모드') }}</span>
+              <UiIcon
+                :name="themeStore.isDark ? 'sun' : 'moon'"
+                class="h-5 w-5"
+              />
             </button>
+            <RouterLink
+              to="/guide"
+              class="btn btn-secondary w-full p-3 text-sm flex items-center justify-between"
+              @click="showMobileMenu = false"
+            >
+              <span>{{ t('header.openGuide', '사용 가이드') }}</span>
+              <UiIcon name="chevronRight" class="h-4 w-4" />
+            </RouterLink>
             <button
-              v-show="showAdminControls && authStore.isAdmin"
+              v-if="authStore.isAdmin"
               @click="$router.push('/admin'); showMobileMenu = false"
               class="btn w-full p-3 text-sm text-left bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 text-white"
             >
-              관리자 패널
+              {{ t('header.adminPanel', '관리자 패널') }}
             </button>
             <button
-              v-show="showAdminControls"
+              v-if="authStore.isLoggedIn"
               @click="$router.push('/settings'); showMobileMenu = false"
               class="btn btn-secondary w-full p-3 text-sm text-left"
             >
-              설정
+              {{ t('header.openSettings', '설정') }}
             </button>
             <button
-              v-show="showAdminControls"
+              v-if="authStore.isLoggedIn"
               @click="handleLogout"
-              class="btn w-full p-3 text-sm text-left bg-error-600 hover:bg-error-700 focus:ring-error-500 text-white"
+              class="btn w-full p-3 text-sm flex items-center justify-between bg-error-600 hover:bg-error-700 focus:ring-error-500 text-white"
             >
-              로그아웃
+              <span>{{ t('header.logoutButton', '로그아웃') }}</span>
+              <UiIcon name="logout" class="h-4 w-4" />
             </button>
-            <div v-if="!showAdminControls" class="text-xs text-text-secondary text-center mt-2">
-              로고를 길게 눌러 관리자 메뉴 표시
-            </div>
           </div>
         </div>
 
         <!-- Desktop Header -->
         <div class="hidden md:flex justify-between items-center">
           <div class="flex items-center space-x-6">
-            <h1 
-              @mousedown="startLongPress"
-              @mouseup="endLongPress"
-              @mouseleave="endLongPress"
-              class="text-2xl font-bold text-text-primary select-none cursor-default"
-            >
-              한입 POS
+            <h1 class="text-2xl font-bold text-text-primary select-none cursor-default">
+              {{ t('brand.name', '한입 POS') }}
             </h1>
             <!-- Bitcoin Price Indicator -->
             <div class="flex items-center space-x-3">
               <div class="text-right">
-                <div class="text-sm text-text-secondary">BTC 가격</div>
+                <div class="text-sm text-text-secondary">
+                  {{ t('header.btcPrice', 'BTC 가격') }}
+                </div>
                 <div class="flex items-center space-x-1 text-sm font-medium">
                   <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
-                  <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                    ⚠️
+                <span
+                  v-else-if="bitcoinStore.error"
+                  class="text-red-500"
+                  :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
+                >
+                    <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                   <template v-else>
-                    <span class="text-orange-500">₿</span>
-                    <span class="text-text-primary">₩{{ Math.round(bitcoinStore.btcPriceKrw).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}</span>
-                    <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-text-secondary" title="가격 정보가 오래되었습니다">
-                      ⚠️
+                    <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
+                    <span class="text-text-primary">{{ btcPriceDisplay }}</span>
+                    <span
+                      v-if="bitcoinStore.priceStatus === 'stale'"
+                      class="text-text-secondary"
+                      :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                    >
+                      <UiIcon name="warning" class="h-4 w-4" />
                     </span>
                   </template>
                 </div>
@@ -127,92 +148,124 @@
               <button
                 @click="bitcoinStore.refresh()"
                 :disabled="bitcoinStore.isLoading"
-                class="text-text-secondary hover:text-text-primary transition-colors p-1"
-                title="가격 새로고침"
+              class="text-text-secondary hover:text-text-primary transition-colors p-1"
+              :title="t('header.refreshPrice', '가격 새로고침')"
               >
-                ↻
+                <UiIcon name="refresh" class="h-4 w-4" />
               </button>
             </div>
           </div>
           <div class="flex items-center space-x-3">
-            <span class="text-text-secondary">환영합니다, {{ authStore.username }}님!</span>
+            <span class="text-text-primary dark:text-white">
+              {{ t('header.welcome', '환영합니다, {name}님!', { name: authStore.username }) }}
+            </span>
             <button
               @click="themeStore.toggleTheme"
               class="p-2 hover:bg-bg-tertiary rounded-xl transition-colors"
-              :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
+              :title="themeStore.isDark ? t('header.theme.light', '라이트 모드') : t('header.theme.dark', '다크 모드')"
             >
-              <span class="text-xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+              <UiIcon
+                :name="themeStore.isDark ? 'sun' : 'moon'"
+                class="h-5 w-5"
+              />
             </button>
+            <RouterLink
+              to="/guide"
+              class="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-colors"
+              :title="t('header.openGuide', '사용 가이드')"
+            >
+              <UiIcon name="bookOpen" class="h-5 w-5" />
+            </RouterLink>
             <button
-              v-show="showAdminControls && authStore.isAdmin"
+              v-if="authStore.isAdmin"
               @click="$router.push('/admin')"
               class="btn px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 text-white"
             >
-              관리자 패널
+              {{ t('header.adminPanel', '관리자 패널') }}
             </button>
             <button
-              v-show="showAdminControls"
+              v-if="authStore.isLoggedIn"
               @click="$router.push('/settings')"
-              class="btn btn-secondary px-4 py-2 text-sm"
+              class="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-colors"
+              :title="t('header.openSettings', '설정')"
             >
-              설정
+              <UiIcon name="settings" class="h-5 w-5" />
             </button>
             <button
-              v-show="showAdminControls"
+              v-if="authStore.isLoggedIn"
               @click="handleLogout"
-              class="btn px-4 py-2 text-sm bg-error-600 hover:bg-error-700 focus:ring-error-500 text-white"
+              class="p-2 rounded-xl text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors"
+              :title="t('header.logout', '로그아웃')"
             >
-              로그아웃
+              <UiIcon name="logout" class="h-5 w-5" />
             </button>
-            <div v-if="!showAdminControls" class="text-xs text-text-secondary">
-              로고 길게 누르기
-            </div>
           </div>
         </div>
       </div>
     </header>
 
-    <div class="container mx-auto px-3 xs:px-4 py-3 xs:py-4 tablet:py-6 lg:py-8 flex flex-col lg:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8">
+    <div class="container mx-auto px-3 xs:px-4 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col lg:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
       <!-- Mobile Cart Toggle -->
       <div class="lg:hidden mb-3 xs:mb-4">
         <button
           @click="showMobileCart = !showMobileCart"
           class="btn btn-primary w-full py-2 xs:py-3 px-3 xs:px-4 flex items-center justify-between text-sm xs:text-base"
         >
-          <span>장바구니 ({{ cartStore.itemCount }}개)</span>
-          <span class="text-base xs:text-lg">{{ showMobileCart ? '▲' : '▼' }}</span>
+          <span>{{ t('shop.cart.itemsLabel', '장바구니 ({count}개)', { count: cartStore.itemCount }) }}</span>
+          <UiIcon
+            :name="showMobileCart ? 'chevronUp' : 'chevronDown'"
+            class="h-5 w-5"
+          />
         </button>
       </div>
 
-      <!-- Mobile Cart -->
-      <div v-if="showMobileCart" class="lg:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up">
-        <div class="flex items-center justify-between mb-3 xs:mb-4">
-          <h3 class="text-base xs:text-lg tablet:text-xl font-semibold text-gray-900 dark:text-white">장바구니</h3>
-          <div class="flex items-center space-x-2">
+        <!-- Mobile Cart -->
+        <div
+          v-if="showMobileCart"
+          ref="mobileCartRef"
+          class="lg:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up"
+        >
+          <div class="flex items-center justify-between mb-3 xs:mb-4">
+            <h3 class="text-base xs:text-lg tablet:text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('shop.cart.title', '장바구니') }}
+            </h3>
+            <div class="flex items-center space-x-2">
             <button
               v-if="cartStore.items.length > 0"
               @click="cartStore.clearCart"
               class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="장바구니 비우기"
+              :title="t('shop.cart.clear', '장바구니 비우기')"
             >
-              🗑️
+              <UiIcon name="trash" class="h-5 w-5" />
             </button>
             <span class="badge badge-primary text-xs xs:text-sm">
-              {{ cartStore.itemCount }}개 상품
+              {{ t('shop.cart.itemsCount', '{count}개 상품', { count: cartStore.itemCount }) }}
             </span>
           </div>
-        </div>
+          </div>
+
+          <div class="mb-3">
+            <button
+              @click="openDirectInputModal"
+              class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg bg-primary-50/70 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+            >
+              <UiIcon name="plus" class="h-4 w-4" />
+              <span>{{ t('shop.cart.directInput', '직접 입력하기') }}</span>
+            </button>
+          </div>
 
         <!-- Mobile Cart Loading -->
         <div v-if="cartStore.isLoading" class="text-center py-4">
           <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">장바구니 로딩 중...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
         </div>
 
         <!-- Mobile Empty Cart -->
         <div v-else-if="cartStore.items.length === 0" class="text-center py-4">
-          <div class="text-gray-400 dark:text-gray-500 text-2xl mb-2">🛒</div>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">장바구니가 비어있습니다</p>
+          <div class="text-gray-400 dark:text-gray-500 text-2xl mb-2">
+            <UiIcon name="cart" class="h-8 w-8 mx-auto" />
+          </div>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.empty', '장바구니가 비어있습니다') }}</p>
         </div>
 
         <!-- Mobile Cart Items -->
@@ -224,13 +277,15 @@
           >
             <div class="flex-1 min-w-0">
               <p class="font-medium text-gray-800 dark:text-white text-sm truncate">{{ item.product_name }}</p>
-              <p class="text-xs text-gray-600 dark:text-gray-300">개당 ₩{{ Number(item.product_price || 0).toLocaleString('ko-KR') }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-300">
+                {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
+              </p>
             </div>
             <div class="flex items-center space-x-1 ml-2">
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity - 1)"
                 :disabled="cartStore.isLoading"
-                class="w-6 h-6 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors flex items-center justify-center disabled:bg-gray-200 text-sm"
+                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm"
               >
                 -
               </button>
@@ -238,7 +293,7 @@
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity + 1)"
                 :disabled="cartStore.isLoading"
-                class="w-6 h-6 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors flex items-center justify-center disabled:bg-gray-200 text-sm"
+                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm"
               >
                 +
               </button>
@@ -248,14 +303,14 @@
 
         <div v-if="cartStore.items.length > 0" class="border-t dark:border-gray-600 pt-3">
           <div class="flex justify-between text-base font-semibold text-gray-800 dark:text-white mb-3">
-            <span>총계:</span>
-            <span>₩{{ cartStore.subtotal.toLocaleString('ko-KR') }}</span>
+            <span>{{ t('shop.cart.total', '총계') }}:</span>
+            <span>{{ formatPrice(cartStore.subtotal) }}</span>
           </div>
           <button
             @click="$router.push('/payment')"
-            class="w-full bg-green-600 dark:bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors font-medium"
+            class="w-full bg-primary-600 dark:bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium"
           >
-            결제하기
+            {{ t('shop.cart.checkout', '결제하기') }}
           </button>
         </div>
       </div>
@@ -265,14 +320,9 @@
         <!-- Category Filter Breadcrumb -->
         <div class="mb-4 md:mb-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">상품</h2>
-            <button
-              @click="openDirectInputModal"
-              class="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors font-medium flex items-center space-x-2 text-sm"
-            >
-              <span>₩</span>
-              <span>직접 입력하기</span>
-            </button>
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">
+              {{ t('shop.products.title', '상품') }}
+            </h2>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <!-- All Products Button -->
@@ -285,7 +335,7 @@
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               ]"
             >
-              전체
+              {{ t('shop.products.filterAll', '전체') }}
             </button>
             
             <!-- Categories used in user's products -->
@@ -311,7 +361,9 @@
         <div v-if="productStore.isLoading" class="flex justify-center items-center py-12">
           <div class="text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-            <p class="text-gray-600 dark:text-gray-300">상품을 불러오는 중...</p>
+            <p class="text-gray-600 dark:text-gray-300">
+              {{ t('shop.products.loading', '상품을 불러오는 중...') }}
+            </p>
           </div>
         </div>
 
@@ -323,7 +375,7 @@
             @click="productStore.fetchAvailableProducts()"
             class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200"
           >
-            다시 시도
+            {{ t('shop.products.retry', '다시 시도') }}
           </button>
         </div>
 
@@ -338,9 +390,17 @@
               <img
                 :src="product.image || product.image_url"
                 :alt="product.name"
-                class="w-full h-32 xs:h-40 tablet:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                class="w-full h-40 xs:h-52 tablet:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                 @error="handleImageError"
               />
+              <div
+                v-if="productHasDiscount(product)"
+                class="absolute top-2 left-2 z-10"
+              >
+                <span class="rounded-full bg-success-600 text-white text-xs font-semibold px-2 py-0.5 shadow-soft">
+                  {{ t('shop.product.discountBadge', '{percent}% 할인', { percent: productDiscountPercent(product) }) }}
+                </span>
+              </div>
               <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <div class="p-3 xs:p-4 tablet:p-5 flex flex-col flex-1">
@@ -350,10 +410,24 @@
               </div>
               
               <!-- Price display with KRW and Sats -->
-              <div class="mb-3 xs:mb-4">
-                <p class="text-lg xs:text-xl tablet:text-2xl font-bold text-primary-600 dark:text-primary-400 mb-1">
-                  ₩{{ Number(product.price || 0).toLocaleString('ko-KR') }}
-                </p>
+              <div class="mb-3 xs:mb-4 space-y-1">
+                <div class="flex items-center gap-2">
+                  <p class="text-lg xs:text-xl tablet:text-2xl font-bold text-primary-600 dark:text-primary-400">
+                    {{ formatPrice(Number(product.price || 0)) }}
+                  </p>
+                  <span
+                    v-if="productHasDiscount(product)"
+                    class="inline-flex items-center rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300 px-2 py-0.5 text-xs font-semibold"
+                  >
+                    {{ t('shop.product.discountBadge', '{percent}% 할인', { percent: productDiscountPercent(product) }) }}
+                  </span>
+                </div>
+                <div
+                  v-if="productHasDiscount(product)"
+                  class="text-xs text-gray-500 dark:text-gray-400 line-through"
+                >
+                  {{ formatPrice(Number(product.regular_price || 0)) }}
+                </div>
                 <div class="flex items-center space-x-2">
                   <p class="text-xs xs:text-sm text-warning-600 dark:text-warning-400 font-medium">
                     {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
@@ -361,7 +435,11 @@
                   <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
-                  <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="Price data is stale">
+                  <span
+                    v-else-if="bitcoinStore.priceStatus === 'stale'"
+                    class="text-xs text-gray-400"
+                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                  >
                     ⚠️
                   </span>
                 </div>
@@ -374,7 +452,7 @@
                     @click="openProductModal(product)"
                     class="btn btn-outline px-3 py-2 xs:py-2.5 tablet:py-3 text-xs xs:text-sm tablet:text-base"
                   >
-                    자세히
+                    {{ t('shop.products.details', '자세히') }}
                   </button>
                   <button
                     @click="handleAddToCart(product)"
@@ -383,9 +461,9 @@
                   >
                     <span v-if="cartStore.isAddingToCart(product.id)" class="flex items-center space-x-2">
                       <div class="animate-spin rounded-full h-3 w-3 xs:h-4 xs:w-4 border-b-2 border-white"></div>
-                      <span>추가 중...</span>
+                      <span>{{ t('shop.products.adding', '추가 중...') }}</span>
                     </span>
-                    <span v-else>추가</span>
+                    <span v-else>{{ t('shop.products.add', '추가') }}</span>
                   </button>
 
                 </div>
@@ -396,34 +474,48 @@
       </div>
 
       <!-- Desktop Cart Sidebar -->
-      <div class="hidden lg:block lg:order-2 w-72 xl:w-80 card p-4 xl:p-6 h-fit sticky top-24">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">장바구니</h3>
+        <div class="hidden lg:block lg:order-2 w-72 xl:w-80 card p-4 xl:p-6 h-fit sticky top-24">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('shop.cart.title', '장바구니') }}
+            </h3>
           <div class="flex items-center space-x-2">
             <button
               v-if="cartStore.items.length > 0"
               @click="cartStore.clearCart"
               class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="장바구니 비우기"
+              :title="t('shop.cart.clear', '장바구니 비우기')"
             >
-              🗑️
+              <UiIcon name="trash" class="h-5 w-5" />
             </button>
             <span class="badge badge-primary text-sm">
-              {{ cartStore.itemCount }}개 상품
+              {{ t('shop.cart.itemsCount', '{count}개 상품', { count: cartStore.itemCount }) }}
             </span>
           </div>
+        </div>
+
+        <div class="mb-4">
+          <button
+            @click="openDirectInputModal"
+            class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg bg-primary-50/70 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+          >
+            <UiIcon name="plus" class="h-4 w-4" />
+            <span>{{ t('shop.cart.directInput', '직접 입력하기') }}</span>
+          </button>
         </div>
 
         <!-- Cart Loading -->
         <div v-if="cartStore.isLoading" class="text-center py-8">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">장바구니 로딩 중...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
         </div>
 
         <!-- Empty Cart -->
         <div v-else-if="cartStore.items.length === 0" class="text-center py-8">
-          <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2">🛒</div>
-          <p class="text-gray-500 dark:text-gray-400">장바구니가 비어있습니다</p>
+          <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2">
+            <UiIcon name="cart" class="h-10 w-10 mx-auto" />
+          </div>
+          <p class="text-gray-500 dark:text-gray-400">{{ t('shop.cart.empty', '장바구니가 비어있습니다') }}</p>
         </div>
 
         <!-- Cart Items -->
@@ -435,13 +527,15 @@
           >
             <div class="flex-1">
               <p class="font-medium text-gray-800 dark:text-white">{{ item.product_name }}</p>
-              <p class="text-sm text-gray-600 dark:text-gray-300">개당 ₩{{ Number(item.product_price || 0).toLocaleString('ko-KR') }}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
+              </p>
             </div>
             <div class="flex items-center space-x-2">
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity - 1)"
                 :disabled="cartStore.isLoading"
-                class="w-8 h-8 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors flex items-center justify-center disabled:bg-gray-200"
+                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700"
               >
                 -
               </button>
@@ -449,22 +543,21 @@
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity + 1)"
                 :disabled="cartStore.isLoading"
-                class="w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors flex items-center justify-center disabled:bg-gray-200"
+                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700"
               >
                 +
               </button>
             </div>
           </div>
         </div>
-
         <div v-if="cartStore.items.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="mb-4">
             <div class="flex justify-between text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              <span>총계:</span>
-              <span>₩{{ cartStore.subtotal.toLocaleString('ko-KR') }}</span>
+              <span>{{ t('shop.cart.total', '총계') }}:</span>
+              <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
             <div class="flex justify-between text-sm text-warning-600 dark:text-warning-400">
-              <span>Bitcoin:</span>
+              <span>{{ t('shop.cart.bitcoinLabel', 'Bitcoin') }}:</span>
               <span>{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</span>
             </div>
           </div>
@@ -472,7 +565,7 @@
             @click="$router.push('/payment')"
             class="btn btn-success w-full py-3 px-4 text-lg"
           >
-            결제하기
+            {{ t('shop.cart.checkout', '결제하기') }}
           </button>
         </div>
       </div>
@@ -491,7 +584,9 @@
         <div class="relative">
           <!-- Modal Header -->
           <div class="flex justify-between items-center p-4 xs:p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-xl xs:text-2xl font-bold text-gray-900 dark:text-white">상품 상세정보</h2>
+            <h2 class="text-xl xs:text-2xl font-bold text-gray-900 dark:text-white">
+              {{ t('shop.product.detailsTitle', '상품 상세정보') }}
+            </h2>
             <button
               @click="closeProductModal"
               class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
@@ -528,13 +623,24 @@
                 <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
                   <div class="space-y-2">
                     <div class="flex justify-between items-center">
-                      <span class="text-gray-600 dark:text-gray-400">가격:</span>
+                      <span class="text-gray-600 dark:text-gray-400">
+                        {{ t('shop.product.priceLabel', '가격') }}:
+                      </span>
                       <span class="text-2xl xs:text-3xl font-bold text-primary-600 dark:text-primary-400">
-                        ₩{{ Number(selectedProduct.price || 0).toLocaleString('ko-KR') }}
+                        {{ formatPrice(Number(selectedProduct.price || 0)) }}
                       </span>
                     </div>
+                    <div
+                      v-if="productHasDiscount(selectedProduct as Product)"
+                      class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 line-through"
+                    >
+                      <span>{{ t('shop.product.regularLabel', '정가') }}:</span>
+                      <span>{{ formatPrice(Number((selectedProduct as Product).regular_price || 0)) }}</span>
+                    </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-gray-600 dark:text-gray-400">Bitcoin 가격:</span>
+                      <span class="text-gray-600 dark:text-gray-400">
+                        {{ t('shop.product.bitcoinPriceLabel', 'Bitcoin 가격') }}:
+                      </span>
                       <span class="text-lg font-semibold text-warning-600 dark:text-warning-400">
                         {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(selectedProduct.price || 0))) }}
                       </span>
@@ -551,15 +657,15 @@
                   >
                     <span v-if="cartStore.isAddingToCart(selectedProduct.id)" class="flex items-center space-x-2">
                       <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>추가 중...</span>
+                      <span>{{ t('shop.products.adding', '추가 중...') }}</span>
                     </span>
-                    <span v-else>장바구니 담기</span>
+                    <span v-else>{{ t('shop.product.addToCart', '장바구니 담기') }}</span>
                   </button>
                   <button
                     @click="closeProductModal"
                     class="btn btn-secondary px-6 py-3 text-base xs:text-lg"
                   >
-                    닫기
+                    {{ t('shop.product.close', '닫기') }}
                   </button>
                 </div>
               </div>
@@ -582,7 +688,9 @@
         <div class="relative">
           <!-- Modal Header -->
           <div class="flex justify-between items-center p-4 xs:p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-xl xs:text-2xl font-bold text-gray-900 dark:text-white">직접 입력하기</h2>
+            <h2 class="text-xl xs:text-2xl font-bold text-gray-900 dark:text-white">
+              {{ t('shop.directInput.title', '직접 입력하기') }}
+            </h2>
             <button
               @click="closeDirectInputModal"
               class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
@@ -594,41 +702,43 @@
           <!-- Modal Content -->
           <div class="p-4 xs:p-6">
             <form @submit.prevent="handleDirectInput" class="space-y-4">
-              <div>
-                <label for="directAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  금액 (₩)
-                </label>
-                <input
-                  id="directAmount"
-                  v-model.number="directInputAmount"
+            <div>
+              <label for="directAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('shop.directInput.amount', '금액 ({currency})', { currency: currencySymbols[selectedCurrency] }) }}
+              </label>
+              <input
+                id="directAmount"
+                v-model.number="directInputAmount"
                   type="number"
                   step="1"
                   min="1"
                   max="999999"
                   required
-                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors text-lg"
-                  placeholder="금액을 입력하세요"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors text-lg"
+                  :placeholder="t('shop.directInput.placeholderAmount', '금액을 입력하세요')"
                   autofocus
                 />
               </div>
 
-              <div>
-                <label for="directDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  설명 (선택사항)
-                </label>
-                <input
-                  id="directDescription"
-                  v-model="directInputDescription"
+            <div>
+              <label for="directDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('shop.directInput.description', '설명 (선택사항)') }}
+              </label>
+              <input
+                id="directDescription"
+                v-model="directInputDescription"
                   type="text"
                   maxlength="100"
-                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
-                  placeholder="예: 추가 결제, 팁 등"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                  :placeholder="t('shop.directInput.placeholderDescription', '예: 추가 결제, 팁 등')"
                 />
               </div>
 
               <!-- Bitcoin Price Display -->
               <div v-if="directInputAmount > 0" class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Bitcoin 금액:</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {{ t('shop.directInput.bitcoinLabel', 'Bitcoin 금액') }}:
+                </div>
                 <div class="flex items-center space-x-2">
                   <span class="text-lg font-semibold text-warning-600 dark:text-warning-400">
                     {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(directInputAmount)) }}
@@ -636,7 +746,11 @@
                   <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
-                  <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="가격 정보가 오래되었습니다">
+                  <span
+                    v-else-if="bitcoinStore.priceStatus === 'stale'"
+                    class="text-xs text-gray-400"
+                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                  >
                     ⚠️
                   </span>
                 </div>
@@ -649,18 +763,18 @@
                   @click="closeDirectInputModal"
                   class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  취소
+                  {{ t('shop.directInput.cancel', '취소') }}
                 </button>
                 <button
                   type="submit"
                   :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput"
-                  class="flex-1 px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 px-4 py-3 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span v-if="isAddingDirectInput" class="flex items-center space-x-2">
                     <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>추가 중...</span>
+                    <span>{{ t('shop.directInput.adding', '추가 중...') }}</span>
                   </span>
-                  <span v-else>장바구니 추가</span>
+                  <span v-else>{{ t('shop.directInput.add', '장바구니 추가') }}</span>
                 </button>
               </div>
             </form>
@@ -669,12 +783,59 @@
       </div>
     </div>
 
+    <Teleport to="body">
+      <Transition name="mobile-sheet">
+        <div
+          v-if="hasCartItems"
+          class="lg:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
+        >
+          <div class="pointer-events-auto card rounded-3xl shadow-large border border-border-primary bg-white/95 dark:bg-gray-950/90">
+            <div class="p-4 space-y-3">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                    {{ t('shop.cart.total', '총계') }}
+                  </p>
+                  <p class="text-2xl font-bold text-text-primary">
+                    {{ formatPrice(cartStore.subtotal) }}
+                  </p>
+                  <p
+                    v-if="subtotalSatsLabel"
+                    class="text-xs text-warning-600 dark:text-warning-400 font-medium"
+                  >
+                    {{ subtotalSatsLabel }}
+                  </p>
+                </div>
+                <button
+                  @click="$router.push('/payment')"
+                  class="btn btn-primary flex-1 py-3 px-4 text-sm font-semibold"
+                >
+                  {{ t('shop.cart.checkout', '결제하기') }}
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="openMobileCartPanel"
+                class="w-full flex items-center justify-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <UiIcon name="cart" class="h-4 w-4" />
+                <span>{{ t('shop.cart.openFromSummary', '장바구니 상세 보기') }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-text-secondary dark:text-text-primary">
+                  {{ t('shop.cart.itemsCount', '{count}개 상품', { count: cartStore.itemCount }) }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import UiIcon from '@/components/ui/Icon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/products'
@@ -682,6 +843,9 @@ import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import { useCategoryStore } from '@/stores/categories'
 import type { Product } from '@/services/api'
+import { useLocaleStore } from '@/stores/locale'
+import { useFiatCurrencyStore } from '@/stores/fiatCurrency'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -690,10 +854,17 @@ const productStore = useProductStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const categoryStore = useCategoryStore()
+const localeStore = useLocaleStore()
+const fiatCurrencyStore = useFiatCurrencyStore()
+const { selectedCurrency, formatter } = storeToRefs(fiatCurrencyStore)
+const currencySymbols = fiatCurrencyStore.currencySymbols
+const t = localeStore.t
+let stopBitcoinAutoRefresh: (() => void) | null = null
 
 // Mobile UI state
 const showMobileCart = ref(false)
 const showMobileMenu = ref(false)
+const mobileCartRef = ref<HTMLDivElement | null>(null)
 
 // Product modal state
 const showProductModal = ref(false)
@@ -701,19 +872,50 @@ const selectedProduct = ref<Product | null>(null)
 
 // Direct input modal state
 const showDirectInputModal = ref(false)
-const directInputAmount = ref<number | null>(null)
+const directInputAmount = ref<number>(0)
 const directInputDescription = ref('')
 const isAddingDirectInput = ref(false)
 
 // Category filtering
-const selectedCategory = ref('')
+const selectedCategory = ref<string | number>('')
 
-// Admin mode toggle for showing/hiding settings
-const showAdminControls = ref(false)
+const btcPriceDisplay = computed(() => {
+  const price = bitcoinStore.getBtcPriceByCurrency(selectedCurrency.value)
+  if (!price) return '--'
+  return formatter.value.format(price)
+})
 
-// Long press functionality
-const longPressTimer = ref<number | null>(null)
-const longPressDuration = 1000 // 1 second
+const formatPrice = (value: number | string): string => {
+  const numeric = Number(value || 0)
+  if (Number.isNaN(numeric)) {
+    return formatter.value.format(0)
+  }
+  return formatter.value.format(numeric)
+}
+
+const productHasDiscount = (product: Product): boolean => {
+  const regular = Number(product.regular_price)
+  const sale = Number(product.price)
+  return !!regular && regular > sale
+}
+
+const productDiscountPercent = (product: Product): number => {
+  if (!productHasDiscount(product)) return 0
+  const regular = Number(product.regular_price)
+  const sale = Number(product.price)
+  return Math.round(((regular - sale) / regular) * 100)
+}
+
+const hasCartItems = computed(() => cartStore.items.length > 0)
+
+const subtotalSatsLabel = computed(() => {
+  if (!hasCartItems.value) return ''
+  const subtotal = Number(cartStore.subtotal || 0)
+  if (subtotal <= 0) return ''
+  const sats = bitcoinStore.krwToSats(subtotal)
+  if (!sats) return ''
+  return bitcoinStore.formatSats(sats)
+})
 
 // Initialize data when component mounts
 onMounted(async () => {
@@ -732,40 +934,42 @@ onMounted(async () => {
   await productStore.initialize()
   
   // Start auto-refresh for Bitcoin price
-  bitcoinStore.startAutoRefresh()
-  
+  stopBitcoinAutoRefresh = bitcoinStore.startAutoRefresh()
 })
 
-// Long press handlers for admin controls
-function startLongPress(event: Event) {
-  event.preventDefault()
-  longPressTimer.value = window.setTimeout(() => {
-    showAdminControls.value = !showAdminControls.value
-  }, longPressDuration)
-}
-
-function endLongPress() {
-  if (longPressTimer.value) {
-    clearTimeout(longPressTimer.value)
-    longPressTimer.value = null
+onUnmounted(() => {
+  if (stopBitcoinAutoRefresh) {
+    stopBitcoinAutoRefresh()
+    stopBitcoinAutoRefresh = null
   }
+
+  document.removeEventListener('keydown', handleEscapeKey)
+  document.removeEventListener('keydown', handleDirectInputEscape)
+})
+
+function openMobileCartPanel() {
+  showMobileCart.value = true
+
+  nextTick(() => {
+    mobileCartRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 // Handle adding product to cart
 async function handleAddToCart(product: Product) {
   if (!authStore.isLoggedIn) {
-    alert('로그인이 필요합니다')
+    alert(t('shop.errors.loginRequired', '로그인이 필요합니다'))
     return
   }
 
   try {
     const result = await cartStore.addItem(product)
     if (!result.success) {
-      alert(result.message || '장바구니 추가에 실패했습니다')
+      alert(result.message || t('shop.errors.addFailed', '장바구니 추가에 실패했습니다'))
     }
   } catch (error) {
     console.error('장바구니 추가 오류:', error)
-    alert('장바구니 추가 중 오류가 발생했습니다')
+    alert(t('shop.errors.generic', '알 수 없는 오류가 발생했습니다'))
   }
 }
 
@@ -775,13 +979,13 @@ async function handleUpdateQuantity(itemId: number, newQuantity: number) {
     // Remove item if quantity is 0 or less
     const result = await cartStore.removeItem(itemId)
     if (!result.success) {
-      alert(result.message || '아이템 제거에 실패했습니다')
+      alert(result.message || t('shop.errors.removeFailed', '아이템 제거에 실패했습니다'))
     }
   } else {
     // Update quantity
     const result = await cartStore.updateItem(itemId, newQuantity)
     if (!result.success) {
-      alert(result.message || '수량 변경에 실패했습니다')
+      alert(result.message || t('shop.errors.quantityUpdateFailed', '수량 변경에 실패했습니다'))
     }
   }
 }
@@ -848,7 +1052,7 @@ async function selectCategory(categoryId: string | number) {
   try {
     selectedCategory.value = categoryId
     // Re-fetch available products with the selected category
-    const filterCategoryId = categoryId || undefined
+    const filterCategoryId = categoryId === '' ? undefined : String(categoryId)
     await productStore.fetchAvailableProducts(filterCategoryId)
   } catch (error) {
     console.error('카테고리별 상품 필터링 오류:', error)
@@ -858,7 +1062,7 @@ async function selectCategory(categoryId: string | number) {
 // Handle direct input modal
 function openDirectInputModal() {
   showDirectInputModal.value = true
-  directInputAmount.value = null
+  directInputAmount.value = 0
   directInputDescription.value = ''
   
   // Add escape key listener
@@ -867,7 +1071,7 @@ function openDirectInputModal() {
 
 function closeDirectInputModal() {
   showDirectInputModal.value = false
-  directInputAmount.value = null
+  directInputAmount.value = 0
   directInputDescription.value = ''
   isAddingDirectInput.value = false
   
@@ -884,7 +1088,7 @@ function handleDirectInputEscape(event: KeyboardEvent) {
 // Handle direct input submission
 async function handleDirectInput() {
   if (!directInputAmount.value || directInputAmount.value <= 0) {
-    alert('올바른 금액을 입력해주세요')
+    alert(t('shop.errors.invalidAmount', '올바른 금액을 입력해주세요'))
     return
   }
 
@@ -892,7 +1096,9 @@ async function handleDirectInput() {
 
   try {
     // Create a custom item name
-    const itemName = directInputDescription.value.trim() || '직접 입력 항목'
+    const itemName =
+      directInputDescription.value.trim() ||
+      t('shop.directInput.fallbackName', '직접 입력 항목')
     
     // Create a custom item object for the cart
     const customItem = {
@@ -905,11 +1111,11 @@ async function handleDirectInput() {
     if (result.success) {
       closeDirectInputModal()
     } else {
-      alert(result.message || '장바구니 추가에 실패했습니다')
+      alert(result.message || t('shop.errors.customAddFailed', '장바구니 추가에 실패했습니다'))
     }
   } catch (error) {
     console.error('직접 입력 장바구니 추가 오류:', error)
-    alert('장바구니 추가 중 오류가 발생했습니다')
+    alert(t('shop.errors.generic', '알 수 없는 오류가 발생했습니다'))
   } finally {
     isAddingDirectInput.value = false
   }

@@ -8,6 +8,7 @@ import Settings from '../views/Settings.vue'
 import Admin from '../views/Admin.vue'
 import Terms from '../views/Terms.vue'
 import Privacy from '../views/Privacy.vue'
+import Guide from '../views/Guide.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +64,11 @@ const router = createRouter({
       name: 'admin',
       component: Admin,
       meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/guide',
+      name: 'guide',
+      component: Guide
     }
   ]
 })

@@ -10,7 +10,7 @@
             class="text-xl font-bold text-text-primary select-none cursor-pointer"
             @click="$router.push('/')"
           >
-            한입 POS
+            {{ brandName }}
           </h1>
           <div class="flex items-center space-x-4">
             <button
@@ -116,11 +116,25 @@
               @error="handleImageError"
             />
             <div class="p-4">
-              <h3 class="font-semibold text-text-primary truncate">
+              <h3 class="font-semibold text-text-primary truncate mb-1">
                 {{ product.name }}
               </h3>
-              <p class="text-primary font-bold text-lg">
-                ₩{{ Number(product.price || 0).toLocaleString("ko-KR") }}
+              <div class="flex items-center gap-2">
+                <p class="text-primary font-bold text-lg">
+                  {{ formatPrice(Number(product.price || 0)) }}
+                </p>
+                <span
+                  v-if="productHasDiscount(product)"
+                  class="text-xs font-semibold text-success-600 bg-success-100 rounded-full px-2 py-0.5"
+                >
+                  -{{ productDiscountPercent(product) }}%
+                </span>
+              </div>
+              <p
+                v-if="productHasDiscount(product)"
+                class="text-xs text-text-secondary line-through"
+              >
+                {{ formatPrice(Number(product.regular_price || 0)) }}
               </p>
             </div>
           </div>
@@ -147,7 +161,7 @@
                   {{ item.product_name }}
                 </p>
                 <p class="text-text-secondary text-sm">
-                  ₩{{ Number(item.product_price || 0).toLocaleString("ko-KR") }}
+                  {{ formatPrice(Number(item.product_price || 0)) }}
                 </p>
               </div>
               <div class="flex items-center space-x-2">
@@ -171,7 +185,7 @@
           <div class="space-y-2">
             <div class="flex justify-between font-semibold">
               <span>총계</span>
-              <span>₩{{ cartStore.subtotal.toLocaleString("ko-KR") }}</span>
+              <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
             <div class="flex justify-between text-sm text-accent">
               <span>Bitcoin</span>
@@ -211,9 +225,25 @@
         <h2 class="text-2xl font-bold text-text-primary mb-2">
           {{ selectedProduct.name }}
         </h2>
-        <p class="text-primary font-bold text-2xl mb-4">
-          ₩{{ Number(selectedProduct.price || 0).toLocaleString("ko-KR") }}
-        </p>
+        <div class="mb-4 space-y-1">
+          <div class="flex items-center gap-2">
+            <p class="text-primary font-bold text-2xl">
+              {{ formatPrice(Number(selectedProduct.price || 0)) }}
+            </p>
+            <span
+              v-if="productHasDiscount(selectedProduct)"
+              class="text-xs font-semibold text-success-600 bg-success-100 rounded-full px-2 py-0.5"
+            >
+              -{{ productDiscountPercent(selectedProduct) }}%
+            </span>
+          </div>
+          <p
+            v-if="productHasDiscount(selectedProduct)"
+            class="text-sm text-text-secondary line-through"
+          >
+            {{ formatPrice(Number(selectedProduct.regular_price || 0)) }}
+          </p>
+        </div>
         <p class="text-text-secondary mb-6">
           {{ selectedProduct.description || "상품 설명이 없습니다." }}
         </p>
@@ -232,7 +262,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
@@ -241,6 +271,7 @@ import { useThemeStore } from "@/stores/theme";
 import { useBitcoinStore } from "@/stores/bitcoin";
 import { useCategoryStore } from "@/stores/categories";
 import type { Product } from "@/services/api";
+import { useLocaleStore } from "@/stores/locale";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -249,6 +280,28 @@ const productStore = useProductStore();
 const themeStore = useThemeStore();
 const bitcoinStore = useBitcoinStore();
 const categoryStore = useCategoryStore();
+const localeStore = useLocaleStore();
+const brandName = computed(() => localeStore.t("brand.name", "한입 POS"));
+const formatPrice = (value: number | string): string => {
+  const numeric = Number(value || 0);
+  if (Number.isNaN(numeric)) {
+    return "₩0";
+  }
+  return `₩${numeric.toLocaleString("ko-KR")}`;
+};
+
+const productHasDiscount = (product: Product): boolean => {
+  const regular = Number(product.regular_price);
+  const sale = Number(product.price);
+  return !!regular && regular > sale;
+};
+
+const productDiscountPercent = (product: Product): number => {
+  if (!productHasDiscount(product)) return 0;
+  const regular = Number(product.regular_price);
+  const sale = Number(product.price);
+  return Math.round(((regular - sale) / regular) * 100);
+};
 
 // Mobile UI state
 const showMobileCart = ref(false);
