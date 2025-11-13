@@ -24,9 +24,9 @@
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            <span>상점으로 돌아가기</span>
+            <span>{{ localeStore.t('admin.backToShop', '상점으로 돌아가기') }}</span>
           </button>
-          <h1 class="text-xl font-bold text-text-primary">관리자 패널</h1>
+          <h1 class="text-xl font-bold text-text-primary">{{ localeStore.t('admin.panel', '관리자 패널') }}</h1>
           <div class="w-24"></div>
           <!-- Spacer -->
         </div>
@@ -36,16 +36,16 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
       <div class="bg-bg-primary rounded-2xl shadow-soft p-6">
         <h2 class="text-xl font-semibold text-text-primary mb-4">
-          사용자 목록
+          {{ localeStore.t('admin.users', '사용자 관리') }}
         </h2>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
               <tr class="border-b border-border-secondary">
-                <th class="p-4">사용자명</th>
-                <th class="p-4">이메일</th>
-                <th class="p-4">가입일</th>
-                <th class="p-4">상품 수</th>
+                <th class="p-4">{{ localeStore.t('admin.userDetail.username', '사용자명:').replace(':', '') }}</th>
+                <th class="p-4">{{ localeStore.t('admin.userDetail.email', '이메일:').replace(':', '') }}</th>
+                <th class="p-4">{{ localeStore.t('admin.userDetail.joinDate', '가입일:').replace(':', '') }}</th>
+                <th class="p-4">{{ localeStore.t('admin.userDetail.productCount', '상품 수:').replace(':', '') }}</th>
                 <th class="p-4"></th>
               </tr>
             </thead>
@@ -68,7 +68,7 @@
                     @click="viewUserDetail(user)"
                     class="btn btn-secondary"
                   >
-                    상세보기
+                    {{ localeStore.t('admin.userDetail.title', '사용자 상세 정보') }}
                   </button>
                 </td>
               </tr>
@@ -89,35 +89,35 @@
         @click.stop
       >
         <h2 class="text-2xl font-bold text-text-primary mb-4">
-          {{ selectedUser.username }}님의 정보
+          {{ selectedUser.username }}{{ localeStore.t('admin.userDetail.userInfo', '사용자 정보') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <h3 class="font-semibold text-text-primary mb-2">기본 정보</h3>
+            <h3 class="font-semibold text-text-primary mb-2">{{ localeStore.t('admin.userDetail.userInfo', '사용자 정보') }}</h3>
             <div class="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span class="text-text-secondary">이메일:</span>
+                <span class="text-text-secondary">{{ localeStore.t('admin.userDetail.email', '이메일:') }}</span>
                 {{ selectedUser.email }}
               </div>
               <div>
-                <span class="text-text-secondary">가입일:</span>
+                <span class="text-text-secondary">{{ localeStore.t('admin.userDetail.joinDate', '가입일:') }}</span>
                 {{ formatDate(selectedUser.created_at) }}
               </div>
               <div>
-                <span class="text-text-secondary">관리자:</span>
-                {{ selectedUser.is_kiosk_admin ? "예" : "아니오" }}
+                <span class="text-text-secondary">{{ localeStore.t('admin.userDetail.isAdmin', '관리자:') }}</span>
+                {{ selectedUser.is_kiosk_admin ? localeStore.t('admin.userDetail.yes', '예') : localeStore.t('admin.userDetail.no', '아니오') }}
               </div>
             </div>
           </div>
           <div>
-            <h3 class="font-semibold text-text-primary mb-2">라이트닝 주소</h3>
+            <h3 class="font-semibold text-text-primary mb-2">{{ localeStore.t('admin.userDetail.lightningAddress', '라이트닝 주소:').replace(':', '') }}</h3>
             <p class="font-mono text-sm text-text-secondary">
-              {{ selectedUser.lightning_address || "설정되지 않음" }}
+              {{ selectedUser.lightning_address || localeStore.t('admin.userDetail.notSet', '설정되지 않음') }}
             </p>
           </div>
           <div>
             <h3 class="font-semibold text-text-primary mb-2">
-              등록 상품 ({{ userProducts.length }}개)
+              {{ localeStore.t('admin.userDetail.products', '상품 목록') }} ({{ userProducts.length }}{{ localeStore.t('admin.userDetail.productCountValue', '{count}개').split('{count}')[1] }})
             </h3>
             <div
               class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-64 overflow-y-auto"
@@ -158,10 +158,12 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useLocaleStore } from "@/stores/locale";
 import { adminAPI, type User, type Product } from "@/services/api";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const localeStore = useLocaleStore();
 
 // Check if user is admin
 if (!authStore.isAdmin) {
@@ -197,12 +199,12 @@ async function fetchUsers() {
     if (result.success) {
       users.value = result.users;
     } else {
-      error.value = result.message || "사용자 목록을 불러오는데 실패했습니다";
+      error.value = result.message || '사용자 목록을 불러오는데 실패했습니다';
     }
   } catch (err: unknown) {
     error.value =
-      err.message || "사용자 목록을 불러오는 중 오류가 발생했습니다";
-    console.error("사용자 목록 가져오기 오류:", err);
+      (err as any).message || '사용자 목록을 불러오는 중 오류가 발생했습니다';
+    console.error('사용자 목록 가져오기 오류:', err);
   } finally {
     isLoading.value = false;
   }
@@ -219,11 +221,11 @@ async function viewUserDetail(user: User & { product_count: number }) {
     if (result.success) {
       userProducts.value = result.products || [];
     } else {
-      console.error("사용자 상세 로드 실패:", result.message);
+      console.error(localeStore.t('admin.error.detailLoadFailed', '사용자 상세 로드 실패:'), result.message);
       userProducts.value = [];
     }
   } catch (error: unknown) {
-    console.error("사용자 상세 불러오기 오류:", error);
+    console.error('사용자 상세 불러오기 오류:', error);
     userProducts.value = [];
   } finally {
     isLoadingUserDetail.value = false;
@@ -241,7 +243,7 @@ function closeUserDetail() {
 async function deleteUser(user: User & { product_count: number }) {
   // Prevent self-deletion
   if (user.id === authStore.user?.id) {
-    alert("자기 자신을 삭제할 수 없습니다");
+    alert(localeStore.t('admin.error.cannotDeleteSelf', '자기 자신을 삭제할 수 없습니다'));
     return;
   }
 
@@ -264,17 +266,17 @@ async function deleteUser(user: User & { product_count: number }) {
         closeUserDetail();
       }
     } else {
-      alert(result.message || "사용자 삭제에 실패했습니다");
+      alert(result.message || localeStore.t('admin.error.deleteFailed', '사용자 삭제에 실패했습니다'));
     }
   } catch (error: unknown) {
-    console.error("사용자 삭제 오류:", error);
-    alert("사용자 삭제 중 오류가 발생했습니다");
+    console.error(localeStore.t('admin.error.deleteError', '사용자 삭제 중 오류가 발생했습니다'), error);
+    alert(localeStore.t('admin.error.deleteError', '사용자 삭제 중 오류가 발생했습니다'));
   } finally {
     isDeletingUser.value = false;
   }
 }
 
-// Handle image loading error
+// Handle image loading error - using translation
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement;
 

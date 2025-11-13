@@ -190,6 +190,22 @@ const icons = {
       { tag: 'path', attrs: { d: 'M21 12H9' } },
     ],
   },
+  download: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'path', attrs: { d: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4' } },
+      { tag: 'path', attrs: { d: 'M7 10l5 5 5-5' } },
+      { tag: 'path', attrs: { d: 'M12 15V3' } },
+    ],
+  },
+  upload: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'path', attrs: { d: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4' } },
+      { tag: 'path', attrs: { d: 'M17 9l-5-5-5 5' } },
+      { tag: 'path', attrs: { d: 'M12 4v12' } },
+    ],
+  },
   coin: {
     viewBox: '0 0 24 24',
     paths: [

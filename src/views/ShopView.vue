@@ -88,7 +88,7 @@
             @click="selectCategory('')"
             :class="['btn-category', { active: selectedCategory === '' }]"
           >
-            전체
+            {{ localeStore.t('shop.products.filterAll', '전체') }}
           </button>
           <button
             v-for="category in categoryStore.categories"
@@ -145,9 +145,9 @@
       <div
         class="w-full lg:w-80 lg:sticky top-24 h-fit bg-bg-primary rounded-2xl shadow-soft p-6"
       >
-        <h2 class="text-xl font-semibold text-text-primary mb-4">장바구니</h2>
+        <h2 class="text-xl font-semibold text-text-primary mb-4">{{ localeStore.t('shop.cart.title', '장바구니') }}</h2>
         <div v-if="cartStore.items.length === 0" class="text-center py-8">
-          <p class="text-text-secondary">장바구니가 비어있습니다.</p>
+          <p class="text-text-secondary">{{ localeStore.t('shop.cart.empty', '장바구니가 비어있습니다.') }}</p>
         </div>
         <div v-else>
           <div class="space-y-4">
@@ -184,11 +184,11 @@
           <div class="border-t border-border-secondary my-6"></div>
           <div class="space-y-2">
             <div class="flex justify-between font-semibold">
-              <span>총계</span>
+              <span>{{ localeStore.t('shop.cart.total', '총계') }}</span>
               <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
             <div class="flex justify-between text-sm text-accent">
-              <span>Bitcoin</span>
+              <span>{{ localeStore.t('shop.cart.bitcoinLabel', 'Bitcoin') }}</span>
               <span>{{
                 bitcoinStore.formatSats(
                   bitcoinStore.krwToSats(cartStore.subtotal),
@@ -200,7 +200,7 @@
             @click="$router.push('/payment')"
             class="btn btn-primary w-full mt-6"
           >
-            결제하기
+            {{ localeStore.t('payment.title', '결제') }}
           </button>
         </div>
       </div>
@@ -245,7 +245,7 @@
           </p>
         </div>
         <p class="text-text-secondary mb-6">
-          {{ selectedProduct.description || "상품 설명이 없습니다." }}
+          {{ selectedProduct.description || localeStore.t('shop.product.detailsTitle', '상품 상세정보') }}
         </p>
         <button
           @click="
@@ -254,7 +254,7 @@
           "
           class="btn btn-primary w-full"
         >
-          장바구니 담기
+          {{ localeStore.t('shop.product.addToCart', '장바구니 담기') }}
         </button>
       </div>
     </div>
@@ -365,18 +365,18 @@ function endLongPress() {
 // Handle adding product to cart
 async function handleAddToCart(product: Product) {
   if (!authStore.isLoggedIn) {
-    alert("로그인이 필요합니다");
+    alert(localeStore.t('shop.errors.loginRequired', '로그인이 필요합니다'));
     return;
   }
 
   try {
     const result = await cartStore.addItem(product);
     if (!result.success) {
-      alert(result.message || "장바구니 추가에 실패했습니다");
+      alert(result.message || localeStore.t('shop.errors.addFailed', '장바구니 추가에 실패했습니다'));
     }
   } catch (error) {
-    console.error("장바구니 추가 오류:", error);
-    alert("장바구니 추가 중 오류가 발생했습니다");
+    console.error(localeStore.t('shop.errors.console', '장바구니 추가 오류:'), error);
+    alert(localeStore.t('shop.errors.generic', '장바구니 추가 중 오류가 발생했습니다'));
   }
 }
 
@@ -386,13 +386,13 @@ async function handleUpdateQuantity(itemId: number, newQuantity: number) {
     // Remove item if quantity is 0 or less
     const result = await cartStore.removeItem(itemId);
     if (!result.success) {
-      alert(result.message || "아이템 제거에 실패했습니다");
+      alert(result.message || localeStore.t('shop.errors.removeFailed', '아이템 제거에 실패했습니다'));
     }
   } else {
     // Update quantity
     const result = await cartStore.updateItem(itemId, newQuantity);
     if (!result.success) {
-      alert(result.message || "수량 변경에 실패했습니다");
+      alert(result.message || localeStore.t('shop.errors.quantityUpdateFailed', '수량 변경에 실패했습니다'));
     }
   }
 }
@@ -402,7 +402,7 @@ function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement;
 
   // Log the failed URL for debugging
-  console.warn("이미지 로드 실패:", img.src);
+  console.warn(localeStore.t('shop.console.imageLoadFailed', '이미지 로드 실패:'), img.src);
 
   // Prevent infinite error loops by checking if we've already handled this error
   if (img.dataset.errorHandled === "true") {
@@ -426,7 +426,7 @@ async function handleLogout() {
     await authStore.logout();
     await router.push("/login");
   } catch (error) {
-    console.error("로그아웃 오류:", error);
+    console.error(localeStore.t('shop.console.logoutError', '로그아웃 오류:'), error);
     // Even if logout fails, redirect to login
     await router.push("/login");
   }
@@ -463,7 +463,7 @@ async function selectCategory(categoryId: string | number) {
     const filterCategoryId = categoryId || undefined;
     await productStore.fetchAvailableProducts(filterCategoryId);
   } catch (error) {
-    console.error("카테고리별 상품 필터링 오류:", error);
+    console.error(localeStore.t('shop.console.filterError', '카테고리별 상품 필터링 오류:'), error);
   }
 }
 
@@ -496,7 +496,7 @@ function handleDirectInputEscape(event: KeyboardEvent) {
 // Handle direct input submission
 async function handleDirectInput() {
   if (!directInputAmount.value || directInputAmount.value <= 0) {
-    alert("올바른 금액을 입력해주세요");
+    alert(localeStore.t('shop.errors.invalidAmount', '올바른 금액을 입력해주세요'));
     return;
   }
 
@@ -504,7 +504,7 @@ async function handleDirectInput() {
 
   try {
     // Create a custom item name
-    const itemName = directInputDescription.value.trim() || "직접 입력 항목";
+    const itemName = directInputDescription.value.trim() || localeStore.t('shop.directInput.fallbackName', '직접 입력 항목');
 
     // Create a custom item object for the cart
     const customItem = {
@@ -517,11 +517,11 @@ async function handleDirectInput() {
     if (result.success) {
       closeDirectInputModal();
     } else {
-      alert(result.message || "장바구니 추가에 실패했습니다");
+      alert(result.message || localeStore.t('shop.errors.customAddFailed', '장바구니 추가에 실패했습니다'));
     }
   } catch (error) {
-    console.error("직접 입력 장바구니 추가 오류:", error);
-    alert("장바구니 추가 중 오류가 발생했습니다");
+    console.error(localeStore.t('shop.console.directInputError', '직접 입력 장바구니 추가 오류:'), error);
+    alert(localeStore.t('shop.errors.generic', '장바구니 추가 중 오류가 발생했습니다'));
   } finally {
     isAddingDirectInput.value = false;
   }

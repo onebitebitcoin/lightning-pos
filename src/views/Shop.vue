@@ -256,7 +256,7 @@
 
         <!-- Mobile Cart Loading -->
         <div v-if="cartStore.isLoading" class="text-center py-4">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
           <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
         </div>
 
@@ -308,7 +308,7 @@
           </div>
           <button
             @click="$router.push('/payment')"
-            class="w-full bg-primary-600 dark:bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium"
+            class="btn btn-primary w-full py-2 px-4 rounded-lg font-medium"
           >
             {{ t('shop.cart.checkout', '결제하기') }}
           </button>
@@ -331,7 +331,7 @@
               :class="[
                 'px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200',
                 selectedCategory === '' 
-                  ? 'bg-blue-600 text-white dark:bg-blue-500' 
+                  ? 'bg-indigo-800 text-white dark:bg-indigo-700' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               ]"
             >
@@ -347,7 +347,7 @@
                 :class="[
                   'px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200',
                   selectedCategory === category.id 
-                    ? 'bg-blue-600 text-white dark:bg-blue-500' 
+                    ? 'bg-indigo-800 text-white dark:bg-indigo-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 ]"
               >
@@ -360,7 +360,7 @@
         <!-- Loading State -->
         <div v-if="productStore.isLoading" class="flex justify-center items-center py-12">
           <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-4"></div>
             <p class="text-gray-600 dark:text-gray-300">
               {{ t('shop.products.loading', '상품을 불러오는 중...') }}
             </p>
@@ -373,7 +373,7 @@
           <p class="text-red-600 dark:text-red-400 mb-4">{{ productStore.error }}</p>
           <button
             @click="productStore.fetchAvailableProducts()"
-            class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200"
+            class="btn btn-primary px-4 py-2 rounded-lg"
           >
             {{ t('shop.products.retry', '다시 시도') }}
           </button>
@@ -411,16 +411,16 @@
               
               <!-- Price display with KRW and Sats -->
               <div class="mb-3 xs:mb-4 space-y-1">
-                <div class="flex items-center gap-2">
+                <div class="flex items-baseline gap-2">
                   <p class="text-lg xs:text-xl tablet:text-2xl font-bold text-primary-600 dark:text-primary-400">
                     {{ formatPrice(Number(product.price || 0)) }}
+                    <span
+                      v-if="productHasDiscount(product)"
+                      class="ml-2 text-xs xs:text-sm font-semibold text-success-600 dark:text-success-400"
+                    >
+                      {{ t('shop.product.discountInline', '-{percent}%', { percent: productDiscountPercent(product) }) }}
+                    </span>
                   </p>
-                  <span
-                    v-if="productHasDiscount(product)"
-                    class="inline-flex items-center rounded-full bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300 px-2 py-0.5 text-xs font-semibold"
-                  >
-                    {{ t('shop.product.discountBadge', '{percent}% 할인', { percent: productDiscountPercent(product) }) }}
-                  </span>
                 </div>
                 <div
                   v-if="productHasDiscount(product)"
@@ -429,7 +429,7 @@
                   {{ formatPrice(Number(product.regular_price || 0)) }}
                 </div>
                 <div class="flex items-center space-x-2">
-                  <p class="text-xs xs:text-sm text-warning-600 dark:text-warning-400 font-medium">
+                  <p class="text-xs xs:text-sm text-primary-600 dark:text-primary-400 font-medium">
                     {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
                   </p>
                   <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
@@ -506,7 +506,7 @@
 
         <!-- Cart Loading -->
         <div v-if="cartStore.isLoading" class="text-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
           <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
         </div>
 
@@ -556,14 +556,14 @@
               <span>{{ t('shop.cart.total', '총계') }}:</span>
               <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
-            <div class="flex justify-between text-sm text-warning-600 dark:text-warning-400">
+            <div class="flex justify-between text-sm text-primary-600 dark:text-primary-400">
               <span>{{ t('shop.cart.bitcoinLabel', 'Bitcoin') }}:</span>
               <span>{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</span>
             </div>
           </div>
           <button
             @click="$router.push('/payment')"
-            class="btn btn-success w-full py-3 px-4 text-lg"
+            class="btn btn-primary w-full py-3 px-4 text-lg"
           >
             {{ t('shop.cart.checkout', '결제하기') }}
           </button>
@@ -574,11 +574,11 @@
     <!-- Product Details Modal -->
     <div
       v-if="showProductModal && selectedProduct"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-8"
       @click="closeProductModal"
     >
       <div 
-        class="card max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in"
+        class="card w-full max-w-4xl md:max-w-5xl max-h-[90vh] overflow-y-auto animate-fade-in"
         @click.stop
       >
         <div class="relative">
@@ -597,13 +597,13 @@
 
           <!-- Modal Content -->
           <div class="p-4 xs:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
               <!-- Product Image -->
               <div class="relative">
                 <img
                   :src="selectedProduct.image || selectedProduct.image_url"
                   :alt="selectedProduct.name"
-                  class="w-full h-64 xs:h-80 object-cover rounded-xl"
+                  class="w-full h-64 xs:h-80 md:h-[28rem] object-cover rounded-2xl"
                   @error="handleImageError"
                 />
               </div>
@@ -614,21 +614,34 @@
                   <h3 class="text-2xl xs:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     {{ selectedProduct.name }}
                   </h3>
-                  <p v-if="selectedProduct.description" class="text-gray-600 dark:text-gray-400 text-sm xs:text-base leading-relaxed">
-                    {{ selectedProduct.description }}
-                  </p>
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      {{ t('shop.product.descriptionLabel', '상품 설명') }}
+                    </p>
+                    <p class="mt-2 text-gray-600 dark:text-gray-300 text-sm xs:text-base leading-relaxed whitespace-pre-line">
+                      {{ (selectedProduct.description || '').trim() || t('shop.product.descriptionFallback', '등록된 설명이 없습니다.') }}
+                    </p>
+                  </div>
                 </div>
 
                 <!-- Price Information -->
                 <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
                   <div class="space-y-2">
-                    <div class="flex justify-between items-center">
+                    <div class="flex justify-between items-center gap-3">
                       <span class="text-gray-600 dark:text-gray-400">
                         {{ t('shop.product.priceLabel', '가격') }}:
                       </span>
-                      <span class="text-2xl xs:text-3xl font-bold text-primary-600 dark:text-primary-400">
-                        {{ formatPrice(Number(selectedProduct.price || 0)) }}
-                      </span>
+                      <div class="flex items-baseline justify-end">
+                        <span class="text-2xl xs:text-3xl font-bold text-primary-600 dark:text-primary-400">
+                          {{ formatPrice(Number(selectedProduct.price || 0)) }}
+                        </span>
+                        <span
+                          v-if="productHasDiscount(selectedProduct as Product)"
+                          class="ml-2 text-sm font-semibold text-success-600 dark:text-success-400"
+                        >
+                          {{ t('shop.product.discountInline', '-{percent}%', { percent: productDiscountPercent(selectedProduct as Product) }) }}
+                        </span>
+                      </div>
                     </div>
                     <div
                       v-if="productHasDiscount(selectedProduct as Product)"
@@ -641,7 +654,7 @@
                       <span class="text-gray-600 dark:text-gray-400">
                         {{ t('shop.product.bitcoinPriceLabel', 'Bitcoin 가격') }}:
                       </span>
-                      <span class="text-lg font-semibold text-warning-600 dark:text-warning-400">
+                      <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">
                         {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(selectedProduct.price || 0))) }}
                       </span>
                     </div>
@@ -740,7 +753,7 @@
                   {{ t('shop.directInput.bitcoinLabel', 'Bitcoin 금액') }}:
                 </div>
                 <div class="flex items-center space-x-2">
-                  <span class="text-lg font-semibold text-warning-600 dark:text-warning-400">
+                  <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">
                     {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(directInputAmount)) }}
                   </span>
                   <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
@@ -768,7 +781,7 @@
                 <button
                   type="submit"
                   :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput"
-                  class="flex-1 px-4 py-3 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="btn btn-primary flex-1 px-4 py-3 rounded-lg"
                 >
                   <span v-if="isAddingDirectInput" class="flex items-center space-x-2">
                     <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -801,7 +814,7 @@
                   </p>
                   <p
                     v-if="subtotalSatsLabel"
-                    class="text-xs text-warning-600 dark:text-warning-400 font-medium"
+                    class="text-xs text-primary-600 dark:text-primary-400 font-medium"
                   >
                     {{ subtotalSatsLabel }}
                   </p>
@@ -834,7 +847,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
@@ -945,6 +958,26 @@ onUnmounted(() => {
 
   document.removeEventListener('keydown', handleEscapeKey)
   document.removeEventListener('keydown', handleDirectInputEscape)
+})
+
+onBeforeRouteLeave((to) => {
+  if (to?.name === 'payment') {
+    return true
+  }
+  if (!cartStore.itemCount) {
+    return true
+  }
+
+  cartStore
+    .clearCart()
+    .then(result => {
+      if (!result?.success) {
+        cartStore.resetLocal()
+      }
+    })
+    .catch(() => {
+      cartStore.resetLocal()
+    })
 })
 
 function openMobileCartPanel() {

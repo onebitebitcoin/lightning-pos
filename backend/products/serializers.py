@@ -3,6 +3,7 @@ from .models import Category, Product, CartItem, Order, OrderItem
 import base64
 import uuid
 from django.core.files.base import ContentFile
+from decimal import Decimal
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -28,7 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'image_url', 'image', 
+            'id', 'name', 'description', 'price', 'regular_price', 'image_url', 'image', 
             'image_display_url', 'category', 'category_name', 'is_available', 
             'stock_quantity', 'created_by', 'created_by_username', 'created_at', 'updated_at'
         ]
@@ -38,6 +39,24 @@ class ProductSerializer(serializers.ModelSerializer):
         """Custom validation to handle base64 image data"""
         # Process image data before validation
         attrs = self._process_image_data(attrs)
+        
+        price = attrs.get('price', getattr(self.instance, 'price', None))
+        regular_price = attrs.get('regular_price', getattr(self.instance, 'regular_price', None))
+        
+        if regular_price is not None and price is not None:
+            try:
+                regular_decimal = Decimal(str(regular_price))
+                price_decimal = Decimal(str(price))
+            except Exception:
+                raise serializers.ValidationError({
+                    'regular_price': '정가와 판매가는 숫자여야 합니다.'
+                })
+            
+            if regular_decimal < price_decimal:
+                raise serializers.ValidationError({
+                    'regular_price': '정가는 판매 가격보다 크거나 같아야 합니다.'
+                })
+        
         return super().validate(attrs)
     
     def _process_image_data(self, validated_data):
@@ -96,9 +115,16 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Set the creator as the current user
         validated_data['created_by'] = self.context['request'].user
+        price = validated_data.get('price')
+        regular_price = validated_data.get('regular_price')
+        if regular_price is None and price is not None:
+            validated_data['regular_price'] = price
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
+        if 'regular_price' in validated_data:
+            if validated_data['regular_price'] is None:
+                validated_data['regular_price'] = validated_data.get('price', instance.price)
         return super().update(instance, validated_data)
 
 

@@ -4,15 +4,15 @@
   >
     <div class="bg-bg-primary rounded-2xl shadow-soft p-8 w-full max-w-md">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-text-primary">로그인</h1>
-        <p class="text-text-secondary">환영합니다!</p>
+        <h1 class="text-3xl font-bold text-text-primary">{{ localeStore.t('login.loginButton', '로그인') }}</h1>
+        <p class="text-text-secondary">{{ localeStore.t('login.welcome', '환영합니다! 계속하려면 로그인해주세요') }}</p>
       </div>
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
           <label
             for="username"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >사용자명</label
+            >{{ localeStore.t('login.username', '사용자명') }}</label
           >
           <input
             id="username"
@@ -26,7 +26,7 @@
           <label
             for="password"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >비밀번호</label
+            >{{ localeStore.t('login.password', '비밀번호') }}</label
           >
           <input
             id="password"
@@ -44,15 +44,15 @@
           :disabled="isSubmitting"
           class="btn btn-primary w-full"
         >
-          <span v-if="isSubmitting">로그인 중...</span>
-          <span v-else>로그인</span>
+          <span v-if="isSubmitting">{{ localeStore.t('login.loggingIn', '로그인 중...') }}</span>
+          <span v-else>{{ localeStore.t('login.loginButton', '로그인') }}</span>
         </button>
       </form>
       <div class="mt-6 text-center">
         <p class="text-sm text-text-secondary">
-          계정이 없으신가요?
+          {{ localeStore.t('login.noAccount', '계정이 없으신가요?') }}
           <router-link to="/register" class="text-primary hover:underline"
-            >회원가입</router-link
+            >{{ localeStore.t('login.signUp', '회원가입') }}</router-link
           >
         </p>
       </div>
@@ -65,9 +65,11 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
+import { useLocaleStore } from "@/stores/locale";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const localeStore = useLocaleStore();
 
 const username = ref("");
 const password = ref("");
@@ -76,7 +78,7 @@ const isSubmitting = ref(false);
 
 async function handleLogin() {
   if (!username.value.trim() || !password.value) {
-    errorMessage.value = "사용자명과 비밀번호를 모두 입력해주세요";
+    errorMessage.value = localeStore.t('login.error.emptyFields', '사용자명과 비밀번호를 모두 입력해주세요');
     return;
   }
 
@@ -104,8 +106,8 @@ async function handleLogin() {
       errorMessage.value = result.message;
     }
   } catch (error) {
-    console.error("로그인 오류:", error);
-    errorMessage.value = "로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
+    console.error(localeStore.t('login.error.console', '로그인 오류:'), error);
+    errorMessage.value = localeStore.t('login.error.loginFailed', '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
   } finally {
     isSubmitting.value = false;
   }

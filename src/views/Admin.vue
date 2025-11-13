@@ -9,14 +9,14 @@
             <button
               @click="$router.push('/shop')"
               class="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-colors duration-200"
-              title="상점으로 돌아가기"
+              :title="localeStore.t('admin.backToShopTitle', '상점으로 돌아가기')"
             >
               <UiIcon name="arrowLeft" class="h-5 w-5" />
             </button>
             <div class="flex items-center space-x-2">
               <h1 class="text-lg sm:text-2xl font-bold text-text-primary">
-                <span class="hidden sm:inline">관리자 패널</span>
-                <span class="sm:hidden">관리자</span>
+                <span class="hidden sm:inline">{{ localeStore.t('admin.panel', '관리자 패널') }}</span>
+                <span class="sm:hidden">{{ localeStore.t('admin.panelMobile', '관리자') }}</span>
               </h1>
             </div>
           </div>
@@ -26,15 +26,15 @@
             <button
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg hover:bg-bg-tertiary transition-colors duration-200"
-              :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
+              :title="themeStore.isDark ? localeStore.t('admin.themeLightTitle', '라이트 모드로 전환') : localeStore.t('admin.themeDarkTitle', '다크 모드로 전환')"
             >
               <UiIcon :name="themeStore.isDark ? 'sun' : 'moon'" class="h-5 w-5" />
             </button>
-            
+
             <!-- User info - responsive -->
             <div class="flex items-center space-x-1 sm:space-x-2">
               <span class="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                <span class="hidden sm:inline">관리자: {{ authStore.username }}님</span>
+                <span class="hidden sm:inline">{{ localeStore.t('admin.userInfo', '관리자:') }} {{ authStore.username }}님</span>
                 <span class="sm:hidden">{{ authStore.username }}</span>
               </span>
             </div>
@@ -57,7 +57,7 @@
           <!-- Modal Header -->
           <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-              {{ selectedUser.username }} 사용자 상세 정보
+              {{ selectedUser.username }} {{ localeStore.t('admin.userDetail.title', '사용자 상세 정보') }}
             </h2>
             <button
               @click="closeUserDetail"
@@ -70,38 +70,38 @@
           <div class="overflow-y-auto max-h-[calc(90vh-120px)]">
             <!-- User Info -->
             <div class="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">사용자 정보</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ localeStore.t('admin.userDetail.userInfo', '사용자 정보') }}</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-3">
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">사용자명:</span>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.username', '사용자명:') }}</span>
                     <div class="text-gray-900 dark:text-white">{{ selectedUser.username }}</div>
                   </div>
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">이메일:</span>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.email', '이메일:') }}</span>
                     <div class="text-gray-900 dark:text-white">{{ selectedUser.email }}</div>
                   </div>
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">라이트닝 주소:</span>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.lightningAddress', '라이트닝 주소:') }}</span>
                     <div class="text-gray-900 dark:text-white font-mono text-sm">
-                      {{ selectedUser.lightning_address || '설정되지 않음' }}
+                      {{ selectedUser.lightning_address || localeStore.t('admin.userDetail.notSet', '설정되지 않음') }}
                     </div>
                   </div>
                 </div>
                 <div class="space-y-3">
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">가입일:</span>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.joinDate', '가입일:') }}</span>
                     <div class="text-gray-900 dark:text-white">{{ formatDate(selectedUser.created_at) }}</div>
                   </div>
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">관리자 권한:</span>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.isAdmin', '관리자 권한:') }}</span>
                     <div class="text-gray-900 dark:text-white">
-                      {{ selectedUser.is_kiosk_admin ? '예' : '아니오' }}
+                      {{ selectedUser.is_kiosk_admin ? localeStore.t('admin.userDetail.yes', '예') : localeStore.t('admin.userDetail.no', '아니오') }}
                     </div>
                   </div>
                   <div>
-                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">상품 수:</span>
-                    <div class="text-gray-900 dark:text-white">{{ userProducts.length }}개</div>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ localeStore.t('admin.userDetail.productCount', '상품 수:') }}</span>
+                    <div class="text-gray-900 dark:text-white">{{ localeStore.t('admin.userDetail.productCountValue', '{count}개').replace('{count}', String(userProducts.length)) }}</div>
                   </div>
                 </div>
               </div>
@@ -109,18 +109,18 @@
 
             <!-- User Products -->
             <div class="p-4 md:p-6">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">상품 목록</h3>
-              
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ localeStore.t('admin.userDetail.products', '상품 목록') }}</h3>
+
               <div v-if="isLoadingUserDetail" class="text-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
-                <p class="text-gray-500 dark:text-gray-400 text-sm">상품 목록 로딩 중...</p>
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">{{ localeStore.t('admin.userDetail.loadingProducts', '상품 목록 로딩 중...') }}</p>
               </div>
 
               <div v-else-if="userProducts.length === 0" class="text-center py-8">
                 <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2 flex justify-center">
                   <UiIcon name="box" class="h-10 w-10" />
                 </div>
-                <p class="text-gray-500 dark:text-gray-400">등록된 상품이 없습니다</p>
+                <p class="text-gray-500 dark:text-gray-400">{{ localeStore.t('admin.userDetail.noProducts', '등록된 상품이 없습니다') }}</p>
               </div>
 
               <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -143,20 +143,20 @@
                       <p class="text-sm text-gray-600 dark:text-gray-400">
                         ₩{{ Number(product.price).toLocaleString('ko-KR') }}
                       </p>
-                      <p v-if="product.category_name" class="text-xs text-blue-600 dark:text-blue-400">
+                      <p v-if="product.category_name" class="text-xs text-indigo-500 dark:text-indigo-300">
                         {{ product.category_name }}
                       </p>
                       <div class="flex items-center space-x-2 mt-1">
                         <span :class="[
                           'text-xs px-2 py-1 rounded-full',
-                          product.is_available 
+                          product.is_available
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                             : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                         ]">
-                          {{ product.is_available ? '판매중' : '품절' }}
+                          {{ product.is_available ? localeStore.t('admin.userDetail.available', '판매중') : localeStore.t('admin.userDetail.unavailable', '품절') }}
                         </span>
                         <span class="text-xs text-gray-500 dark:text-gray-400">
-                          재고: {{ product.stock_quantity }}
+                          {{ localeStore.t('admin.userDetail.stock', '재고: {count}').replace('{count}', String(product.stock_quantity)) }}
                         </span>
                       </div>
                     </div>
@@ -173,17 +173,17 @@
         <div class="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">
-              사용자 목록
+              {{ localeStore.t('admin.userList.title', '사용자 목록') }}
             </h2>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-600 dark:text-gray-400">
-                총 {{ users.length }}명
+                {{ localeStore.t('admin.userList.total', '총 {count}명').replace('{count}', String(users.length)) }}
               </span>
               <button
                 @click="fetchUsers"
                 :disabled="isLoading"
-                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                title="새로고침"
+                class="text-indigo-500 dark:text-indigo-300 hover:text-indigo-400 dark:hover:text-indigo-200 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                :title="localeStore.t('admin.userList.refresh', '새로고침')"
               >
                 <UiIcon name="refresh" class="h-5 w-5" />
               </button>
@@ -193,8 +193,8 @@
 
         <!-- Loading State -->
         <div v-if="isLoading" class="p-8 text-center">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-2"></div>
-          <p class="text-gray-500 dark:text-gray-400">사용자 목록을 불러오는 중...</p>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
+          <p class="text-gray-500 dark:text-gray-400">{{ localeStore.t('admin.userList.loading', '사용자 목록을 불러오는 중...') }}</p>
         </div>
 
         <!-- Error State -->
@@ -205,9 +205,9 @@
           <p class="text-red-600 dark:text-red-400 mb-4">{{ error }}</p>
           <button
             @click="fetchUsers"
-            class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200"
+            class="btn btn-primary px-4 py-2 rounded-lg"
           >
-            다시 시도
+            {{ localeStore.t('admin.userList.error', '다시 시도') }}
           </button>
         </div>
 
@@ -226,30 +226,30 @@
                     {{ user.username }}
                   </h3>
                   <span v-if="user.is_kiosk_admin" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                    관리자
+                    {{ localeStore.t('admin.userList.admin', '관리자') }}
                   </span>
                 </div>
-                
+
                 <div class="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                   <div class="flex items-start gap-2">
-                    <span class="font-medium min-w-0 flex-shrink-0">이메일:</span>
+                    <span class="font-medium min-w-0 flex-shrink-0">{{ localeStore.t('admin.userList.email', '이메일:') }}</span>
                     <span class="break-all">{{ user.email }}</span>
                   </div>
-                  
+
                   <div class="flex items-start gap-2">
-                    <span class="font-medium min-w-0 flex-shrink-0">라이트닝:</span>
-                    <span class="font-mono text-xs break-all">{{ user.lightning_address || '설정되지 않음' }}</span>
+                    <span class="font-medium min-w-0 flex-shrink-0">{{ localeStore.t('admin.userList.lightning', '라이트닝:') }}</span>
+                    <span class="font-mono text-xs break-all">{{ user.lightning_address || localeStore.t('admin.userDetail.notSet', '설정되지 않음') }}</span>
                   </div>
-                  
+
                   <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
-                      <span class="font-medium">상품:</span>
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                        {{ user.product_count }}개
+                      <span class="font-medium">{{ localeStore.t('admin.userList.products', '상품:') }}</span>
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
+                        {{ localeStore.t('admin.userList.productsCount', '{count}개').replace('{count}', String(user.product_count)) }}
                       </span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="font-medium">가입:</span>
+                      <span class="font-medium">{{ localeStore.t('admin.userList.joinDate', '가입:') }}</span>
                       <span>{{ formatDate(user.created_at) }}</span>
                     </div>
                   </div>
@@ -260,20 +260,20 @@
               <div class="flex items-center gap-2 sm:flex-col sm:gap-1">
                 <button
                   @click="viewUserDetail(user)"
-                  class="flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
-                  title="상세 보기"
+                  class="flex items-center justify-center px-3 py-2 text-sm font-medium text-indigo-500 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg transition-colors"
+                  :title="localeStore.t('admin.userList.viewDetail', '상세 보기')"
                 >
                   <UiIcon name="eye" class="h-5 w-5 mr-1" />
-                  <span class="hidden sm:inline">상세</span>
+                  <span class="hidden sm:inline">{{ localeStore.t('admin.userList.viewDetailShort', '상세') }}</span>
                 </button>
                 <button
                   @click="deleteUser(user)"
                   :disabled="user.id === authStore.user?.id || isDeletingUser"
                   class="flex items-center justify-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="사용자 삭제"
+                  :title="localeStore.t('admin.userList.deleteUser', '사용자 삭제')"
                 >
                   <UiIcon name="trash" class="h-5 w-5 mr-1" />
-                  <span class="hidden sm:inline">삭제</span>
+                  <span class="hidden sm:inline">{{ localeStore.t('admin.userList.deleteUserShort', '삭제') }}</span>
                 </button>
               </div>
             </div>
@@ -290,11 +290,13 @@ import UiIcon from '@/components/ui/Icon.vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { useLocaleStore } from '@/stores/locale'
 import { adminAPI, type User } from '@/services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+const localeStore = useLocaleStore()
 
 // Check if user is admin
 if (!authStore.isAdmin) {
@@ -330,11 +332,11 @@ async function fetchUsers() {
     if (result.success) {
       users.value = result.users
     } else {
-      error.value = result.message || '사용자 목록을 불러오는데 실패했습니다'
+      error.value = result.message || localeStore.t('admin.error.fetchFailed', '사용자 목록을 불러오는데 실패했습니다')
     }
   } catch (err: any) {
-    error.value = err.message || '사용자 목록을 불러오는 중 오류가 발생했습니다'
-    console.error('사용자 목록 가져오기 오류:', err)
+    error.value = err.message || localeStore.t('admin.error.fetchError', '사용자 목록을 불러오는 중 오류가 발생했습니다')
+    console.error(localeStore.t('admin.console.fetchError', '사용자 목록 가져오기 오류:'), err)
   } finally {
     isLoading.value = false
   }
@@ -351,11 +353,11 @@ async function viewUserDetail(user: User & { product_count: number }) {
     if (result.success) {
       userProducts.value = result.products || []
     } else {
-      console.error('사용자 상세 로드 실패:', result.message)
+      console.error(localeStore.t('admin.error.detailLoadFailed', '사용자 상세 로드 실패:'), result.message)
       userProducts.value = []
     }
   } catch (error) {
-    console.error('사용자 상세 불러오기 오류:', error)
+    console.error(localeStore.t('admin.error.detailFetchError', '사용자 상세 불러오기 오류:'), error)
     userProducts.value = []
   } finally {
     isLoadingUserDetail.value = false
@@ -373,13 +375,15 @@ function closeUserDetail() {
 async function deleteUser(user: User & { product_count: number }) {
   // Prevent self-deletion
   if (user.id === authStore.user?.id) {
-    alert('자기 자신을 삭제할 수 없습니다')
+    alert(localeStore.t('admin.error.cannotDeleteSelf', '자기 자신을 삭제할 수 없습니다'))
     return
   }
 
   // Confirmation dialog
-  const confirmMessage = `"${user.username}" 사용자를 정말로 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 해당 사용자의 모든 상품과 데이터가 함께 삭제됩니다.`
-  if (!confirm(confirmMessage)) {
+  const confirmTitle = localeStore.t('admin.delete.confirmTitle', '사용자를 정말로 삭제하시겠습니까?')
+  const confirmMessage = localeStore.t('admin.delete.confirmMessage', '이 작업은 되돌릴 수 없으며, 해당 사용자의 모든 상품과 데이터가 함께 삭제됩니다.')
+  const fullConfirmMessage = `"${user.username}" ${confirmTitle}\n\n${confirmMessage}`
+  if (!confirm(fullConfirmMessage)) {
     return
   }
 
@@ -396,11 +400,11 @@ async function deleteUser(user: User & { product_count: number }) {
         closeUserDetail()
       }
     } else {
-      alert(result.message || '사용자 삭제에 실패했습니다')
+      alert(result.message || localeStore.t('admin.error.deleteFailed', '사용자 삭제에 실패했습니다'))
     }
   } catch (error) {
-    console.error('사용자 삭제 오류:', error)
-    alert('사용자 삭제 중 오류가 발생했습니다')
+    console.error(localeStore.t('admin.console.deleteError', '사용자 삭제 오류:'), error)
+    alert(localeStore.t('admin.error.deleteError', '사용자 삭제 중 오류가 발생했습니다'))
   } finally {
     isDeletingUser.value = false
   }

@@ -9,8 +9,9 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_kiosk_admin', 'is_staff', 'is_active', 'created_at')
     search_fields = ('username', 'email')
     ordering = ('-created_at',)
-    
+
     fieldsets = BaseUserAdmin.fieldsets + (
         ('키오스크 정보', {'fields': ('is_kiosk_admin', 'created_at', 'updated_at')}),
+        ('지갑 정보', {'fields': ('lightning_address', 'usdt_address')}),
     )
     readonly_fields = ('created_at', 'updated_at')

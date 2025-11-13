@@ -69,35 +69,35 @@ class UserLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'lightning_address', 'created_at', 'is_kiosk_admin')
+        fields = ('id', 'username', 'email', 'lightning_address', 'usdt_address', 'created_at', 'is_kiosk_admin')
         read_only_fields = ('id', 'created_at')
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating user profile information"""
-    
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'lightning_address')
-    
+        fields = ('username', 'email', 'lightning_address', 'usdt_address')
+
     def validate_username(self, value):
         # Allow current user to keep their username
         if self.instance and self.instance.username == value:
             return value
-        
+
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("이미 존재하는 사용자명입니다.")
         return value
-    
+
     def validate_email(self, value):
         # Allow current user to keep their email
         if self.instance and self.instance.email == value:
             return value
-            
+
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("이미 존재하는 이메일입니다.")
         return value
-    
+
     def validate_lightning_address(self, value):
         """Validate lightning address format"""
         if value and value.strip():
@@ -105,9 +105,23 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             # Basic validation for lightning address format (user@domain.com)
             if '@' not in value or value.count('@') != 1:
                 raise serializers.ValidationError("올바른 라이트닝 주소 형식이 아닙니다. (예: test@walletofsatoshi.com)")
-            
+
             local, domain = value.split('@')
             if not local or not domain or '.' not in domain:
                 raise serializers.ValidationError("올바른 라이트닝 주소 형식이 아닙니다. (예: test@walletofsatoshi.com)")
-        
+
+        return value
+
+    def validate_usdt_address(self, value):
+        """Validate USDT address format"""
+        if value and value.strip():
+            value = value.strip()
+            # Basic validation for USDT address format (user@domain.com)
+            if '@' not in value or value.count('@') != 1:
+                raise serializers.ValidationError("올바른 USDT 주소 형식이 아닙니다. (예: username@speed.app)")
+
+            local, domain = value.split('@')
+            if not local or not domain or '.' not in domain:
+                raise serializers.ValidationError("올바른 USDT 주소 형식이 아닙니다. (예: username@speed.app)")
+
         return value

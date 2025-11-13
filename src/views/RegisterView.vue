@@ -4,15 +4,15 @@
   >
     <div class="bg-bg-primary rounded-2xl shadow-soft p-8 w-full max-w-md">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-text-primary">회원가입</h1>
-        <p class="text-text-secondary">새로운 계정을 생성합니다.</p>
+        <h1 class="text-3xl font-bold text-text-primary">{{ localeStore.t('register.title', '회원가입') }}</h1>
+        <p class="text-text-secondary">{{ localeStore.t('register.subtitle', '새 계정을 만들어주세요') }}</p>
       </div>
       <form @submit.prevent="handleRegister" class="space-y-6">
         <div>
           <label
             for="username"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >사용자명</label
+            >{{ localeStore.t('register.username', '사용자명') }}</label
           >
           <input
             id="username"
@@ -29,7 +29,7 @@
           <label
             for="email"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >이메일</label
+            >{{ localeStore.t('register.email', '이메일') }}</label
           >
           <input
             id="email"
@@ -46,7 +46,7 @@
           <label
             for="password"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >비밀번호</label
+            >{{ localeStore.t('register.password', '비밀번호') }}</label
           >
           <input
             id="password"
@@ -63,7 +63,7 @@
           <label
             for="confirmPassword"
             class="block text-sm font-medium text-text-secondary mb-1"
-            >비밀번호 확인</label
+            >{{ localeStore.t('register.confirmPassword', '비밀번호 확인') }}</label
           >
           <input
             id="confirmPassword"
@@ -81,15 +81,15 @@
           :disabled="isSubmitting"
           class="btn btn-primary w-full"
         >
-          <span v-if="isSubmitting">가입하는 중...</span>
-          <span v-else>회원가입</span>
+          <span v-if="isSubmitting">{{ localeStore.t('register.registering', '가입 중...') }}</span>
+          <span v-else>{{ localeStore.t('register.registerButton', '가입하기') }}</span>
         </button>
       </form>
       <div class="mt-6 text-center">
         <p class="text-sm text-text-secondary">
-          이미 계정이 있으신가요?
+          {{ localeStore.t('register.hasAccount', '이미 계정이 있으신가요?') }}
           <router-link to="/login" class="text-primary hover:underline"
-            >로그인</router-link
+            >{{ localeStore.t('register.signIn', '로그인') }}</router-link
           >
         </p>
       </div>
@@ -105,11 +105,11 @@
           <UiIcon name="celebration" class="h-12 w-12" />
         </div>
         <h3 class="text-2xl font-semibold text-text-primary mb-2">
-          회원가입 완료!
+          {{ localeStore.t('register.accountCreated', '계정 생성 완료!') }}
         </h3>
         <p class="text-text-secondary mb-6">{{ successMessage }}</p>
         <button @click="goToLogin" class="btn btn-primary w-full">
-          로그인 페이지로 이동
+          {{ localeStore.t('register.goToLogin', '로그인 페이지로 이동') }}
         </button>
       </div>
     </div>
@@ -120,10 +120,12 @@
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useLocaleStore } from "@/stores/locale";
 import UiIcon from "@/components/ui/Icon.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const localeStore = useLocaleStore();
 
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
@@ -163,50 +165,49 @@ function validateForm(): boolean {
 
   // Validate username
   if (!formData.username.trim()) {
-    formErrors.username = "사용자명을 입력해주세요";
+    formErrors.username = localeStore.t('register.validation.usernameRequired', '사용자명을 입력해주세요');
     isValid = false;
   } else if (formData.username.trim().length < 3) {
-    formErrors.username = "사용자명은 3글자 이상이어야 합니다";
+    formErrors.username = localeStore.t('register.validation.usernameMinLength', '사용자명은 3글자 이상이어야 합니다');
     isValid = false;
   } else if (!/^[a-zA-Z0-9가-힣_]+$/.test(formData.username.trim())) {
-    formErrors.username =
-      "사용자명은 영문, 한글, 숫자, 언더스코어만 사용 가능합니다";
+    formErrors.username = localeStore.t('register.validation.usernameFormat', '사용자명은 영문, 한글, 숫자, 언더스코어만 사용 가능합니다');
     isValid = false;
   }
 
   // Validate email
   if (!formData.email.trim()) {
-    formErrors.email = "이메일을 입력해주세요";
+    formErrors.email = localeStore.t('register.validation.emailRequired', '이메일을 입력해주세요');
     isValid = false;
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-    formErrors.email = "올바른 이메일 형식이 아닙니다";
+    formErrors.email = localeStore.t('register.validation.emailFormat', '올바른 이메일 형식이 아닙니다');
     isValid = false;
   }
 
   // Validate password
   if (!formData.password) {
-    formErrors.password = "비밀번호를 입력해주세요";
+    formErrors.password = localeStore.t('register.validation.passwordRequired', '비밀번호를 입력해주세요');
     isValid = false;
   } else if (formData.password.length < 6) {
-    formErrors.password = "비밀번호는 6글자 이상이어야 합니다";
+    formErrors.password = localeStore.t('register.validation.passwordMinLength', '비밀번호는 6글자 이상이어야 합니다');
     isValid = false;
   } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
-    formErrors.password = "비밀번호는 영문과 숫자를 포함해야 합니다";
+    formErrors.password = localeStore.t('register.validation.passwordFormat', '비밀번호는 영문과 숫자를 포함해야 합니다');
     isValid = false;
   }
 
   // Validate confirm password
   if (!formData.confirmPassword) {
-    formErrors.confirmPassword = "비밀번호 확인을 입력해주세요";
+    formErrors.confirmPassword = localeStore.t('register.validation.confirmPasswordRequired', '비밀번호 확인을 입력해주세요');
     isValid = false;
   } else if (formData.password !== formData.confirmPassword) {
-    formErrors.confirmPassword = "비밀번호가 일치하지 않습니다";
+    formErrors.confirmPassword = localeStore.t('register.validation.confirmPasswordMatch', '비밀번호가 일치하지 않습니다');
     isValid = false;
   }
 
   // Validate terms agreement
   if (!formData.agreeTerms) {
-    formErrors.agreeTerms = "이용약관과 개인정보 처리방침에 동의해주세요";
+    formErrors.agreeTerms = localeStore.t('register.validation.agreeTermsRequired', '이용약관과 개인정보 처리방침에 동의해주세요');
     isValid = false;
   }
 
@@ -246,8 +247,8 @@ async function handleRegister() {
       }
     }
   } catch (error) {
-    console.error("회원가입 오류:", error);
-    alert("계정 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+    console.error(localeStore.t('register.error.console', '회원가입 오류:'), error);
+    alert(localeStore.t('register.error.accountCreationFailed', '계정 생성 중 오류가 발생했습니다. 다시 시도해주세요.'));
   } finally {
     isSubmitting.value = false;
   }

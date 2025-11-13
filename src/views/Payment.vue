@@ -61,7 +61,7 @@
                 :class="[
                   'px-2 xs:px-4 py-1.5 xs:py-2 rounded-lg border transition-colors text-xs xs:text-sm',
                   cartStore.discount === discountOption && !isCustomDiscount
-                    ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-200'
+                    ? 'bg-indigo-100 dark:bg-indigo-900 border-indigo-500 text-indigo-700 dark:text-indigo-200'
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                 ]"
               >
@@ -72,7 +72,7 @@
                 :class="[
                   'px-2 xs:px-4 py-1.5 xs:py-2 rounded-lg border transition-colors text-xs xs:text-sm',
                   cartStore.discount === 0 && !isCustomDiscount
-                    ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-200'
+                    ? 'bg-indigo-100 dark:bg-indigo-900 border-indigo-500 text-indigo-700 dark:text-indigo-200'
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                 ]"
               >
@@ -95,15 +95,15 @@
                   step="0.1"
                   :placeholder="t('payment.discounts.customPlaceholder', '할인율 입력')"
                   :class="[
-                    'flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
-                    isCustomDiscount ? 'border-blue-500 bg-blue-50 dark:bg-blue-900' : 'border-gray-300 dark:border-gray-600'
+                    'flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                    isCustomDiscount ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-300 dark:border-gray-600'
                   ]"
                 />
                 <button
                   @click="applyCustomDiscount"
                   :disabled="!customDiscountValue || customDiscountValue < 0 || customDiscountValue > 100"
-                class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-              >
+                  class="btn btn-primary px-4 py-2 rounded-lg"
+                >
                 {{ t('common.apply', '적용') }}
               </button>
             </div>
@@ -152,65 +152,89 @@
           </h2>
           
           <div class="space-y-3 xs:space-y-4 mb-4 xs:mb-6">
-            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+            <label
+              :class="[
+                'flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-200',
+                hasLightningAddress ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-60'
+              ]"
+            >
               <input
                 v-model="paymentMethod"
                 type="radio"
                 value="lightning"
-                class="w-4 h-4 text-blue-600 dark:text-blue-400"
+                class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                :disabled="!hasLightningAddress"
               />
               <div class="flex-1">
                 <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
                   {{ t('payment.methods.lightning.title', '라이트닝 네트워크') }}
                 </p>
-                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
-                  {{ t('payment.methods.lightning.subtitle', '빠른 비트코인 결제') }}
+                <p v-if="hasLightningAddress" class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('payment.methods.lightning.subtitle', 'Wallet of Satoshi, Strike, Coinos') }}
+                </p>
+                <p v-else class="text-xs text-warning-600 dark:text-warning-400 mt-1">
+                  {{ t('payment.methods.lightning.disabledHint', '사용자 설정에서 라이트닝 주소를 입력하면 사용할 수 있습니다') }}
                 </p>
               </div>
-              <UiIcon name="lightning" class="h-6 w-6 text-primary-500" />
+              <UiIcon
+                name="lightning"
+                :class="['h-6 w-6', hasLightningAddress ? 'text-primary-500' : 'opacity-50']"
+              />
             </label>
             
-            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-not-allowed opacity-50 transition-colors duration-200">
+            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
               <input
+                v-model="paymentMethod"
                 type="radio"
                 value="ecash"
-                disabled
-                class="w-4 h-4 text-gray-400 cursor-not-allowed"
+                class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
               />
               <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
                   {{ t('payment.methods.ecash.title', 'e-cash 결제') }}
                 </p>
-                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">
-                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (곧 출시 예정)') }}
+                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (Cashu)') }}
                 </p>
               </div>
-              <UiIcon name="coin" class="h-6 w-6 opacity-70" />
+              <UiIcon name="coin" class="h-6 w-6 text-primary-500" />
             </label>
             
-            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-not-allowed opacity-50 transition-colors duration-200">
+            <label
+              :class="[
+                'flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-200',
+                hasUsdtAddress ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-60'
+              ]"
+            >
               <input
+                v-model="paymentMethod"
                 type="radio"
                 value="usdt"
-                disabled
-                class="w-4 h-4 text-gray-400 cursor-not-allowed"
+                class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                :disabled="!hasUsdtAddress"
               />
               <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-500 dark:text-gray-400">
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
                   {{ t('payment.methods.usdt.title', 'USDT 테더 결제') }}
                 </p>
-                <p class="text-xs xs:text-sm text-gray-400 dark:text-gray-500">
-                  {{ t('payment.methods.usdt.subtitle', '라이트닝 네트워크 기반 스테이블코인 결제 (곧 출시 예정)') }}
+                <p v-if="hasUsdtAddress" class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('payment.methods.usdt.subtitle', '라이트닝 네트워크 기반 스테이블코인 결제') }}
+                </p>
+                <p v-else class="text-xs text-warning-600 dark:text-warning-400 mt-1">
+                  {{ t('payment.methods.usdt.disabledHint', '사용자 설정에서 speed.app 주소를 입력하면 사용할 수 있습니다') }}
                 </p>
               </div>
-              <UiIcon name="banknote" class="h-6 w-6 opacity-70" />
+              <UiIcon
+                name="banknote"
+                :class="['h-6 w-6', hasUsdtAddress ? 'text-primary-500' : 'opacity-50']"
+              />
             </label>
           </div>
 
           <button
             @click="handlePayment"
             :disabled="!paymentMethod || isGeneratingInvoice"
-            class="btn btn-success w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg hidden sm:inline-flex sm:justify-center"
+            class="btn btn-primary w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg hidden sm:inline-flex sm:justify-center"
           >
             <div class="text-center">
               <div v-if="isGeneratingInvoice" class="flex items-center justify-center space-x-2">
@@ -297,11 +321,11 @@
             
             <!-- Lightning Address Display -->
             <div v-if="paymentMethod === 'lightning' && activeLightningAddress" class="mb-4">
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-            <div class="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+              <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3">
+            <div class="text-xs text-indigo-600 dark:text-indigo-400 font-medium mb-1">
               {{ t('payment.wallet.target', '결제 대상 지갑') }}
             </div>
-                <div class="text-sm font-mono text-blue-800 dark:text-blue-300 break-all flex items-center gap-1">
+                <div class="text-sm font-mono text-indigo-800 dark:text-indigo-200 break-all flex items-center gap-1">
                   <UiIcon name="lightning" class="h-4 w-4" />
                   <span>{{ activeLightningAddress }}</span>
                 </div>
@@ -312,7 +336,7 @@
             <div class="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4 inline-block">
               <!-- Loading State -->
               <div v-show="isGeneratingInvoice" class="flex flex-col items-center space-y-4 p-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
                 <div class="text-sm text-gray-600">
                   {{ getLoadingMessage() }}
                 </div>
@@ -340,7 +364,7 @@
               </button>
               <button
                 @click="completePayment"
-                class="flex-1 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors duration-200"
+                class="btn btn-primary flex-1 px-4 py-2 rounded-lg"
               >
                 {{ t('payment.actions.complete', '결제 완료') }}
               </button>
@@ -366,7 +390,7 @@
           </p>
           <button
             @click="returnToShop"
-            class="w-full bg-blue-600 dark:bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-medium transition-colors duration-200"
+            class="btn btn-primary w-full py-3 px-4 font-medium"
           >
             {{ t('payment.success.continue', '쇼핑 계속하기') }}
           </button>
@@ -403,6 +427,15 @@ const qrCanvas = ref<HTMLCanvasElement>()
 const isGeneratingInvoice = ref(false)
 const activeLightningAddress = ref<string>('')
 
+// Check if user has configured wallet addresses
+const hasLightningAddress = computed(() => {
+  return !!(authStore.user?.lightning_address && authStore.user.lightning_address.trim())
+})
+
+const hasUsdtAddress = computed(() => {
+  return !!(authStore.user?.usdt_address && authStore.user.usdt_address.trim())
+})
+
 const discountOptions = [5, 10, 15, 20, 25]
 const customDiscountValue = ref<number | null>(null)
 const isCustomDiscount = ref(false)
@@ -436,14 +469,25 @@ function getUserLightningAddress(): string {
   if (authStore.user?.lightning_address) {
     return authStore.user.lightning_address
   }
-  
+
   // If not, construct one using their username and default domain
   if (authStore.username) {
     return `${authStore.username}@${DEFAULT_LIGHTNING_DOMAIN}`
   }
-  
+
   // Fallback to default Lightning address
   return FALLBACK_LIGHTNING_ADDRESS
+}
+
+// Get user's USDT address
+function getUserUsdtAddress(): string {
+  // Return user's USDT address from profile
+  if (authStore.user?.usdt_address) {
+    return authStore.user.usdt_address
+  }
+
+  // No fallback for USDT - must be configured
+  return ''
 }
 
 // Get fallback Lightning addresses to try if primary fails
@@ -465,6 +509,12 @@ function getFallbackLightningAddresses(): string[] {
 // Initialize Bitcoin store
 bitcoinStore.initialize()
 
+// Set default payment method based on available wallet addresses
+// If lightning address is not set, switch to ecash
+if (!hasLightningAddress.value) {
+  paymentMethod.value = 'ecash'
+}
+
 async function handlePayment() {
   if (!paymentMethod.value) return
 
@@ -482,8 +532,9 @@ async function handlePayment() {
   if (qrCanvas.value) {
     // QR 코드 생성
     let qrData = ''
-    
-    if (paymentMethod.value === 'lightning') {
+
+    // Lightning and USDT both use Lightning Network invoice generation
+    if (paymentMethod.value === 'lightning' || paymentMethod.value === 'usdt') {
       // Generate real Lightning invoice using LNURL with fallback support
       try {
         // Ensure bitcoin price is loaded
@@ -491,66 +542,69 @@ async function handlePayment() {
           console.log('💰 비트코인 가격 데이터가 없습니다. 로딩 중...')
           await bitcoinStore.fetchBitcoinPrice()
         }
-        
+
         const satsAmount = bitcoinStore.krwToSats(cartStore.total)
         const paymentTypeLabel = getPaymentTypeLabel()
         const memo = `${paymentTypeLabel} - ${cartStore.total.toLocaleString('ko-KR')}원`
-        
-        console.log('🚀 라이트닝 인보이스 생성 시작')
+
+        console.log(`🚀 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 시작`)
         console.log('💰 KRW 금액:', cartStore.total)
         console.log('💰 BTC 가격:', bitcoinStore.btcPriceKrw)
         console.log('💰 변환된 사츠:', satsAmount, '사츠')
         console.log('📝 메모:', memo)
-        
+
         if (satsAmount <= 0) {
           throw new Error('사츠 변환 실패: 비트코인 가격 데이터를 가져올 수 없습니다')
         }
-        
-        // Try primary Lightning address first
-        const primaryAddress = getUserLightningAddress()
-        console.log('⚡ 기본 라이트닝 주소 시도:', primaryAddress)
-        
+
+        // Get address based on payment method
+        const primaryAddress = paymentMethod.value === 'usdt'
+          ? getUserUsdtAddress()
+          : getUserLightningAddress()
+
+        console.log(`⚡ 기본 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 주소 시도:`, primaryAddress)
+
         let result = await bitcoinService.getLnurl(primaryAddress, satsAmount, memo)
         let usedAddress = primaryAddress
-        
-        // If primary address fails with wallet not found, try fallbacks
-        if (!result.success && result.errorType === 'WALLET_NOT_FOUND') {
+
+        // If primary address fails with wallet not found and it's Lightning, try fallbacks
+        if (!result.success && result.errorType === 'WALLET_NOT_FOUND' && paymentMethod.value === 'lightning') {
           const fallbackAddresses = getFallbackLightningAddresses()
           console.log('❌ 기본 주소 실패, 대체 주소 시도:', fallbackAddresses)
-          
+
           for (const fallbackAddress of fallbackAddresses) {
             console.log('🔄 대체 주소 시도:', fallbackAddress)
             result = await bitcoinService.getLnurl(fallbackAddress, satsAmount, memo)
-            
+
             if (result.success) {
               console.log('✅ 대체 주소로 인보이스 생성 성공:', fallbackAddress)
               usedAddress = fallbackAddress
               break
             }
-            
+
             console.log('❌ 대체 주소 실패:', fallbackAddress, result.error)
-            
+
             // If this fallback also fails with wallet not found, try next one
             if (result.errorType !== 'WALLET_NOT_FOUND') {
               break // Don't try more fallbacks for other types of errors
             }
           }
         }
-        
+
         if (result.success && result.invoice) {
-          console.log('🎉 라이트닝 인보이스 생성 성공!')
+          console.log(`🎉 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 성공!`)
           console.log('📄 인보이스:', result.invoice.substring(0, 50) + '...')
           console.log('📍 사용한 주소:', usedAddress)
-          
+
           qrData = result.invoice
           activeLightningAddress.value = usedAddress
-          
+
           // Generate QR code immediately after getting invoice
           try {
             console.log('🔲 QR 코드 생성 중...')
             console.log('📱 QR 데이터 길이:', qrData.length)
             console.log('🎯 QR 데이터 미리보기:', qrData.substring(0, 100) + '...')
-            
+
             await QRCode.toCanvas(qrCanvas.value, qrData, {
               width: 300,
               margin: 2,
@@ -559,7 +613,7 @@ async function handlePayment() {
                 light: '#FFFFFF'
               }
             })
-            
+
             console.log('✅ QR 코드 생성 성공!')
             // Stop loading state after successful QR generation
             isGeneratingInvoice.value = false
@@ -571,17 +625,17 @@ async function handlePayment() {
             return
           }
         } else {
-          console.log('💥 모든 라이트닝 주소 시도 실패!')
+          console.log(`💥 모든 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 주소 시도 실패!`)
           console.log('🔍 최종 오류 유형:', result.errorType)
           console.log('❌ 최종 오류 메시지:', result.error)
-          
+
           // Stop loading state on error
           isGeneratingInvoice.value = false
           activeLightningAddress.value = ''
-          
+
           // Show user-friendly error message based on error type
           let errorMessage = t('payment.errors.invoice', 'Lightning 인보이스 생성에 실패했습니다.')
-          
+
           switch (result.errorType) {
             case 'WALLET_NOT_FOUND':
               errorMessage = t('payment.errors.invoiceWallet', 'Lightning 지갑을 찾을 수 없습니다.\n주소: {address}\n\n설정에서 올바른 Lightning 주소를 설정하거나\n다른 결제 방법을 선택해주세요.', {
@@ -603,13 +657,13 @@ async function handlePayment() {
                 detail: result.error ?? '',
               })
           }
-          
+
           alert(errorMessage)
           showQRCode.value = false
           return
         }
       } catch (error) {
-        console.error('💥 라이트닝 인보이스 생성 중 예상치 못한 오류:', error)
+        console.error(`💥 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 중 예상치 못한 오류:`, error)
         // Stop loading state on unexpected error
         isGeneratingInvoice.value = false
         activeLightningAddress.value = ''
@@ -618,14 +672,14 @@ async function handlePayment() {
         return
       }
     } else {
-      // Fallback for other payment methods
+      // Fallback for other payment methods (e-cash)
       qrData = `payment:${Date.now()}:${cartStore.total.toFixed(2)}`
-      
+
       try {
         console.log('🔲 QR 코드 생성 중...')
         console.log('📱 QR 데이터 길이:', qrData.length)
         console.log('🎯 QR 데이터 미리보기:', qrData.substring(0, 100) + '...')
-        
+
         await QRCode.toCanvas(qrCanvas.value, qrData, {
           width: 300,
           margin: 2,
@@ -634,7 +688,7 @@ async function handlePayment() {
             light: '#FFFFFF'
           }
         })
-        
+
         console.log('✅ QR 코드 생성 성공!')
         // Stop loading state after successful QR generation
         isGeneratingInvoice.value = false

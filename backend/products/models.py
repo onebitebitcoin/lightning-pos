@@ -30,6 +30,13 @@ class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name='상품명')
     description = models.TextField(blank=True, verbose_name='상품 설명')
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='가격')
+    regular_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='정가'
+    )
     image_url = models.URLField(blank=True, verbose_name='이미지 URL')
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name='이미지 파일')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='카테고리')

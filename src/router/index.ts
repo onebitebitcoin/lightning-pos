@@ -5,6 +5,7 @@ import Register from '../views/Register.vue'
 import Shop from '../views/Shop.vue'
 import Payment from '../views/Payment.vue'
 import Settings from '../views/Settings.vue'
+import ProductForm from '../views/ProductForm.vue'
 import Admin from '../views/Admin.vue'
 import Terms from '../views/Terms.vue'
 import Privacy from '../views/Privacy.vue'
@@ -57,6 +58,18 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: Settings,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/products/new',
+      name: 'product-create',
+      component: ProductForm,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/products/edit/:id',
+      name: 'product-edit',
+      component: ProductForm,
       meta: { requiresAuth: true }
     },
     {

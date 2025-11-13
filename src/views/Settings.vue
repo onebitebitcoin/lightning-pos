@@ -13,7 +13,7 @@
               <UiIcon name="arrowLeft" class="h-5 w-5" />
             </button>
             <h1 class="text-lg font-bold text-text-primary">
-              {{ t('settings.pageTitle', '상품 관리') }}
+              {{ t('settings.pageTitle', '설정') }}
             </h1>
           </div>
           <div class="flex items-center space-x-2">
@@ -23,13 +23,13 @@
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                 </span>
-                <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                <span v-else-if="bitcoinStore.error" class="text-red-500" :title="t('settings.priceUnavailable', '가격 정보를 불러올 수 없습니다')">
                   <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
                   <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                   <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
-                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" :title="t('common.priceStale', '가격 정보가 오래되었습니다')">
                     <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                 </template>
@@ -56,7 +56,7 @@
               <span>{{ t('settings.backToShop', '상점으로 돌아가기') }}</span>
             </button>
             <h1 class="text-2xl font-bold text-text-primary">
-              {{ t('settings.pageTitle', '상품 관리') }}
+              {{ t('settings.pageTitle', '설정') }}
             </h1>
           </div>
           <div class="flex items-center space-x-4">
@@ -69,13 +69,13 @@
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
                   <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                 </span>
-                <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                <span v-else-if="bitcoinStore.error" class="text-red-500" :title="t('settings.priceUnavailable', '가격 정보를 불러올 수 없습니다')">
                   <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
                   <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                   <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
-                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" title="가격 정보가 오래되었습니다">
+                  <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" :title="t('common.priceStale', '가격 정보가 오래되었습니다')">
                     <UiIcon name="warning" class="h-4 w-4" />
                   </span>
                 </template>
@@ -84,7 +84,7 @@
             <button
               @click="themeStore.toggleTheme"
               class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              :title="themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
+              :title="themeStore.isDark ? t('settings.theme.switchLight', '라이트 모드로 전환') : t('settings.theme.switchDark', '다크 모드로 전환')"
             >
               <UiIcon :name="themeStore.isDark ? 'sun' : 'moon'" class="h-5 w-5" />
             </button>
@@ -104,26 +104,32 @@
           <button
             v-if="!showUserSettings"
             @click="showUserSettings = true"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm"
+            class="text-indigo-500 dark:text-indigo-300 hover:text-indigo-400 dark:hover:text-indigo-200 px-3 py-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-sm"
           >
-            편집
+            {{ t('settings.userSection.edit', '편집') }}
           </button>
         </div>
 
         <!-- User Info Display -->
         <div v-if="!showUserSettings" class="space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">사용자명:</span>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.username', '사용자명:') }}</span>
             <span class="text-gray-900 dark:text-white">{{ authStore.username }}</span>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">이메일:</span>
-            <span class="text-gray-900 dark:text-white">{{ authStore.user?.email || '설정되지 않음' }}</span>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.email', '이메일:') }}</span>
+            <span class="text-gray-900 dark:text-white">{{ authStore.user?.email || t('settings.userSection.notSet', '설정되지 않음') }}</span>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">라이트닝 주소:</span>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.lightningAddress', '라이트닝 지갑 주소:') }}</span>
             <span class="text-gray-900 dark:text-white font-mono text-sm">
-              {{ authStore.user?.lightning_address || '설정되지 않음' }}
+              {{ authStore.user?.lightning_address || t('settings.userSection.notSet', '설정되지 않음') }}
+            </span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.usdtAddress', 'USDT 지갑 주소:') }}</span>
+            <span class="text-gray-900 dark:text-white font-mono text-sm">
+              {{ authStore.user?.usdt_address || t('settings.userSection.notSet', '설정되지 않음') }}
             </span>
           </div>
         </div>
@@ -133,54 +139,73 @@
           <form @submit.prevent="updateProfile" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                사용자명
+                {{ t('settings.userSection.usernameLabel', '사용자명') }}
               </label>
               <input
                 v-model="userForm.username"
                 type="text"
                 required
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   userFormErrors.username ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="사용자명을 입력하세요"
+                :placeholder="t('settings.userSection.usernamePlaceholder', '사용자명을 입력하세요')"
               />
               <p v-if="userFormErrors.username" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.username }}</p>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                이메일
+                {{ t('settings.userSection.emailLabel', '이메일') }}
               </label>
               <input
                 v-model="userForm.email"
                 type="email"
                 required
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   userFormErrors.email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="이메일을 입력하세요"
+                :placeholder="t('settings.userSection.emailPlaceholder', '이메일을 입력하세요')"
               />
               <p v-if="userFormErrors.email" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.email }}</p>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                라이트닝 지갑 주소
+                {{ t('settings.userSection.lightningLabel', '라이트닝 지갑 주소') }}
               </label>
               <input
                 v-model="userForm.lightning_address"
                 type="text"
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 font-mono text-sm',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 font-mono text-sm',
                   userFormErrors.lightning_address ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="예: test@walletofsatoshi.com"
+                :placeholder="t('settings.userSection.lightningPlaceholder', '예: test@walletofsatoshi.com')"
               />
               <p v-if="userFormErrors.lightning_address" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.lightning_address }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                비트코인 라이트닝 결제를 받기 위한 주소입니다
+                {{ t('settings.userSection.lightningHint', '비트코인 라이트닝 결제를 받기 위한 주소입니다') }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('settings.userSection.usdtLabel', 'USDT 지갑 주소') }}
+              </label>
+              <input
+                v-model="userForm.usdt_address"
+                type="text"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 font-mono text-sm',
+                  userFormErrors.usdt_address ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                :placeholder="t('settings.userSection.usdtPlaceholder', '예: username@speed.app')"
+              />
+              <p v-if="userFormErrors.usdt_address" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ userFormErrors.usdt_address }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {{ t('settings.userSection.usdtHint', '라이트닝 기반 USDT 결제를 받으려면 speed.app 주소를 입력하세요') }}
               </p>
             </div>
 
@@ -190,7 +215,7 @@
                 @click="cancelUserEdit"
                 class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
               >
-                취소
+                {{ t('settings.userSection.cancel', '취소') }}
               </button>
               <button
                 type="submit"
@@ -199,11 +224,11 @@
                   'flex-1 px-4 py-2 rounded-lg transition-colors text-white',
                   isUpdatingProfile
                     ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600'
+                    : 'bg-indigo-800 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800'
                 ]"
               >
-                <span v-if="isUpdatingProfile">업데이트 중...</span>
-                <span v-else>저장</span>
+                <span v-if="isUpdatingProfile">{{ t('settings.userSection.updating', '업데이트 중...') }}</span>
+                <span v-else>{{ t('settings.userSection.save', '저장') }}</span>
               </button>
             </div>
           </form>
@@ -212,8 +237,8 @@
 
       <div class="card mb-4 p-4 md:p-6">
         <div class="flex flex-col gap-1 mb-6">
-          <h3 class="text-base font-semibold text-text-primary">
-            {{ t('settings.environment.title', '환경 설정') }}
+          <h3 class="text-lg md:text-xl font-semibold text-text-primary">
+            {{ t('settings.environment.title', '언어/통화 선택') }}
           </h3>
           <p class="text-sm text-text-secondary">
             {{ t('settings.environment.helper', '결제에 사용할 법정통화와 화면 표시 언어를 선택하세요.') }}
@@ -280,6 +305,11 @@
 
       <!-- Products Section -->
       <div class="card overflow-hidden">
+        <div class="flex items-center justify-between px-4 pt-4 md:px-6 md:pt-6 mb-4">
+          <h2 class="text-lg md:text-xl font-semibold text-text-primary">
+            {{ t('settings.products.title', '상품 관리') }}
+          </h2>
+        </div>
         <!-- Mobile Card View -->
         <div class="md:hidden space-y-4 p-4">
           <div
@@ -298,14 +328,17 @@
               
               <!-- Product Info -->
               <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-gray-900 dark:text-white text-sm mb-2 line-clamp-2">
+                <h3 class="font-medium text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
                   {{ product.name }}
                 </h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                  {{ productDescriptionPreview(product, 60) }}
+                </p>
                 
                 <!-- Prices -->
                 <div class="space-y-1 mb-3">
                   <div class="flex items-center gap-2">
-                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <div class="text-lg font-bold text-indigo-500 dark:text-indigo-300">
                       {{ formatFiatPrice(Number(product.price || 0)) }}
                     </div>
                     <span
@@ -322,7 +355,7 @@
                     {{ formatFiatPrice(Number(product.regular_price || 0)) }}
                   </div>
                   <div class="flex items-center space-x-2">
-                    <div class="text-xs font-medium text-warning-600 dark:text-warning-400">
+                    <div class="text-xs font-medium text-indigo-500 dark:text-indigo-300">
                       {{ bitcoinStore.formatSats(bitcoinStore.fiatToSats(Number(product.price || 0), selectedFiatCurrency)) }}
                     </div>
                     <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
@@ -347,17 +380,17 @@
                 
                 <!-- Action buttons -->
                 <div class="flex space-x-2">
-                  <button
-                    @click="openEditModal(product)"
-                    class="flex-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                  <RouterLink
+                    :to="`/products/edit/${product.id}`"
+                    class="flex-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-200 py-2 px-3 rounded-lg text-sm font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors text-center"
                   >
-                    수정
-                  </button>
+                    {{ t('settings.action.edit', '수정') }}
+                  </RouterLink>
                   <button
                     @click="openDeleteModal(product)"
                     class="flex-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
                   >
-                    삭제
+                    {{ t('settings.action.delete', '삭제') }}
                   </button>
                 </div>
               </div>
@@ -377,13 +410,10 @@
                   {{ t('settings.table.product', '상품명') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  {{ selectedFiatCurrency }} {{ t('settings.table.price', '가격') }}
+                  {{ selectedFiatCurrency }} {{ t('settings.table.price', '가격') }} / {{ t('settings.table.satsPrice', 'Sats 가격') }}
                 </th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  {{ t('settings.table.discount', '할인') }}
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  {{ t('settings.table.satsPrice', 'Sats 가격') }}
+                  {{ t('settings.product.description', '상품 설명') }}
                 </th>
                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   {{ t('settings.table.actions', '작업') }}
@@ -410,8 +440,28 @@
                   </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
-                  <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {{ formatFiatPrice(Number(product.price || 0)) }}
+                  <div class="flex flex-wrap items-center gap-3">
+                    <div class="text-lg font-bold text-indigo-500 dark:text-indigo-300">
+                      {{ formatFiatPrice(Number(product.price || 0)) }}
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <div class="text-sm font-medium text-indigo-500 dark:text-indigo-300">
+                        {{ bitcoinStore.formatSats(bitcoinStore.fiatToSats(Number(product.price || 0), selectedFiatCurrency)) }}
+                      </div>
+                      <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
+                        <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
+                      </span>
+                      <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
+                        <UiIcon name="warning" class="h-4 w-4" />
+                      </span>
+                      <span
+                        v-else-if="bitcoinStore.priceStatus === 'stale'"
+                        class="text-xs text-gray-400"
+                        title="비트코인 가격 정보가 오래되었습니다"
+                      >
+                        <UiIcon name="warning" class="h-4 w-4" />
+                      </span>
+                    </div>
                   </div>
                   <div
                     v-if="productHasDiscount(product)"
@@ -425,41 +475,24 @@
                     </span>
                   </div>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap">
-                  <span v-if="productHasDiscount(product)" class="text-sm font-semibold text-success-600 dark:text-success-400">
-                    -{{ productDiscountPercent(product) }}%
-                  </span>
-                  <span v-else class="text-sm text-gray-500 dark:text-gray-400">--</span>
-                </td>
-                <td class="px-4 py-4 whitespace-nowrap">
-                  <div class="flex items-center space-x-2">
-                    <div class="text-sm font-medium text-warning-600 dark:text-warning-400">
-                      {{ bitcoinStore.formatSats(bitcoinStore.fiatToSats(Number(product.price || 0), selectedFiatCurrency)) }}
-                    </div>
-                    <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
-                      <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
-                    </span>
-                    <span v-else-if="bitcoinStore.error" class="text-red-500" title="가격 정보를 불러올 수 없습니다">
-                      <UiIcon name="warning" class="h-4 w-4" />
-                    </span>
-                    <span v-else-if="bitcoinStore.priceStatus === 'stale'" class="text-xs text-gray-400" title="비트코인 가격 정보가 오래되었습니다">
-                      <UiIcon name="warning" class="h-4 w-4" />
-                    </span>
-                  </div>
+                <td class="px-4 py-4">
+                  <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                    {{ productDescriptionPreview(product, 110) }}
+                  </p>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">
                   <div class="flex justify-center space-x-2">
-                    <button
-                      @click="openEditModal(product)"
-                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                      title="수정"
+                    <RouterLink
+                      :to="`/products/edit/${product.id}`"
+                      class="text-indigo-500 dark:text-indigo-300 hover:text-indigo-400 dark:hover:text-indigo-200 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                      :title="t('settings.action.editTitle', '수정')"
                     >
                       <UiIcon name="edit" class="h-5 w-5" />
-                    </button>
+                    </RouterLink>
                     <button
                       @click="openDeleteModal(product)"
                       class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      title="삭제"
+                      :title="t('settings.action.deleteTitle', '삭제')"
                     >
                       <UiIcon name="trash" class="h-5 w-5" />
                     </button>
@@ -470,42 +503,162 @@
           </table>
         </div>
         <div class="flex justify-end border-t border-border-secondary/60 bg-white/80 dark:bg-gray-900/40 px-4 py-4">
-          <button
-            @click="openAddModal"
-            class="inline-flex items-center space-x-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium shadow-soft transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400 dark:focus:ring-blue-400"
+          <RouterLink
+            to="/products/new"
+            class="btn btn-primary inline-flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium shadow-soft focus:ring-offset-2"
           >
             <UiIcon name="plus" class="h-4 w-4" />
             <span>{{ t('settings.newProduct', '새 상품 추가') }}</span>
-          </button>
+          </RouterLink>
+        </div>
+      </div>
+
+      <!-- e-Cash Management -->
+      <div class="card p-4 md:p-6 space-y-6 mt-6">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-primary-600">{{ t('settings.ecash.badge', 'e-cash 관리') }}</p>
+            <h2 class="text-lg md:text-xl font-semibold text-text-primary">
+              {{ t('settings.ecash.title', 'Cashu e-cash') }}
+            </h2>
+            <p class="text-sm text-text-secondary mt-1">
+              {{ t('settings.ecash.description', 'Cashu 기반 e-cash 토큰을 안전하게 관리하고 백업하거나 복원할 수 있습니다.') }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="handleEcashBackup"
+              class="p-2 rounded-lg border border-border-primary text-text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              :title="t('settings.ecash.actions.backup', '백업')"
+            >
+              <UiIcon name="download" class="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              @click="triggerEcashRestore"
+              class="p-2 rounded-lg border border-border-primary text-text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              :title="t('settings.ecash.actions.restore', '복원')"
+            >
+              <UiIcon name="upload" class="h-5 w-5" />
+            </button>
+            <input
+              ref="ecashFileInput"
+              type="file"
+              accept="application/json"
+              class="hidden"
+              @change="handleEcashFileChange"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="space-y-3">
+            <label class="text-sm font-medium text-text-primary">
+              {{ t('settings.ecash.mintLabel', 'Mint 서버 URL') }}
+            </label>
+            <input
+              v-model="ecashMintForm.mintUrl"
+              type="text"
+              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
+              :placeholder="t('settings.ecash.mintPlaceholder', '예: mint.coinos.io')"
+            />
+            <p class="text-xs text-text-secondary">
+              {{ t('settings.ecash.mintHelper', 'https:// 접두사가 없으면 자동으로 추가되며, 기본값은 mint.coinos.io 입니다.') }}
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
+                @click="saveEcashMintUrl"
+              >
+                {{ t('settings.ecash.actions.save', '저장') }}
+              </button>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg border border-border-primary text-text-primary text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                @click="refreshEcashHoldings"
+              >
+                {{ t('settings.ecash.actions.refresh', '새로고침') }}
+              </button>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-border-primary/70 bg-gray-50 dark:bg-gray-900/40 p-4 space-y-3">
+            <p class="text-sm font-medium text-text-secondary">
+              {{ t('settings.ecash.total', '총 보유량') }}
+            </p>
+            <p class="text-3xl font-bold text-text-primary">
+              {{ ecashTotalSats ? bitcoinStore.formatSats(ecashTotalSats) : '0 sats' }}
+            </p>
+            <p class="text-xs text-text-secondary">
+              {{ t('settings.ecash.holdingsDescription', 'mint 별 e-cash 잔액을 확인하세요.') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-border-primary/60 rounded-2xl">
+          <table class="min-w-full divide-y divide-border-primary/40 text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800/60 text-text-secondary uppercase tracking-wide text-xs">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold">
+                  {{ t('settings.ecash.table.mint', 'Mint') }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold">
+                  {{ t('settings.ecash.table.amount', '금액 (sats)') }}
+                </th>
+                <th class="px-4 py-3 text-left font-semibold">
+                  {{ t('settings.ecash.table.count', '토큰 수') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-border-primary/30">
+              <tr v-if="!hasEcashHoldings">
+                <td colspan="3" class="px-4 py-6 text-center text-text-secondary">
+                  {{ t('settings.ecash.empty', '보유 중인 e-cash 토큰이 없습니다.') }}
+                </td>
+              </tr>
+              <tr v-for="holding in ecashHoldings" :key="holding.mintUrl">
+                <td class="px-4 py-3 font-medium text-text-primary break-all">
+                  {{ holding.mintUrl }}
+                </td>
+                <td class="px-4 py-3 text-text-primary">
+                  {{ bitcoinStore.formatSats(holding.amount) }}
+                </td>
+                <td class="px-4 py-3 text-text-secondary">
+                  {{ holding.count.toLocaleString() }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- Add/Edit Product Modal -->
       <div
         v-if="showProductModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-start md:items-center justify-center z-50 p-4 overflow-y-auto"
         @click="closeProductModal"
       >
-        <div class="card p-4 md:p-8 max-w-md w-full mx-4 transition-colors duration-200" @click.stop>
+        <div class="card p-4 md:p-8 max-w-md w-full mx-auto my-8 transition-colors duration-200 max-h-[90vh] overflow-y-auto" @click.stop>
           <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-4 md:mb-6">
-            {{ editingProduct ? '상품 수정' : '새 상품 추가' }}
+            {{ editingProduct ? t('settings.modal.editTitle', '상품 수정') : t('settings.modal.addTitle', '새 상품 추가') }}
           </h3>
-          
+
           <form @submit.prevent="saveProduct" class="space-y-4">
             <!-- Product Name -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                상품명
+                {{ t('settings.product.title', '상품명') }}
               </label>
               <input
                 v-model="productForm.name"
                 type="text"
                 required
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.name ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="상품명을 입력하세요"
+                :placeholder="t('settings.product.titlePlaceholder', '상품명을 입력하세요')"
               />
               <p v-if="formErrors.name" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.name }}</p>
             </div>
@@ -522,7 +675,7 @@
                 min="0"
                 max="999999"
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.regularPrice ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
                 :placeholder="t('settings.product.regularPrice', '정가')"
@@ -548,7 +701,7 @@
                 max="999999"
                 required
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.price ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
                 placeholder="0.00"
@@ -559,29 +712,53 @@
               </p>
             </div>
 
+            <!-- Product Description -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('settings.product.description', '상품 설명') }}
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('settings.product.descriptionOptional', '선택 사항') }}
+                </span>
+              </label>
+              <textarea
+                v-model="productForm.description"
+                rows="3"
+                :placeholder="t('settings.product.descriptionPlaceholder', '상품에 대한 설명을 입력하세요 (선택)')"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 resize-none',
+                  formErrors.description ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
+                ]"
+                maxlength="500"
+              ></textarea>
+              <p v-if="formErrors.description" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.description }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {{ t('settings.product.descriptionHint', '주요 특징이나 사용법을 간단히 적어주세요') }}
+              </p>
+            </div>
+
             <!-- Product Category -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                카테고리
+                {{ t('settings.product.category', '카테고리') }}
               </label>
               <input
                 v-model="productForm.categoryName"
                 type="text"
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.category ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="카테고리 이름을 입력하세요 (예: 음료수, 스낵, 과자 등)"
+                :placeholder="t('settings.product.categoryPlaceholder', '카테고리 이름을 입력하세요 (예: 음료수, 스낵, 과자 등)')"
                 maxlength="50"
               />
               <p v-if="formErrors.category" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.category }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                새로운 카테고리를 입력하거나 기존 카테고리 이름을 사용하세요
+                {{ t('settings.product.categoryHint', '새로운 카테고리를 입력하거나 기존 카테고리 이름을 사용하세요') }}
               </p>
-              
+
               <!-- Show existing categories as suggestions -->
               <div v-if="allCategoryNames.length > 0" class="mt-2">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">기존 카테고리:</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('settings.product.categoryExisting', '기존 카테고리:') }}</p>
                 <div class="flex flex-wrap gap-1">
                   <button
                     v-for="categoryName in allCategoryNames"
@@ -599,41 +776,41 @@
             <!-- Product Image -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                이미지 URL
+                {{ t('settings.product.image', '이미지 URL') }}
               </label>
               <input
                 v-model="productForm.image"
                 type="url"
                 required
                 :class="[
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200',
                   formErrors.image ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'
                 ]"
-                placeholder="https://example.com/image.jpg"
+                :placeholder="t('settings.product.imagePlaceholder', 'https://example.com/image.jpg')"
               />
               <p v-if="formErrors.image" class="text-red-500 dark:text-red-400 text-sm mt-1">{{ formErrors.image }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                이미지 URL을 입력하거나 아래에서 파일을 선택하세요
+                {{ t('settings.product.imageHint', '이미지 URL을 입력하거나 아래에서 파일을 선택하세요') }}
               </p>
             </div>
 
             <!-- Image Upload -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                또는 이미지 파일 업로드
+                {{ t('settings.product.imageUpload', '또는 이미지 파일 업로드') }}
               </label>
               <input
                 @change="handleImageUpload"
                 type="file"
                 accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
               />
             </div>
 
             <!-- Image Preview -->
             <div v-if="productForm.image" class="mt-4">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                미리보기
+                {{ t('settings.product.preview', '미리보기') }}
               </label>
               <img
                 :src="productForm.image"
@@ -642,7 +819,7 @@
                 @error="imageError = true"
               />
               <p v-if="imageError" class="text-red-500 dark:text-red-400 text-sm mt-1">
-                이미지를 불러올 수 없습니다. URL을 확인해주세요.
+                {{ t('settings.product.imageError', '이미지를 불러올 수 없습니다. URL을 확인해주세요.') }}
               </p>
             </div>
 
@@ -653,7 +830,7 @@
                 @click="closeProductModal"
                 class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
               >
-                취소
+                {{ t('settings.modal.cancel', '취소') }}
               </button>
               <button
                 type="submit"
@@ -662,16 +839,16 @@
                   'flex-1 px-4 py-2 rounded-lg transition-colors text-white',
                   isSubmitting
                     ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600'
+                    : 'bg-indigo-800 dark:bg-indigo-700 hover:bg-indigo-700 dark:hover:bg-indigo-800'
                 ]"
               >
-                <span v-if="isSubmitting">처리 중...</span>
-                <span v-else>{{ editingProduct ? '수정' : '추가' }}</span>
+                <span v-if="isSubmitting">{{ t('settings.modal.processing', '처리 중...') }}</span>
+                <span v-else>{{ editingProduct ? t('settings.modal.edit', '수정') : t('settings.modal.add', '추가') }}</span>
               </button>
             </div>
           </form>
-        </div>
       </div>
+    </div>
 
       <!-- Delete Confirmation Modal -->
       <div
@@ -683,23 +860,22 @@
           <div class="text-4xl md:text-6xl mb-3 md:mb-4 text-warning-500 flex justify-center">
             <UiIcon name="warning" class="h-12 w-12" />
           </div>
-          <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-2">상품 삭제</h3>
+          <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white mb-2">{{ t('settings.delete.title', '상품 삭제') }}</h3>
           <p class="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-4 md:mb-6">
-            "{{ productToDelete?.name }}"을(를) 삭제하시겠습니까?<br>
-            이 작업은 되돌릴 수 없습니다.
+            {{ t('settings.delete.message', '"{name}"을(를) 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', { name: productToDelete?.name ?? '' }) }}
           </p>
           <div class="flex space-x-3">
             <button
               @click="closeDeleteModal"
               class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
-              취소
+              {{ t('settings.delete.cancel', '취소') }}
             </button>
             <button
               @click="deleteProduct"
               class="flex-1 px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors duration-200"
             >
-              삭제
+              {{ t('settings.delete.confirm', '삭제') }}
             </button>
           </div>
         </div>
@@ -708,7 +884,7 @@
       <!-- Success Notification -->
       <div
         v-if="showSuccess"
-        class="fixed top-4 right-4 bg-primary-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all"
+        class="fixed top-4 right-4 bg-indigo-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all"
       >
         <div class="flex items-center space-x-2">
           <UiIcon name="checkCircle" class="h-5 w-5" />
@@ -721,6 +897,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -728,6 +905,7 @@ import { useProductStore } from '@/stores/products'
 import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import { useCategoryStore } from '@/stores/categories'
+import { useEcashStore } from '@/stores/ecash'
 import type { Product } from '@/services/api'
 import { authAPI } from '@/services/api'
 import { useLocaleStore } from '@/stores/locale'
@@ -740,6 +918,7 @@ const productStore = useProductStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const categoryStore = useCategoryStore()
+const ecashStore = useEcashStore()
 const localeStore = useLocaleStore()
 const t = localeStore.t
 const fiatCurrencyStore = useFiatCurrencyStore()
@@ -759,14 +938,21 @@ const currencyTranslationKeys: Record<FiatCurrency, string> = {
   JPY: 'settings.currency.option.jpy'
 }
 
+const ecashHoldings = computed(() => ecashStore.holdings)
+const ecashTotalSats = computed(() => ecashStore.totalSats)
+const hasEcashHoldings = computed(() => ecashStore.proofsCount > 0)
+
 // Initialize products and Bitcoin price when component mounts
 onMounted(async () => {
   try {
     await Promise.all([
       productStore.initializeForSettings(),
       bitcoinStore.initialize(),
-      categoryStore.initialize()
+      categoryStore.initialize(),
+      ecashStore.initialize()
     ])
+    ecashMintForm.mintUrl = ecashStore.mintUrl
+    ecashStore.refreshHoldings()
   } catch (error) {
     console.error('데이터 로드 실패:', error)
   }
@@ -781,6 +967,8 @@ const imageError = ref(false)
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const showSuccess = ref(false)
+const ecashMintForm = reactive({ mintUrl: '' })
+const ecashFileInput = ref<HTMLInputElement | null>(null)
 
 // User settings states
 const showUserSettings = ref(false)
@@ -811,10 +999,76 @@ function productDiscountPercent(product: Product): number {
   return Math.round(((regular - sale) / regular) * 100)
 }
 
+function productDescriptionPreview(product: Product, maxLength = 80): string {
+  const description = (product.description || '').trim()
+  if (!description) {
+    return '--'
+  }
+  return description.length > maxLength
+    ? `${description.slice(0, maxLength).trimEnd()}...`
+    : description
+}
+
 const handleLanguageSelect = (event: Event) => {
   const target = event.target as HTMLSelectElement | null
   if (!target) return
   localeStore.setLanguage(target.value as LanguageCode)
+}
+
+function saveEcashMintUrl() {
+  ecashStore.setMintUrl(ecashMintForm.mintUrl)
+  showSuccessMessage(t('settings.ecash.saveMintSuccess', 'Mint 서버 URL이 저장되었습니다.'))
+}
+
+function refreshEcashHoldings() {
+  ecashStore.refreshHoldings()
+  showSuccessMessage(t('settings.ecash.refreshSuccess', 'e-cash 잔액을 새로고침했습니다.'))
+}
+
+function handleEcashBackup() {
+  try {
+    const data = ecashStore.exportProofs(true)
+    const blob = new Blob([data], { type: 'application/json' })
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `cashu-backup-${timestamp}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    showSuccessMessage(t('settings.ecash.backupSuccess', 'e-cash 백업 파일을 다운로드했습니다.'))
+  } catch (error) {
+    console.error('e-cash backup failed:', error)
+    showSuccessMessage(t('settings.ecash.backupFailed', 'e-cash 백업 파일을 만드는 데 실패했습니다.'), true)
+  }
+}
+
+function triggerEcashRestore() {
+  ecashFileInput.value?.click()
+}
+
+async function handleEcashFileChange(event: Event) {
+  const target = event.target as HTMLInputElement | null
+  const file = target?.files?.[0]
+  if (!file) return
+
+  try {
+    const text = await file.text()
+    const result = ecashStore.importProofs(text)
+    ecashStore.refreshHoldings()
+    showSuccessMessage(
+      t('settings.ecash.restoreSuccess', '{count}개의 토큰을 불러왔습니다.', { count: result.added })
+    )
+  } catch (error) {
+    console.error('e-cash restore failed:', error)
+    showSuccessMessage(t('settings.ecash.restoreFailed', 'e-cash 복원에 실패했습니다. JSON 파일을 확인해주세요.'), true)
+  } finally {
+    if (target) {
+      target.value = ''
+    }
+  }
 }
 
 // Product form
@@ -822,7 +1076,7 @@ const productForm = reactive({
   name: '',
   price: 0,
   regularPrice: 0,
-  category: '',
+  description: '',
   categoryName: '',
   image: ''
 })
@@ -835,6 +1089,7 @@ const formErrors = reactive({
   name: '',
   price: '',
   regularPrice: '',
+  description: '',
   category: '',
   image: ''
 })
@@ -852,15 +1107,25 @@ const formDiscountPercent = computed(() => {
 const userForm = reactive({
   username: '',
   email: '',
-  lightning_address: ''
+  lightning_address: '',
+  usdt_address: ''
 })
 
 // User form errors
 const userFormErrors = reactive({
   username: '',
   email: '',
-  lightning_address: ''
+  lightning_address: '',
+  usdt_address: ''
 })
+
+watch(
+  () => ecashStore.mintUrl,
+  value => {
+    ecashMintForm.mintUrl = value
+  },
+  { immediate: true }
+)
 
 // Computed property to get all category names for suggestions
 const allCategoryNames = computed(() => {
@@ -907,7 +1172,7 @@ function resetForm() {
   productForm.name = ''
   productForm.price = 0
   productForm.regularPrice = 0
-  productForm.category = ''
+  productForm.description = ''
   productForm.categoryName = ''
   productForm.image = ''
   selectedFile.value = null
@@ -920,6 +1185,7 @@ function clearErrors() {
   formErrors.name = ''
   formErrors.price = ''
   formErrors.regularPrice = ''
+  formErrors.description = ''
   formErrors.category = ''
   formErrors.image = ''
 }
@@ -931,19 +1197,19 @@ function validateForm(): boolean {
 
   // Validate name
   if (!productForm.name.trim()) {
-    formErrors.name = '상품명을 입력해주세요'
+    formErrors.name = t('settings.error.nameRequired', '상품명을 입력해주세요')
     isValid = false
   } else if (productForm.name.trim().length < 2) {
-    formErrors.name = '상품명은 2글자 이상이어야 합니다'
+    formErrors.name = t('settings.error.nameTooShort', '상품명은 2글자 이상이어야 합니다')
     isValid = false
   }
 
   // Validate price
   if (productForm.price <= 0) {
-    formErrors.price = '가격은 0보다 커야 합니다'
+    formErrors.price = t('settings.error.priceInvalid', '가격은 0보다 커야 합니다')
     isValid = false
   } else if (productForm.price > 999999) {
-    formErrors.price = '가격은 ₩999,999를 초과할 수 없습니다'
+    formErrors.price = t('settings.error.priceExceeded', '가격은 ₩999,999를 초과할 수 없습니다')
     isValid = false
   }
   if (productForm.regularPrice && productForm.regularPrice < productForm.price) {
@@ -953,7 +1219,7 @@ function validateForm(): boolean {
 
   // Validate image
   if (!productForm.image.trim()) {
-    formErrors.image = '이미지 URL을 입력하거나 파일을 업로드해주세요'
+    formErrors.image = t('settings.error.imageRequired', '이미지 URL을 입력하거나 파일을 업로드해주세요')
     isValid = false
   }
 
@@ -971,22 +1237,16 @@ watch(() => productForm.price, value => {
   }
 })
 
-// Open modals
-function openAddModal() {
-  editingProduct.value = null
-  resetForm()
-  showProductModal.value = true
-}
-
 function openEditModal(product: any) {
   editingProduct.value = product
   productForm.name = product.name
   productForm.price = product.price
   productForm.regularPrice = product.regular_price || product.price || 0
-  productForm.category = product.category || ''
+  productForm.description = product.description || ''
   // Set the category name based on the category ID
   productForm.categoryName = product.category_name || ''
   productForm.image = product.image || product.image_url || ''
+  selectedFile.value = null
   showProductModal.value = true
 }
 
@@ -1077,6 +1337,7 @@ async function saveProduct() {
       productForm.regularPrice && productForm.regularPrice > 0
         ? productForm.regularPrice
         : null
+    const descriptionValue = productForm.description.trim()
     
     let result
     if (editingProduct.value) {
@@ -1085,7 +1346,8 @@ async function saveProduct() {
         name: productForm.name.trim(),
         price: productForm.price,
         regular_price: regularPriceValue,
-        category: categoryId,
+        description: descriptionValue,
+        category: categoryId ?? undefined,
         image_url: productForm.image.trim()
       })
     } else {
@@ -1096,7 +1358,8 @@ async function saveProduct() {
           name: productForm.name.trim(),
           price: productForm.price,
           regular_price: regularPriceValue,
-          category: categoryId,
+          description: descriptionValue || undefined,
+          category: categoryId ?? undefined,
           stock_quantity: 100, // Default stock
           is_available: true
         }, selectedFile.value)
@@ -1106,7 +1369,8 @@ async function saveProduct() {
           name: productForm.name.trim(),
           price: productForm.price,
           regular_price: regularPriceValue,
-          category: categoryId,
+          description: descriptionValue || undefined,
+          category: categoryId ?? undefined,
           image_url: productForm.image.trim()
         })
       }
@@ -1175,6 +1439,7 @@ function resetUserForm() {
   userForm.username = authStore.username || ''
   userForm.email = authStore.user?.email || ''
   userForm.lightning_address = authStore.user?.lightning_address || ''
+  userForm.usdt_address = authStore.user?.usdt_address || ''
   clearUserErrors()
 }
 
@@ -1182,6 +1447,7 @@ function clearUserErrors() {
   userFormErrors.username = ''
   userFormErrors.email = ''
   userFormErrors.lightning_address = ''
+  userFormErrors.usdt_address = ''
 }
 
 function cancelUserEdit() {
@@ -1203,7 +1469,8 @@ async function updateProfile() {
     const result = await authAPI.updateProfile({
       username: userForm.username.trim(),
       email: userForm.email.trim(),
-      lightning_address: userForm.lightning_address.trim() || undefined
+      lightning_address: userForm.lightning_address.trim() || undefined,
+      usdt_address: userForm.usdt_address.trim() || undefined
     })
 
     if (result.success && result.user) {

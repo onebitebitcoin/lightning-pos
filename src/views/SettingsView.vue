@@ -26,14 +26,14 @@
                 />
               </svg>
             </button>
-            <h1 class="text-xl font-bold text-text-primary">설정</h1>
+            <h1 class="text-xl font-bold text-text-primary">{{ localeStore.t('settings.pageTitle', '상품 관리') }}</h1>
           </div>
           <div class="flex items-center space-x-4">
             <button
               @click="themeStore.toggleTheme"
               class="text-text-secondary hover:text-primary transition-colors p-2 rounded-full hover:bg-bg-tertiary"
               :title="
-                themeStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'
+                themeStore.isDark ? localeStore.t('settings.theme.switchLight', '라이트 모드로 전환') : localeStore.t('settings.theme.switchDark', '다크 모드로 전환')
               "
             >
               <span class="text-xl">
@@ -81,12 +81,12 @@
       <!-- User Profile Settings -->
       <div class="bg-bg-primary rounded-2xl shadow-soft p-6 mb-8">
         <h2 class="text-xl font-semibold text-text-primary mb-4">
-          사용자 설정
+          {{ localeStore.t('settings.userSection.title', '사용자 설정') }}
         </h2>
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >사용자명</label
+              >{{ localeStore.t('settings.userSection.usernameLabel', '사용자명') }}</label
             >
             <input
               v-model="userForm.username"
@@ -96,7 +96,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >이메일</label
+              >{{ localeStore.t('settings.userSection.emailLabel', '이메일') }}</label
             >
             <input
               v-model="userForm.email"
@@ -106,7 +106,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >라이트닝 주소</label
+              >{{ localeStore.t('settings.userSection.lightningLabel', '라이트닝 지갑 주소') }}</label
             >
             <input
               v-model="userForm.lightning_address"
@@ -114,8 +114,19 @@
               class="w-full form-input font-mono"
             />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-1"
+              >{{ localeStore.t('settings.userSection.usdtLabel', 'USDT 지갑 주소') }}</label
+            >
+            <input
+              v-model="userForm.usdt_address"
+              type="text"
+              class="w-full form-input font-mono"
+              :placeholder="localeStore.t('settings.userSection.usdtPlaceholder', '예: username@speed.app')"
+            />
+          </div>
           <div class="flex justify-end space-x-3">
-            <button @click="updateProfile" class="btn btn-primary">저장</button>
+            <button @click="updateProfile" class="btn btn-primary">{{ localeStore.t('settings.userSection.save', '저장') }}</button>
           </div>
         </div>
       </div>
@@ -123,9 +134,9 @@
       <!-- Products Section -->
       <div class="bg-bg-primary rounded-2xl shadow-soft p-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold text-text-primary">상품 관리</h2>
+          <h2 class="text-xl font-semibold text-text-primary">{{ localeStore.t('settings.pageTitle', '상품 관리') }}</h2>
           <button @click="openAddModal" class="btn btn-primary">
-            + 새 상품 추가
+            + {{ localeStore.t('settings.product.titlePlaceholder', '새 상품 추가') }}
           </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -153,13 +164,13 @@
                 @click="openEditModal(product)"
                 class="btn btn-secondary w-full"
               >
-                수정
+                {{ localeStore.t('settings.action.edit', '수정') }}
               </button>
               <button
                 @click="openDeleteModal(product)"
                 class="btn btn-danger w-full"
               >
-                삭제
+                {{ localeStore.t('settings.action.delete', '삭제') }}
               </button>
             </div>
           </div>
@@ -177,12 +188,12 @@
         @click.stop
       >
         <h3 class="text-2xl font-semibold text-text-primary mb-6">
-          {{ editingProduct ? "상품 수정" : "새 상품 추가" }}
+          {{ editingProduct ? localeStore.t('settings.modal.editTitle', '상품 수정') : localeStore.t('settings.modal.addTitle', '새 상품 추가') }}
         </h3>
         <form @submit.prevent="saveProduct" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >상품명</label
+              >{{ localeStore.t('settings.product.title', '상품명') }}</label
             >
             <input
               v-model="productForm.name"
@@ -193,7 +204,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >가격 (₩)</label
+              >{{ localeStore.t('settings.product.salePrice', '판매 가격') }} (₩)</label
             >
             <input
               v-model.number="productForm.price"
@@ -204,7 +215,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >카테고리</label
+              >{{ localeStore.t('settings.product.category', '카테고리') }}</label
             >
             <input
               v-model="productForm.categoryName"
@@ -214,7 +225,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >이미지 URL</label
+              >{{ localeStore.t('settings.product.image', '이미지 URL') }}</label
             >
             <input
               v-model="productForm.image"
@@ -225,7 +236,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-1"
-              >또는 이미지 파일 업로드</label
+              >{{ localeStore.t('settings.product.imageUpload', '또는 이미지 파일 업로드') }}</label
             >
             <input
               @change="handleImageUpload"
@@ -240,14 +251,14 @@
               @click="closeProductModal"
               class="btn btn-secondary w-full"
             >
-              취소
+              {{ localeStore.t('settings.modal.cancel', '취소') }}
             </button>
             <button
               type="submit"
               :disabled="isSubmitting"
               class="btn btn-primary w-full"
             >
-              {{ editingProduct ? "수정" : "추가" }}
+              {{ editingProduct ? localeStore.t('settings.modal.edit', '수정') : localeStore.t('settings.modal.add', '추가') }}
             </button>
           </div>
         </form>
@@ -263,16 +274,16 @@
         class="bg-bg-primary rounded-2xl p-8 max-w-sm w-full m-4 text-center"
         @click.stop
       >
-        <h3 class="text-2xl font-semibold text-text-primary mb-4">상품 삭제</h3>
+        <h3 class="text-2xl font-semibold text-text-primary mb-4">{{ localeStore.t('settings.delete.title', '상품 삭제') }}</h3>
         <p class="text-text-secondary mb-6">
-          "{{ productToDelete?.name }}"을(를) 정말 삭제하시겠습니까?
+          "{{ productToDelete?.name }}"{{ localeStore.t('settings.delete.message', '을(를) 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.') }}
         </p>
         <div class="flex space-x-4">
           <button @click="closeDeleteModal" class="btn btn-secondary w-full">
-            취소
+            {{ localeStore.t('settings.delete.cancel', '취소') }}
           </button>
           <button @click="deleteProduct" class="btn btn-danger w-full">
-            삭제
+            {{ localeStore.t('settings.delete.confirm', '삭제') }}
           </button>
         </div>
       </div>
@@ -285,12 +296,16 @@ import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useProductStore } from "@/stores/products";
 import { useCategoryStore } from "@/stores/categories";
+import { useLocaleStore } from "@/stores/locale";
+import { useThemeStore } from "@/stores/theme";
 import type { Product } from "@/services/api";
 import { authAPI } from "@/services/api";
 
 const authStore = useAuthStore();
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
+const localeStore = useLocaleStore();
+const themeStore = useThemeStore();
 
 // Initialize products and Bitcoin price when component mounts
 onMounted(async () => {
@@ -300,7 +315,7 @@ onMounted(async () => {
       categoryStore.initialize(),
     ]);
   } catch (error) {
-    console.error("데이터 로드 실패:", error);
+    console.error(localeStore.t('settings.error.dataLoadFailed', '데이터 로드 실패:'), error);
   }
 });
 
@@ -344,6 +359,7 @@ const userForm = reactive({
   username: "",
   email: "",
   lightning_address: "",
+  usdt_address: "",
 });
 
 // User form errors
@@ -351,6 +367,7 @@ const userFormErrors = reactive({
   username: "",
   email: "",
   lightning_address: "",
+  usdt_address: "",
 });
 
 // Helper function to find or create category by name
@@ -414,6 +431,7 @@ function resetUserForm() {
   userForm.username = u?.username || "";
   userForm.email = u?.email || "";
   userForm.lightning_address = u?.lightning_address || "";
+  userForm.usdt_address = u?.usdt_address || "";
   clearUserErrors();
 }
 
@@ -422,6 +440,7 @@ function clearUserErrors() {
   userFormErrors.username = "";
   userFormErrors.email = "";
   userFormErrors.lightning_address = "";
+  userFormErrors.usdt_address = "";
 }
 
 // Validate form
@@ -431,25 +450,25 @@ function validateForm(): boolean {
 
   // Validate name
   if (!productForm.name.trim()) {
-    formErrors.name = "상품명을 입력해주세요";
+    formErrors.name = localeStore.t('settings.error.nameRequired', '상품명을 입력해주세요');
     isValid = false;
   } else if (productForm.name.trim().length < 2) {
-    formErrors.name = "상품명은 2글자 이상이어야 합니다";
+    formErrors.name = localeStore.t('settings.error.nameTooShort', '상품명은 2글자 이상이어야 합니다');
     isValid = false;
   }
 
   // Validate price
   if (productForm.price <= 0) {
-    formErrors.price = "가격은 0보다 커야 합니다";
+    formErrors.price = localeStore.t('settings.error.priceInvalid', '가격은 0보다 커야 합니다');
     isValid = false;
   } else if (productForm.price > 999999) {
-    formErrors.price = "가격은 ₩999,999를 초과할 수 없습니다";
+    formErrors.price = localeStore.t('settings.error.priceExceeded', '가격은 ₩999,999를 초과할 수 없습니다');
     isValid = false;
   }
 
   // Validate image
   if (!productForm.image.trim()) {
-    formErrors.image = "이미지 URL을 입력하거나 파일을 업로드해주세요";
+    formErrors.image = localeStore.t('settings.error.imageRequired', '이미지 URL을 입력하거나 파일을 업로드해주세요');
     isValid = false;
   }
 
@@ -529,7 +548,7 @@ function handleImageUpload(event: Event) {
     // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       formErrors.image =
-        "이미지 파일이 너무 큽니다. 최대 10MB까지 업로드 가능합니다.";
+        localeStore.t('settings.error.imageSize', '이미지 파일이 너무 큽니다. 최대 10MB까지 업로드 가능합니다.');
       return;
     }
 
@@ -543,7 +562,7 @@ function handleImageUpload(event: Event) {
     ];
     if (!allowedTypes.includes(file.type)) {
       formErrors.image =
-        "지원되지 않는 이미지 형식입니다. JPEG, PNG, GIF, WebP만 지원합니다.";
+        localeStore.t('settings.error.imageFormat', '지원되지 않는 이미지 형식입니다. JPEG, PNG, GIF, WebP만 지원합니다.');
       return;
     }
 
@@ -557,7 +576,7 @@ function handleImageUpload(event: Event) {
       imageError.value = false;
     };
     reader.onerror = () => {
-      formErrors.image = "이미지 파일을 읽는 중 오류가 발생했습니다.";
+      formErrors.image = localeStore.t('settings.error.imageRead', '이미지 파일을 읽는 중 오류가 발생했습니다.');
     };
     reader.readAsDataURL(file);
   }
@@ -612,8 +631,8 @@ async function saveProduct() {
     if (result.success) {
       showSuccessMessage(
         editingProduct.value
-          ? "상품이 성공적으로 수정되었습니다"
-          : "새 상품이 성공적으로 추가되었습니다",
+          ? localeStore.t('settings.success.productUpdated', '상품이 성공적으로 수정되었습니다')
+          : localeStore.t('settings.success.productAdded', '새 상품이 성공적으로 추가되었습니다'),
       );
       closeProductModal();
     } else {
@@ -622,12 +641,12 @@ async function saveProduct() {
         formErrors.image = result.message;
       } else {
         showSuccessMessage(
-          result.message || "오류가 발생했습니다. 다시 시도해주세요",
+          result.message || localeStore.t('settings.error.productAddFailed', '오류가 발생했습니다. 다시 시도해주세요'),
         );
       }
     }
   } catch (error: any) {
-    console.error("상품 저장 중 오류가 발생했습니다:", error);
+    console.error(localeStore.t('settings.error.productSave', '상품 저장 중 오류가 발생했습니다:'), error);
 
     // Handle different types of errors
     if (error.response?.data?.image_url) {
@@ -637,7 +656,7 @@ async function saveProduct() {
     } else if (error.response?.data?.message) {
       showSuccessMessage(error.response.data.message);
     } else {
-      showSuccessMessage("오류가 발생했습니다. 다시 시도해주세요");
+      showSuccessMessage(localeStore.t('settings.error.productAddFailed', '오류가 발생했습니다. 다시 시도해주세요'));
     }
   } finally {
     isSubmitting.value = false;
@@ -661,13 +680,13 @@ async function deleteProduct() {
     try {
       const result = await productStore.deleteProduct(productToDelete.value.id);
       if (result.success) {
-        showSuccessMessage("상품이 성공적으로 삭제되었습니다");
+        showSuccessMessage(localeStore.t('settings.success.productDeleted', '상품이 성공적으로 삭제되었습니다'));
       } else {
-        showSuccessMessage(result.message || "상품 삭제에 실패했습니다");
+        showSuccessMessage(result.message || localeStore.t('settings.error.productDeleteFailed', '상품 삭제에 실패했습니다'));
       }
     } catch (error) {
-      console.error("상품 삭제 중 오류:", error);
-      showSuccessMessage("상품 삭제 중 오류가 발생했습니다");
+      console.error(localeStore.t('settings.error.productDelete', '상품 삭제 중 오류:'), error);
+      showSuccessMessage(localeStore.t('settings.error.productDeleteFailed', '상품 삭제 중 오류가 발생했습니다'));
     }
     closeDeleteModal();
   }
@@ -692,12 +711,13 @@ async function updateProfile() {
       username: userForm.username.trim(),
       email: userForm.email.trim(),
       lightning_address: userForm.lightning_address.trim() || undefined,
+      usdt_address: userForm.usdt_address.trim() || undefined,
     });
 
     if (result.success && result.user) {
       // Update auth store with new user data
       authStore.updateUser(result.user);
-      showSuccessMessage("프로필이 성공적으로 업데이트되었습니다");
+      showSuccessMessage(localeStore.t('settings.success.profileUpdated', '프로필이 성공적으로 업데이트되었습니다'));
       showUserSettings.value = false;
     } else {
       // Handle specific validation errors
@@ -712,12 +732,12 @@ async function updateProfile() {
       }
 
       if (!result.errors || Object.keys(result.errors).length === 0) {
-        showSuccessMessage(result.message || "프로필 업데이트에 실패했습니다");
+        showSuccessMessage(result.message || localeStore.t('settings.error.profileUpdateFailed', '프로필 업데이트에 실패했습니다'));
       }
     }
   } catch (error: any) {
-    console.error("프로필 업데이트 중 오류:", error);
-    showSuccessMessage("프로필 업데이트 중 오류가 발생했습니다");
+    console.error(localeStore.t('settings.console.profileUpdateError', '프로필 업데이트 중 오류:'), error);
+    showSuccessMessage(localeStore.t('settings.error.profileUpdateError', '프로필 업데이트 중 오류가 발생했습니다'));
   } finally {
     isUpdatingProfile.value = false;
   }

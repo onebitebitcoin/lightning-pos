@@ -8,6 +8,7 @@ from django.middleware.csrf import get_token
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, UserProfileUpdateSerializer
 from .models import User
 from products.models import Product
+import requests
 
 
 @api_view(['GET'])
@@ -284,4 +285,130 @@ def admin_delete_user_view(request, user_id):
         return Response({
             'success': False,
             'message': '사용자 삭제 중 오류가 발생했습니다'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def generate_lightning_invoice_view(request):
+    """
+    Generate Lightning Network invoice via LNURL
+    This acts as a proxy to avoid CORS issues when calling external Lightning services
+    """
+    try:
+        ln_account = request.data.get('ln_account')
+        sats = request.data.get('sats')
+        memo = request.data.get('memo', 'Payment')
+
+        if not ln_account or not sats:
+            return Response({
+                'success': False,
+                'error': 'ln_account and sats are required',
+                'errorType': 'INVALID_REQUEST'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Parse Lightning address
+        if '@' not in ln_account:
+            return Response({
+                'success': False,
+                'error': 'Invalid Lightning address format',
+                'errorType': 'INVALID_REQUEST'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        ln_name, ln_domain = ln_account.split('@', 1)
+        lnurl_endpoint = f'https://{ln_domain}/.well-known/lnurlp/{ln_name}'
+
+        # Step 1: Get LNURL pay request details
+        try:
+            lnurl_response = requests.get(lnurl_endpoint, timeout=10)
+            lnurl_response.raise_for_status()
+            lnurl_data = lnurl_response.json()
+        except requests.exceptions.RequestException as e:
+            return Response({
+                'success': False,
+                'error': f'Failed to connect to Lightning service: {str(e)}',
+                'errorType': 'NETWORK_ERROR'
+            }, status=status.HTTP_502_BAD_GATEWAY)
+
+        # Check for error response
+        if lnurl_data.get('status') == 'ERROR':
+            error_reason = lnurl_data.get('reason', 'Unknown error')
+            error_type = 'WALLET_NOT_FOUND' if 'wallet' in error_reason.lower() else 'INVALID_RESPONSE'
+            return Response({
+                'success': False,
+                'error': error_reason,
+                'errorType': error_type
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate response
+        if lnurl_data.get('tag') != 'payRequest':
+            return Response({
+                'success': False,
+                'error': 'Invalid LNURL response: missing payRequest tag',
+                'errorType': 'INVALID_RESPONSE'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check amount limits
+        milli_sats = int(sats) * 1000
+        min_sendable = lnurl_data.get('minSendable', 0)
+        max_sendable = lnurl_data.get('maxSendable', 0)
+
+        if milli_sats < min_sendable or milli_sats > max_sendable:
+            return Response({
+                'success': False,
+                'error': f'Amount {sats} sats is outside allowed range ({min_sendable // 1000} - {max_sendable // 1000} sats)',
+                'errorType': 'INVALID_AMOUNT'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Step 2: Request invoice
+        callback_url = lnurl_data.get('callback')
+        if not callback_url:
+            return Response({
+                'success': False,
+                'error': 'No callback URL in LNURL response',
+                'errorType': 'INVALID_RESPONSE'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            invoice_response = requests.get(
+                callback_url,
+                params={'amount': milli_sats, 'comment': memo},
+                timeout=10
+            )
+            invoice_response.raise_for_status()
+            invoice_data = invoice_response.json()
+        except requests.exceptions.RequestException as e:
+            return Response({
+                'success': False,
+                'error': f'Failed to generate invoice: {str(e)}',
+                'errorType': 'NETWORK_ERROR'
+            }, status=status.HTTP_502_BAD_GATEWAY)
+
+        # Check for error in invoice response
+        if invoice_data.get('status') == 'ERROR':
+            return Response({
+                'success': False,
+                'error': invoice_data.get('reason', 'Failed to generate invoice'),
+                'errorType': 'INVALID_RESPONSE'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Extract invoice
+        invoice = invoice_data.get('pr')
+        if not invoice:
+            return Response({
+                'success': False,
+                'error': 'No invoice returned from Lightning service',
+                'errorType': 'INVALID_RESPONSE'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'success': True,
+            'invoice': invoice
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}',
+            'errorType': 'UNKNOWN'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

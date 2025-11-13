@@ -72,6 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     password: string
     password_confirm: string
     lightning_address: string
+    usdt_address?: string
   }): Promise<{ success: boolean; message: string; errors?: any }> {
     isLoading.value = true
     error.value = null

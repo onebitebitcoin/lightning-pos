@@ -5,13 +5,13 @@
         <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">
           {{ localeStore.t('brand.name', '한입 POS') }}
         </h1>
-        <p class="text-sm xs:text-base text-text-secondary">환영합니다! 계속하려면 로그인해주세요</p>
+        <p class="text-sm xs:text-base text-text-secondary">{{ localeStore.t('login.welcome', '환영합니다! 계속하려면 로그인해주세요') }}</p>
       </div>
-      
+
       <form @submit.prevent="handleLogin" class="space-y-4 tablet:space-y-6">
         <div>
           <label for="username" class="block text-sm tablet:text-base font-medium text-text-secondary mb-2">
-            사용자명
+            {{ localeStore.t('login.username', '사용자명') }}
           </label>
           <input
             id="username"
@@ -19,13 +19,13 @@
             type="text"
             required
             class="form-input text-sm xs:text-base"
-            placeholder="사용자명을 입력하세요"
+            :placeholder="localeStore.t('login.usernamePlaceholder', '사용자명을 입력하세요')"
           />
         </div>
-        
+
         <div>
           <label for="password" class="block text-sm tablet:text-base font-medium text-text-secondary mb-2">
-            비밀번호
+            {{ localeStore.t('login.password', '비밀번호') }}
           </label>
           <input
             id="password"
@@ -33,7 +33,7 @@
             type="password"
             required
             class="form-input text-sm xs:text-base"
-            placeholder="비밀번호를 입력하세요"
+            :placeholder="localeStore.t('login.passwordPlaceholder', '비밀번호를 입력하세요')"
           />
         </div>
         
@@ -49,20 +49,20 @@
         >
           <span v-if="isSubmitting" class="flex items-center justify-center space-x-2">
             <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>로그인 중...</span>
+            <span>{{ localeStore.t('login.loggingIn', '로그인 중...') }}</span>
           </span>
-          <span v-else>로그인</span>
+          <span v-else>{{ localeStore.t('login.loginButton', '로그인') }}</span>
         </button>
       </form>
-      
+
       <div class="mt-4 xs:mt-6 text-center">
         <p class="text-xs xs:text-sm text-text-secondary">
-          계정이 없으신가요? 
+          {{ localeStore.t('login.noAccount', '계정이 없으신가요?') }}
           <button
             @click="$router.push('/register')"
             class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 underline font-medium transition-colors"
           >
-            회원가입
+            {{ localeStore.t('login.signUp', '회원가입') }}
           </button>
         </p>
       </div>
@@ -88,7 +88,7 @@ const isSubmitting = ref(false)
 
 async function handleLogin() {
   if (!username.value.trim() || !password.value) {
-    errorMessage.value = '사용자명과 비밀번호를 모두 입력해주세요'
+    errorMessage.value = localeStore.t('login.error.emptyFields', '사용자명과 비밀번호를 모두 입력해주세요')
     return
   }
 
@@ -97,15 +97,15 @@ async function handleLogin() {
 
   try {
     const result = await authStore.login(username.value.trim(), password.value)
-    
+
     if (result.success) {
       // Initialize cart after successful login
       const cartStore = useCartStore()
       await cartStore.initialize()
-      
+
       // Small delay to ensure token is fully set in axios instance
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       // Redirect based on user role
       if (authStore.isAdmin) {
         router.push('/admin')
@@ -116,8 +116,8 @@ async function handleLogin() {
       errorMessage.value = result.message
     }
   } catch (error) {
-    console.error('로그인 오류:', error)
-    errorMessage.value = '로그인 중 오류가 발생했습니다. 다시 시도해주세요.'
+    console.error(localeStore.t('login.error.console', '로그인 오류:'), error)
+    errorMessage.value = localeStore.t('login.error.loginFailed', '로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
   } finally {
     isSubmitting.value = false
   }
