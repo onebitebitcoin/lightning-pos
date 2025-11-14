@@ -771,7 +771,7 @@ async function handlePayment() {
 }
 
 function buildEcashTransportUrl(requestId: string) {
-  return `${ecashTransportBaseUrl}/api/payment-request/${encodeURIComponent(requestId)}`
+  return `${ecashTransportBaseUrl}/api/products/payments/requests/${encodeURIComponent(requestId)}/`
 }
 
 function stopEcashFlow() {
