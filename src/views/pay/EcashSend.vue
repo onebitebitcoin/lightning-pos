@@ -741,12 +741,18 @@ async function handleInvoiceSend() {
     changeOutputDatas = built.outputDatas
   }
 
-  const response = await apiClient.post('/cashu/melt/', {
+  const meltPayload: any = {
     quote: quoteData?.quote || quoteData?.quote_id,
     inputs: picked,
-    outputs: changeOutputs,
     mintUrl: ecashStore.mintUrl
-  })
+  }
+
+  // Only include outputs if we have change
+  if (changeOutputs && changeOutputs.length > 0) {
+    meltPayload.outputs = changeOutputs
+  }
+
+  const response = await apiClient.post('/cashu/melt/', meltPayload)
   const data = response.data
   const signatures = data?.change || data?.signatures || data?.promises || []
   let changeProofs: CashuProof[] = []

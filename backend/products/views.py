@@ -830,6 +830,13 @@ def cashu_melt_view(request):
         response.raise_for_status()
 
         return Response(response.json())
+    except requests.exceptions.HTTPError as e:
+        error_detail = e.response.text if hasattr(e, 'response') and e.response else str(e)
+        return Response({
+            'success': False,
+            'error': f'Failed to melt tokens: {str(e)}',
+            'detail': error_detail
+        }, status=status.HTTP_502_BAD_GATEWAY)
     except requests.exceptions.RequestException as e:
         return Response({
             'success': False,
