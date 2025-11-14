@@ -257,6 +257,37 @@ const icons = {
       { tag: 'path', attrs: { d: 'M3 7l9 6 9-6' } },
     ],
   },
+  camera: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'rect', attrs: { x: '3', y: '5', width: '18', height: '14', rx: '3' } },
+      { tag: 'path', attrs: { d: 'M9 5l1.5-2h3L15 5' } },
+      { tag: 'circle', attrs: { cx: '12', cy: '12', r: '4' } },
+    ],
+  },
+  clipboard: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'rect', attrs: { x: '6', y: '4', width: '12', height: '16', rx: '2' } },
+      { tag: 'path', attrs: { d: 'M9 4V3h6v1' } },
+      { tag: 'path', attrs: { d: 'M9 10h6' } },
+      { tag: 'path', attrs: { d: 'M9 14h4' } },
+    ],
+  },
+  copy: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'rect', attrs: { x: '8', y: '8', width: '13', height: '13', rx: '2' } },
+      { tag: 'path', attrs: { d: 'M4 16V5a2 2 0 012-2h11' } },
+    ],
+  },
+  send: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'path', attrs: { d: 'M22 2L11 13' } },
+      { tag: 'path', attrs: { d: 'M22 2l-7 20-4-9-9-4z' } },
+    ],
+  },
 } as const satisfies Record<string, IconDefinition>
 
 type IconName = keyof typeof icons

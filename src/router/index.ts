@@ -10,6 +10,7 @@ import Admin from '../views/Admin.vue'
 import Terms from '../views/Terms.vue'
 import Privacy from '../views/Privacy.vue'
 import Guide from '../views/Guide.vue'
+import EcashSend from '../views/pay/EcashSend.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -58,6 +59,12 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: Settings,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/pay/send',
+      name: 'ecash-send',
+      component: EcashSend,
       meta: { requiresAuth: true }
     },
     {

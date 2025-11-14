@@ -130,6 +130,57 @@ export const useEcashStore = defineStore('ecash', () => {
     return { added: Math.max(merged.length - before, 0), total: merged.length }
   }
 
+  function setProofs(next: CashuProof[]) {
+    const normalized = uniqueProofs(next || [])
+    proofs.value = normalized
+    serializeProofs(normalized)
+  }
+
+  function removeProofs(toRemove: CashuProof[] = []) {
+    if (!Array.isArray(toRemove) || toRemove.length === 0) {
+      return { removed: 0, total: proofs.value.length }
+    }
+    const removeKeys = new Set(toRemove.map(proof => proof?.secret || JSON.stringify(proof)))
+    const remaining = proofs.value.filter(proof => !removeKeys.has(proof?.secret || JSON.stringify(proof)))
+    const removed = Math.max(proofs.value.length - remaining.length, 0)
+    setProofs(remaining)
+    return { removed, total: remaining.length }
+  }
+
+  function selectProofsForAmount(target: number) {
+    const normalizedTarget = Math.max(Number(target) || 0, 0)
+    if (!normalizedTarget) {
+      return { ok: false, picked: [], total: 0 }
+    }
+
+    const availableProofs = uniqueProofs(proofs.value)
+      .slice()
+      .sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0))
+
+    const picked: CashuProof[] = []
+    let total = 0
+
+    for (const proof of availableProofs) {
+      picked.push(proof)
+      total += Number(proof.amount || 0)
+      if (total >= normalizedTarget) {
+        break
+      }
+    }
+
+    if (total < normalizedTarget) {
+      return { ok: false, picked: [], total: 0 }
+    }
+
+    const uniquePicked = uniqueProofs(picked)
+    const uniqueTotal = uniquePicked.reduce((sum, proof) => sum + Number(proof?.amount || 0), 0)
+    return { ok: true, picked: uniquePicked, total: uniqueTotal }
+  }
+
+  function getProofsSnapshot() {
+    return uniqueProofs(proofs.value)
+  }
+
   function importProofs(input: string | CashuProof[]) {
     let parsed: CashuProof[] = []
     try {
@@ -160,6 +211,9 @@ export const useEcashStore = defineStore('ecash', () => {
     refreshHoldings,
     exportProofs,
     addProofs,
+    removeProofs,
+    selectProofsForAmount,
+    getProofsSnapshot,
     importProofs,
     DEFAULT_MINT_URL
   }

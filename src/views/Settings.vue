@@ -526,6 +526,13 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
+            <RouterLink
+              to="/pay/send"
+              class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-primary-500 focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+            >
+              <UiIcon name="send" class="h-4 w-4" />
+              <span>{{ t('settings.ecash.actions.send', 'e-cash 보내기') }}</span>
+            </RouterLink>
             <button
               type="button"
               @click="handleEcashBackup"

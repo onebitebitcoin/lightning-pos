@@ -359,6 +359,30 @@
                 {{ getQRScanMessage() }}
               </span>
             </p>
+            <div
+              v-if="paymentMethod === 'ecash' && !isGeneratingInvoice && ecashRequestText"
+              class="mb-4 space-y-2"
+            >
+              <button
+                type="button"
+                class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                @click="copyEcashRequestText"
+              >
+                <UiIcon name="copy" class="h-4 w-4" />
+                <span>{{ t('payment.actions.copyRequest', '결제 텍스트 복사') }}</span>
+              </button>
+              <p
+                v-if="ecashCopyFeedback"
+                :class="[
+                  'text-sm',
+                  ecashCopyFeedback.type === 'success'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                ]"
+              >
+                {{ ecashCopyFeedback.message }}
+              </p>
+            </div>
             
             <div class="flex space-x-3">
               <button
@@ -430,7 +454,7 @@ const ecashStore = useEcashStore()
 const t = localeStore.t
 const apiBaseUrl = API_BASE_URL.replace(/\/+$/, '')
 const ecashTransportBaseUrl = (
-  import.meta.env.VITE_ECASH_TRANSPORT_BASE_URL || 'https://pos.onebitebitcoin/api'
+  import.meta.env.VITE_ECASH_TRANSPORT_BASE_URL || 'https://pos.onebitebitcoin.com'
 ).replace(/\/+$/, '')
 
 const paymentMethod = ref('lightning')
@@ -440,7 +464,10 @@ const qrCanvas = ref<HTMLCanvasElement>()
 const isGeneratingInvoice = ref(false)
 const activeLightningAddress = ref<string>('')
 const isWaitingForEcashPayment = ref(false)
+const ecashRequestText = ref('')
+const ecashCopyFeedback = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 let ecashPollingTimer: number | null = null
+let ecashCopyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 // Check if user has configured wallet addresses
 const hasLightningAddress = computed(() => {
@@ -718,6 +745,7 @@ async function handlePayment() {
 
         console.log('💳 e-cash payment request generated:', requestId)
         qrData = requestString
+        ecashRequestText.value = requestString
         startEcashPaymentPolling(requestId)
         isWaitingForEcashPayment.value = true
 
@@ -743,7 +771,7 @@ async function handlePayment() {
 }
 
 function buildEcashTransportUrl(requestId: string) {
-  return `${ecashTransportBaseUrl}/products/payments/requests/${encodeURIComponent(requestId)}/`
+  return `${ecashTransportBaseUrl}/api/payment-request/${encodeURIComponent(requestId)}`
 }
 
 function stopEcashFlow() {
@@ -752,6 +780,7 @@ function stopEcashFlow() {
     ecashPollingTimer = null
   }
   isWaitingForEcashPayment.value = false
+  resetEcashRequestState()
 }
 
 function startEcashPaymentPolling(requestId: string) {
@@ -785,6 +814,41 @@ function startEcashPaymentPolling(requestId: string) {
 
   poll()
   ecashPollingTimer = window.setInterval(poll, 3000)
+}
+
+function resetEcashRequestState() {
+  ecashRequestText.value = ''
+  if (ecashCopyFeedbackTimer) {
+    clearTimeout(ecashCopyFeedbackTimer)
+    ecashCopyFeedbackTimer = null
+  }
+  ecashCopyFeedback.value = null
+}
+
+function setEcashCopyFeedback(type: 'success' | 'error', message: string) {
+  ecashCopyFeedback.value = { type, message }
+  if (ecashCopyFeedbackTimer) {
+    clearTimeout(ecashCopyFeedbackTimer)
+  }
+  ecashCopyFeedbackTimer = window.setTimeout(() => {
+    ecashCopyFeedback.value = null
+    ecashCopyFeedbackTimer = null
+  }, 3500)
+}
+
+async function copyEcashRequestText() {
+  if (!ecashRequestText.value) return
+  if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+    setEcashCopyFeedback('error', t('ecashSend.errors.clipboard', '클립보드 접근이 거부되었습니다.'))
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(ecashRequestText.value)
+    setEcashCopyFeedback('success', t('ecashSend.copied', '요청 텍스트를 복사했습니다.'))
+  } catch (error) {
+    console.error('Failed to copy e-cash request text:', error)
+    setEcashCopyFeedback('error', t('ecashSend.errors.clipboard', '클립보드 접근이 거부되었습니다.'))
+  }
 }
 
 async function handleEcashPaymentPayload(payload: any, requestId: string) {
