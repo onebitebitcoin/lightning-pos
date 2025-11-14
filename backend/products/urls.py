@@ -25,4 +25,13 @@ urlpatterns = [
 
     # Cashu NUT-18 payment requests
     path('payments/requests/<str:payment_id>/', views.nut18_payment_request_view, name='nut18_payment_request'),
+
+    # Cashu mint proxy endpoints
+    path('cashu/keys/', views.cashu_keys_view, name='cashu_keys'),
+    path('cashu/swap/', views.cashu_swap_view, name='cashu_swap'),
+    path('cashu/melt/quote/', views.cashu_melt_quote_view, name='cashu_melt_quote'),
+    path('cashu/melt/', views.cashu_melt_view, name='cashu_melt'),
+
+    # Lightning address
+    path('lightningaddr/quote/', views.lightning_address_quote_view, name='lightning_address_quote'),
 ]

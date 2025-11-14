@@ -7,6 +7,7 @@ from django.utils.crypto import get_random_string
 from decimal import Decimal
 from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
+import requests
 from .models import Category, Product, CartItem, Order, OrderItem
 from .serializers import (
     CategorySerializer, ProductSerializer, CartItemSerializer,
@@ -665,3 +666,253 @@ def nut18_payment_request_view(request, payment_id):
         return Response(response_payload)
 
     return Response({'paid': False})
+
+
+@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def cashu_keys_view(request):
+    """
+    Proxy to get Cashu mint keys
+    """
+    mint_url = request.query_params.get('mintUrl')
+    if not mint_url:
+        return Response({
+            'success': False,
+            'error': 'mintUrl parameter is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Normalize mint URL
+        mint_url = mint_url.rstrip('/')
+        keys_url = f"{mint_url}/v1/keys"
+
+        response = requests.get(keys_url, timeout=30)
+        response.raise_for_status()
+
+        return Response(response.json())
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Failed to fetch mint keys: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def cashu_swap_view(request):
+    """
+    Proxy to swap Cashu tokens
+    """
+    mint_url = request.data.get('mintUrl')
+    if not mint_url:
+        return Response({
+            'success': False,
+            'error': 'mintUrl is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    inputs = request.data.get('inputs')
+    outputs = request.data.get('outputs')
+
+    if not inputs or not outputs:
+        return Response({
+            'success': False,
+            'error': 'inputs and outputs are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Normalize mint URL
+        mint_url = mint_url.rstrip('/')
+        swap_url = f"{mint_url}/v1/swap"
+
+        payload = {
+            'inputs': inputs,
+            'outputs': outputs
+        }
+
+        response = requests.post(swap_url, json=payload, timeout=30)
+        response.raise_for_status()
+
+        return Response(response.json())
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Failed to swap tokens: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def cashu_melt_quote_view(request):
+    """
+    Proxy to get a melt quote (for paying Lightning invoices)
+    """
+    mint_url = request.data.get('mintUrl')
+    bolt11 = request.data.get('request') or request.data.get('invoice')
+
+    if not mint_url:
+        return Response({
+            'success': False,
+            'error': 'mintUrl is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not bolt11:
+        return Response({
+            'success': False,
+            'error': 'request or invoice is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Normalize mint URL
+        mint_url = mint_url.rstrip('/')
+        quote_url = f"{mint_url}/v1/melt/quote/bolt11"
+
+        payload = {
+            'request': bolt11,
+            'unit': 'sat'
+        }
+
+        response = requests.post(quote_url, json=payload, timeout=30)
+        response.raise_for_status()
+
+        return Response(response.json())
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Failed to get melt quote: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def cashu_melt_view(request):
+    """
+    Proxy to melt Cashu tokens (pay Lightning invoice)
+    """
+    mint_url = request.data.get('mintUrl')
+    quote = request.data.get('quote')
+    inputs = request.data.get('inputs')
+    outputs = request.data.get('outputs')
+
+    if not mint_url:
+        return Response({
+            'success': False,
+            'error': 'mintUrl is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not quote or not inputs:
+        return Response({
+            'success': False,
+            'error': 'quote and inputs are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Normalize mint URL
+        mint_url = mint_url.rstrip('/')
+        melt_url = f"{mint_url}/v1/melt/bolt11"
+
+        payload = {
+            'quote': quote,
+            'inputs': inputs
+        }
+
+        if outputs:
+            payload['outputs'] = outputs
+
+        response = requests.post(melt_url, json=payload, timeout=30)
+        response.raise_for_status()
+
+        return Response(response.json())
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Failed to melt tokens: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def lightning_address_quote_view(request):
+    """
+    Get Lightning invoice from Lightning address
+    """
+    address = request.data.get('address')
+    amount = request.data.get('amount')
+
+    if not address:
+        return Response({
+            'success': False,
+            'error': 'address is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not amount:
+        return Response({
+            'success': False,
+            'error': 'amount is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Parse Lightning address (user@domain.com)
+        if '@' in address:
+            user, domain = address.split('@')
+            # Fetch LNURL from .well-known endpoint
+            wellknown_url = f"https://{domain}/.well-known/lnurlp/{user}"
+
+            response = requests.get(wellknown_url, timeout=30)
+            response.raise_for_status()
+            lnurl_data = response.json()
+
+            callback_url = lnurl_data.get('callback')
+            if not callback_url:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid Lightning address response'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Request invoice with amount (in millisats)
+            amount_msats = int(amount) * 1000
+            invoice_response = requests.get(
+                callback_url,
+                params={'amount': amount_msats},
+                timeout=30
+            )
+            invoice_response.raise_for_status()
+            invoice_data = invoice_response.json()
+
+            invoice = invoice_data.get('pr')
+            if not invoice:
+                return Response({
+                    'success': False,
+                    'error': 'Failed to get invoice from Lightning address'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                'success': True,
+                'request': invoice,
+                'invoice': invoice
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Invalid Lightning address format'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Failed to process Lightning address: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Error processing Lightning address: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
