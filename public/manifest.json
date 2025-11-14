@@ -6,9 +6,11 @@
   "display": "standalone",
   "background_color": "#1f2937",
   "theme_color": "#f59e0b",
-  "orientation": "portrait",
+  "orientation": "any",
   "scope": "/",
   "lang": "ko",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "categories": ["business", "finance", "productivity"],
   "icons": [
     {
