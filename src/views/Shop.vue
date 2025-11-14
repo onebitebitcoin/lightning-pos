@@ -284,16 +284,16 @@
             <div class="flex items-center space-x-1 ml-2">
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity - 1)"
-                :disabled="cartStore.isLoading"
-                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm"
+                :disabled="cartStore.isUpdatingItem(item.id)"
+                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm disabled:opacity-50"
               >
                 -
               </button>
               <span class="w-6 text-center font-medium text-gray-800 dark:text-white text-sm">{{ item.quantity }}</span>
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity + 1)"
-                :disabled="cartStore.isLoading"
-                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm"
+                :disabled="cartStore.isUpdatingItem(item.id)"
+                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm disabled:opacity-50"
               >
                 +
               </button>
@@ -534,16 +534,16 @@
             <div class="flex items-center space-x-2">
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity - 1)"
-                :disabled="cartStore.isLoading"
-                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700"
+                :disabled="cartStore.isUpdatingItem(item.id)"
+                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:opacity-50"
               >
                 -
               </button>
               <span class="w-8 text-center font-medium text-gray-800 dark:text-white">{{ item.quantity }}</span>
               <button
                 @click="handleUpdateQuantity(item.id, item.quantity + 1)"
-                :disabled="cartStore.isLoading"
-                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700"
+                :disabled="cartStore.isUpdatingItem(item.id)"
+                class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:opacity-50"
               >
                 +
               </button>

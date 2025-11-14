@@ -350,6 +350,11 @@
               <span v-if="isGeneratingInvoice">
                 {{ getLoadingMessage() }}
               </span>
+              <span
+                v-else-if="paymentMethod === 'ecash' && isWaitingForEcashPayment"
+              >
+                {{ t('payment.status.ecashWaiting', 'e-cash 결제를 확인 중입니다. 결제가 완료되면 자동으로 주문이 확정됩니다.') }}
+              </span>
               <span v-else>
                 {{ getQRScanMessage() }}
               </span>
@@ -401,7 +406,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
@@ -411,6 +416,9 @@ import { bitcoinService } from '@/services/bitcoin'
 import QRCode from 'qrcode'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useLocaleStore } from '@/stores/locale'
+import { useEcashStore } from '@/stores/ecash'
+import { createPaymentRequest, createHttpPostTransport } from '@/services/nut18'
+import { API_BASE_URL } from '@/services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -418,7 +426,12 @@ const cartStore = useCartStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const localeStore = useLocaleStore()
+const ecashStore = useEcashStore()
 const t = localeStore.t
+const apiBaseUrl = API_BASE_URL.replace(/\/+$/, '')
+const ecashTransportBaseUrl = (
+  import.meta.env.VITE_ECASH_TRANSPORT_BASE_URL || 'https://pos.onebitebitcoin/api'
+).replace(/\/+$/, '')
 
 const paymentMethod = ref('lightning')
 const showQRCode = ref(false)
@@ -426,6 +439,8 @@ const showSuccess = ref(false)
 const qrCanvas = ref<HTMLCanvasElement>()
 const isGeneratingInvoice = ref(false)
 const activeLightningAddress = ref<string>('')
+const isWaitingForEcashPayment = ref(false)
+let ecashPollingTimer: number | null = null
 
 // Check if user has configured wallet addresses
 const hasLightningAddress = computed(() => {
@@ -508,6 +523,7 @@ function getFallbackLightningAddresses(): string[] {
 
 // Initialize Bitcoin store
 bitcoinStore.initialize()
+ecashStore.initialize()
 
 // Set default payment method based on available wallet addresses
 // If lightning address is not set, switch to ecash
@@ -517,6 +533,8 @@ if (!hasLightningAddress.value) {
 
 async function handlePayment() {
   if (!paymentMethod.value) return
+
+  stopEcashFlow()
 
   if (paymentMethod.value === 'cash') {
     await completePayment()
@@ -671,14 +689,37 @@ async function handlePayment() {
         showQRCode.value = false
         return
       }
-    } else {
-      // Fallback for other payment methods (e-cash)
-      qrData = `payment:${Date.now()}:${cartStore.total.toFixed(2)}`
-
+    } else if (paymentMethod.value === 'ecash') {
       try {
-        console.log('🔲 QR 코드 생성 중...')
-        console.log('📱 QR 데이터 길이:', qrData.length)
-        console.log('🎯 QR 데이터 미리보기:', qrData.substring(0, 100) + '...')
+        if (!bitcoinStore.btcPriceKrw) {
+          await bitcoinStore.fetchBitcoinPrice()
+        }
+
+        const satsAmount = bitcoinStore.krwToSats(cartStore.total)
+        if (!satsAmount || satsAmount <= 0) {
+          throw new Error('사츠 변환에 실패했습니다')
+        }
+
+        const normalizedSats = Math.max(1, Math.round(satsAmount))
+        const requestId = `creq_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+        const transportUrl = buildEcashTransportUrl(requestId)
+        const memo = getPaymentTypeLabel()
+        const description = `${memo} - ${cartStore.total.toLocaleString('ko-KR')} KRW`
+
+        const requestString = createPaymentRequest({
+          id: requestId,
+          amount: normalizedSats,
+          unit: 'sat',
+          single_use: true,
+          mints: [ecashStore.mintUrl],
+          description,
+          transports: [createHttpPostTransport(transportUrl)]
+        })
+
+        console.log('💳 e-cash payment request generated:', requestId)
+        qrData = requestString
+        startEcashPaymentPolling(requestId)
+        isWaitingForEcashPayment.value = true
 
         await QRCode.toCanvas(qrCanvas.value, qrData, {
           width: 300,
@@ -689,12 +730,11 @@ async function handlePayment() {
           }
         })
 
-        console.log('✅ QR 코드 생성 성공!')
-        // Stop loading state after successful QR generation
         isGeneratingInvoice.value = false
       } catch (error) {
-        console.error('💥 QR 코드 생성 오류:', error)
+        console.error('💥 e-cash 요청 생성 오류:', error)
         isGeneratingInvoice.value = false
+        isWaitingForEcashPayment.value = false
         alert(t('payment.errors.qr', 'QR 코드 생성에 실패했습니다.'))
         showQRCode.value = false
       }
@@ -702,13 +742,94 @@ async function handlePayment() {
   }
 }
 
+function buildEcashTransportUrl(requestId: string) {
+  return `${ecashTransportBaseUrl}/products/payments/requests/${encodeURIComponent(requestId)}/`
+}
+
+function stopEcashFlow() {
+  if (ecashPollingTimer !== null) {
+    clearInterval(ecashPollingTimer)
+    ecashPollingTimer = null
+  }
+  isWaitingForEcashPayment.value = false
+}
+
+function startEcashPaymentPolling(requestId: string) {
+  const checkUrl = buildEcashTransportUrl(requestId)
+  let attempts = 0
+  const maxAttempts = 60
+
+  const poll = async () => {
+    try {
+      const response = await fetch(checkUrl)
+      if (response.ok) {
+        const payload = await response.json()
+        const hasProofs = payload?.paid && Array.isArray(payload?.proofs) && payload.proofs.length > 0
+        if (hasProofs) {
+          await handleEcashPaymentPayload(payload, requestId)
+          return
+        }
+      } else if (response.status !== 404) {
+        console.error('e-cash 결제 상태 확인에 실패했습니다:', response.statusText)
+      }
+    } catch (error) {
+      console.error('e-cash 결제 폴링 중 오류:', error)
+    }
+
+    attempts += 1
+    if (attempts >= maxAttempts) {
+      console.warn('e-cash 결제 확인 제한 시간 초과')
+      stopEcashFlow()
+    }
+  }
+
+  poll()
+  ecashPollingTimer = window.setInterval(poll, 3000)
+}
+
+async function handleEcashPaymentPayload(payload: any, requestId: string) {
+  try {
+    const proofs = Array.isArray(payload?.proofs) ? payload.proofs : []
+    if (!proofs.length) {
+      console.warn('수신된 e-cash 결제에 proof 데이터가 없습니다.')
+      return
+    }
+
+    const mintForProofs = payload?.mint || ecashStore.mintUrl
+    ecashStore.addProofs(
+      proofs.map((proof: Record<string, any>) => ({
+        ...proof,
+        mintUrl: proof?.mintUrl || mintForProofs
+      })),
+      mintForProofs
+    )
+
+    await consumeEcashRequest(requestId)
+    stopEcashFlow()
+    await completePayment()
+  } catch (error) {
+    console.error('e-cash 결제 처리 중 오류:', error)
+  }
+}
+
+async function consumeEcashRequest(requestId: string) {
+  try {
+    const consumeUrl = `${buildEcashTransportUrl(requestId)}?consume=true`
+    await fetch(consumeUrl)
+  } catch (error) {
+    console.error('e-cash 결제 요청 정리 중 오류:', error)
+  }
+}
+
 function closeQRCode() {
   showQRCode.value = false
   isGeneratingInvoice.value = false
   activeLightningAddress.value = ''
+  stopEcashFlow()
 }
 
 async function completePayment() {
+  stopEcashFlow()
   showQRCode.value = false
   isGeneratingInvoice.value = false
   activeLightningAddress.value = ''
@@ -804,4 +925,8 @@ function getPaymentTypeLabel(): string {
       return DEFAULT_MEMO
   }
 }
+
+onBeforeUnmount(() => {
+  stopEcashFlow()
+})
 </script>

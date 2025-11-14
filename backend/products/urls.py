@@ -22,4 +22,7 @@ urlpatterns = [
     path('orders/', views.order_list_view, name='order_list'),
     path('orders/create/', views.create_order_view, name='create_order'),
     path('orders/<int:order_id>/', views.order_detail_view, name='order_detail'),
+
+    # Cashu NUT-18 payment requests
+    path('payments/requests/<str:payment_id>/', views.nut18_payment_request_view, name='nut18_payment_request'),
 ]

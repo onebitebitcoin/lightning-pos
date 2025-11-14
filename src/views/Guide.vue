@@ -145,7 +145,6 @@
             STEP 1
           </div>
           <div>
-            <p class="text-sm font-medium text-primary-600">{{ t('guide.lightning.badge', '라이트닝 주소') }}</p>
             <h3 class="text-2xl font-semibold text-text-primary">{{ t('guide.lightning.heading', '입금 지갑 연결하기') }}</h3>
           </div>
         </div>
@@ -159,16 +158,6 @@
             <h4 class="text-lg font-semibold text-text-primary">{{ step.title }}</h4>
             <p class="text-sm text-text-secondary">{{ step.description }}</p>
           </div>
-        </div>
-        <div class="rounded-2xl bg-primary-50 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800 p-5">
-          <h4 class="text-sm font-semibold text-primary-700 dark:text-primary-200 mb-2">
-            {{ t('guide.lightning.checklist.title', '테스트 체크리스트') }}
-          </h4>
-          <ul class="text-sm text-primary-700/80 dark:text-primary-100 space-y-1">
-            <li>{{ t('guide.lightning.checklist.item1', '• 최소/최대 송금 한도 확인 (Lightning 서비스마다 다릅니다)') }}</li>
-            <li>{{ t('guide.lightning.checklist.item2', '• "라이트닝 주소 입력" 섹션에 주소 저장 후 결제 페이지에서 인보이스 생성 테스트') }}</li>
-            <li>{{ t('guide.lightning.checklist.item3', '• 테스트 완료 후 shop > 결제 화면에서 실제 라이트닝 인보이스가 뜨는지 확인') }}</li>
-          </ul>
         </div>
         <div class="flex justify-end">
           <RouterLink to="/settings" class="btn btn-primary px-6 py-3 text-sm">
@@ -184,7 +173,6 @@
             STEP 2
           </div>
           <div>
-            <p class="text-sm font-medium text-success-600">{{ t('guide.product.badge', '상품 등록') }}</p>
             <h3 class="text-2xl font-semibold text-text-primary">{{ t('guide.product.heading', '상품 추가하기') }}</h3>
           </div>
         </div>
@@ -216,7 +204,6 @@
             STEP 3
           </div>
           <div>
-            <p class="text-sm font-medium text-warning-600">{{ t('guide.payment.badge', '결제 흐름') }}</p>
             <h3 class="text-2xl font-semibold text-text-primary">{{ t('guide.payment.heading', '현장 결제 절차') }}</h3>
           </div>
         </div>
@@ -246,6 +233,20 @@
             </div>
           </article>
         </div>
+      </section>
+
+      <!-- Contact section -->
+      <section class="card p-6 md:p-8">
+        <p class="text-text-secondary text-center">
+          {{ t('guide.contact.message', '추가 문의사항은') }}
+          <a
+            href="mailto:onebitebitcoin@proton.me"
+            class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium underline"
+          >
+            onebitebitcoin@proton.me
+          </a>
+          {{ t('guide.contact.suffix', '로 메일 보내주세요.') }}
+        </p>
       </section>
 
     </main>

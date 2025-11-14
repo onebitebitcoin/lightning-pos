@@ -250,6 +250,13 @@ const icons = {
       },
     ],
   },
+  mail: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'rect', attrs: { x: '3', y: '5', width: '18', height: '14', rx: '2' } },
+      { tag: 'path', attrs: { d: 'M3 7l9 6 9-6' } },
+    ],
+  },
 } as const satisfies Record<string, IconDefinition>
 
 type IconName = keyof typeof icons

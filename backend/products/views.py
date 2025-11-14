@@ -1,14 +1,38 @@
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from django.db import transaction, models
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from decimal import Decimal
+from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
 from .models import Category, Product, CartItem, Order, OrderItem
 from .serializers import (
     CategorySerializer, ProductSerializer, CartItemSerializer,
     OrderSerializer, CreateOrderSerializer
 )
+
+PAYMENT_REQUEST_TTL_SECONDS = 10 * 60  # Keep payment data in memory for 10 minutes
+payment_request_store = {}
+
+
+def cleanup_expired_payment_requests():
+    """Remove in-memory payment requests that have expired."""
+    if not payment_request_store:
+        return
+
+    now = timezone.now()
+    expired_keys = []
+    for request_id, data in payment_request_store.items():
+        created_at = data.get('created_at')
+        if not created_at:
+            continue
+        if now - created_at > timedelta(seconds=PAYMENT_REQUEST_TTL_SECONDS):
+            expired_keys.append(request_id)
+
+    for request_id in expired_keys:
+        payment_request_store.pop(request_id, None)
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -569,3 +593,75 @@ def order_detail_view(request, order_id):
             'success': False,
             'message': '주문을 찾을 수 없습니다.'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+def nut18_payment_request_view(request, payment_id):
+    """
+    Receive and check Cashu NUT-18 payment requests (HTTP POST transport)
+    """
+    cleanup_expired_payment_requests()
+
+    if request.method == 'POST':
+        payload = request.data or {}
+        payload_id = payload.get('id')
+        proofs = payload.get('proofs')
+
+        if not payload_id or payload_id != payment_id:
+            return Response({
+                'success': False,
+                'error': 'Payment ID mismatch'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if not proofs or not isinstance(proofs, list):
+            return Response({
+                'success': False,
+                'error': 'Proofs array is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        total_amount = 0
+        normalized_proofs = []
+        for proof in proofs:
+            amount = 0
+            try:
+                amount = int(proof.get('amount', 0))
+            except (TypeError, ValueError, AttributeError):
+                amount = 0
+            total_amount += max(amount, 0)
+            normalized_proofs.append(proof)
+
+        timestamp = timezone.now().isoformat()
+        payment_request_store[payment_id] = {
+            'proofs': normalized_proofs,
+            'amount': total_amount,
+            'unit': payload.get('unit') or 'sat',
+            'mint': payload.get('mint') or '',
+            'memo': payload.get('memo') or '',
+            'timestamp': timestamp,
+            'created_at': timezone.now(),
+        }
+
+        return Response({'success': True})
+
+    data = payment_request_store.get(payment_id)
+    if data:
+        consume = request.query_params.get('consume')
+        response_payload = {
+            'paid': True,
+            'proofs': data.get('proofs', []),
+            'amount': data.get('amount', 0),
+            'unit': data.get('unit', 'sat'),
+            'mint': data.get('mint', ''),
+            'memo': data.get('memo', ''),
+            'timestamp': data.get('timestamp'),
+        }
+
+        if consume and consume.lower() == 'true':
+            payment_request_store.pop(payment_id, None)
+
+        return Response(response_payload)
+
+    return Response({'paid': False})

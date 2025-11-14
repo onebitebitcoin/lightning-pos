@@ -106,28 +106,48 @@ export const useEcashStore = defineStore('ecash', () => {
     }
   }
 
-function importProofs(input: string | CashuProof[]) {
-  let parsed: CashuProof[] = []
-  try {
-    if (typeof input === 'string') {
-      parsed = JSON.parse(input)
-    } else {
-      parsed = input
+  function addProofs(newProofs: CashuProof[] = [], mintOverride?: string) {
+    if (!Array.isArray(newProofs) || newProofs.length === 0) {
+      return { added: 0, total: proofs.value.length }
     }
-  } catch (error) {
-    console.error('Failed to import proofs:', error)
-    parsed = []
-  }
-  if (!Array.isArray(parsed)) {
-    return { added: 0, total: proofs.value.length }
+
+    const normalizedMint = mintOverride || mintUrl.value || DEFAULT_MINT_URL
+    const normalized = newProofs
+      .filter(proof => proof && typeof proof === 'object')
+      .map(proof => ({
+        ...proof,
+        mintUrl: proof.mintUrl || normalizedMint
+      }))
+
+    if (!normalized.length) {
+      return { added: 0, total: proofs.value.length }
+    }
+
+    const before = proofs.value.length
+    const merged = uniqueProofs([...proofs.value, ...normalized])
+    proofs.value = merged
+    serializeProofs(merged)
+    return { added: Math.max(merged.length - before, 0), total: merged.length }
   }
 
-  const before = proofs.value.length
-  const existing = uniqueProofs([...proofs.value, ...parsed])
-  proofs.value = existing
-  serializeProofs(existing)
-  return { added: Math.max(existing.length - before, 0), total: existing.length }
-}
+  function importProofs(input: string | CashuProof[]) {
+    let parsed: CashuProof[] = []
+    try {
+      if (typeof input === 'string') {
+        parsed = JSON.parse(input)
+      } else {
+        parsed = input
+      }
+    } catch (error) {
+      console.error('Failed to import proofs:', error)
+      parsed = []
+    }
+    if (!Array.isArray(parsed)) {
+      return { added: 0, total: proofs.value.length }
+    }
+
+    return addProofs(parsed)
+  }
 
   return {
     mintUrl,
@@ -139,6 +159,7 @@ function importProofs(input: string | CashuProof[]) {
     setMintUrl,
     refreshHoldings,
     exportProofs,
+    addProofs,
     importProofs,
     DEFAULT_MINT_URL
   }

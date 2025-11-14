@@ -8,6 +8,7 @@ export const useCartStore = defineStore('cart', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const addingToCart = ref(new Set<number>()) // Track which products are being added
+  const updatingItems = ref(new Set<number>()) // Track which items are being updated
 
   // Computed properties
   const subtotal = computed(() => {
@@ -54,10 +55,19 @@ export const useCartStore = defineStore('cart', () => {
 
     try {
       const result = await cartAPI.addToCart(product.id, quantity)
-      
+
       if (result.success) {
-        // Refresh cart to get updated data
-        await fetchCart()
+        // Update local state with the returned item instead of fetching entire cart
+        if (result.item) {
+          const existingIndex = items.value.findIndex(item => item.id === result.item!.id)
+          if (existingIndex > -1) {
+            // Update existing item
+            items.value[existingIndex] = result.item
+          } else {
+            // Add new item
+            items.value.push(result.item)
+          }
+        }
         return { success: true, message: result.message }
       } else {
         error.value = result.message || '장바구니 추가에 실패했습니다'
@@ -74,12 +84,13 @@ export const useCartStore = defineStore('cart', () => {
 
   // Update item quantity
   async function updateItem(itemId: number, quantity: number): Promise<{ success: boolean; message?: string }> {
-    isLoading.value = true
+    // Add item ID to updating set instead of using global isLoading
+    updatingItems.value.add(itemId)
     error.value = null
 
     try {
       const result = await cartAPI.updateCartItem(itemId, quantity)
-      
+
       if (result.success) {
         // Update local state
         const index = items.value.findIndex(item => item.id === itemId)
@@ -95,18 +106,20 @@ export const useCartStore = defineStore('cart', () => {
       error.value = err.message || '수량 변경에 실패했습니다'
       return { success: false, message: error.value || '오류가 발생했습니다' }
     } finally {
-      isLoading.value = false
+      // Remove item ID from updating set
+      updatingItems.value.delete(itemId)
     }
   }
 
   // Remove item from cart
   async function removeItem(itemId: number): Promise<{ success: boolean; message?: string }> {
-    isLoading.value = true
+    // Add item ID to updating set instead of using global isLoading
+    updatingItems.value.add(itemId)
     error.value = null
 
     try {
       const result = await cartAPI.removeCartItem(itemId)
-      
+
       if (result.success) {
         // Remove from local state
         const index = items.value.findIndex(item => item.id === itemId)
@@ -122,7 +135,8 @@ export const useCartStore = defineStore('cart', () => {
       error.value = err.message || '아이템 제거에 실패했습니다'
       return { success: false, message: error.value || '오류가 발생했습니다' }
     } finally {
-      isLoading.value = false
+      // Remove item ID from updating set
+      updatingItems.value.delete(itemId)
     }
   }
 
@@ -207,6 +221,11 @@ export const useCartStore = defineStore('cart', () => {
     return addingToCart.value.has(productId)
   }
 
+  // Check if a specific item is being updated
+  function isUpdatingItem(itemId: number): boolean {
+    return updatingItems.value.has(itemId)
+  }
+
   // Initialize cart
   async function initialize() {
     await fetchCart()
@@ -220,10 +239,19 @@ export const useCartStore = defineStore('cart', () => {
 
     try {
       const result = await cartAPI.addToCart(productId, quantity)
-      
+
       if (result.success) {
-        // Refresh cart to get updated data
-        await fetchCart()
+        // Update local state with the returned item instead of fetching entire cart
+        if (result.item) {
+          const existingIndex = items.value.findIndex(item => item.id === result.item!.id)
+          if (existingIndex > -1) {
+            // Update existing item
+            items.value[existingIndex] = result.item
+          } else {
+            // Add new item
+            items.value.push(result.item)
+          }
+        }
         return { success: true, message: result.message }
       } else {
         error.value = result.message || '장바구니 추가에 실패했습니다'
@@ -249,10 +277,19 @@ export const useCartStore = defineStore('cart', () => {
 
     try {
       const result = await cartAPI.addCustomItem(itemData)
-      
+
       if (result.success) {
-        // Refresh cart to get updated data
-        await fetchCart()
+        // Update local state with the returned item instead of fetching entire cart
+        if (result.item) {
+          const existingIndex = items.value.findIndex(item => item.id === result.item!.id)
+          if (existingIndex > -1) {
+            // Update existing item
+            items.value[existingIndex] = result.item
+          } else {
+            // Add new item
+            items.value.push(result.item)
+          }
+        }
         return { success: true, message: result.message }
       } else {
         error.value = result.message || '커스텀 아이템 추가에 실패했습니다'
@@ -273,6 +310,7 @@ export const useCartStore = defineStore('cart', () => {
     isLoading,
     error,
     addingToCart,
+    updatingItems,
 
     // Computed
     total,
@@ -293,6 +331,7 @@ export const useCartStore = defineStore('cart', () => {
     setDiscount,
     resetLocal,
     clearError,
-    isAddingToCart
+    isAddingToCart,
+    isUpdatingItem
   }
 })

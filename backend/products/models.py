@@ -99,6 +99,7 @@ class Order(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('cash', '현금'),
         ('lightning', '라이트닝'),
+        ('ecash', 'e-cash'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='사용자')
