@@ -369,16 +369,29 @@ export function createPaymentPayload({ id, memo = '', mint, unit = 'sat', proofs
 }
 
 export async function sendPaymentViaPost(url: string, payload: Record<string, unknown>) {
-  const response = await fetch(url, {
+  // Use backend proxy to avoid CORS issues
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api'
+  const proxyUrl = `${apiBaseUrl}/payment-request-proxy/`
+
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      url,
+      payload
+    })
   })
 
   if (!response.ok) {
-    throw new Error(`Payment failed: ${response.statusText}`)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.error || `Payment failed: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  if (!data.success) {
+    throw new Error(data.error || 'Payment failed')
   }
 
   return response

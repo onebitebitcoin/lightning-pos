@@ -20,6 +20,9 @@ urlpatterns = [
 
     # Lightning address endpoint (direct routing for frontend compatibility)
     path('api/lightningaddr/quote/', products_views.lightning_address_quote_view, name='lightning_address_quote_direct'),
+
+    # Payment request proxy (CORS workaround)
+    path('api/payment-request-proxy/', products_views.payment_request_proxy_view, name='payment_request_proxy'),
 ]
 
 # Serve media files during development

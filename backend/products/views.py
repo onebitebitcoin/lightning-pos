@@ -841,6 +841,49 @@ def cashu_melt_view(request):
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([permissions.AllowAny])
+def payment_request_proxy_view(request):
+    """
+    Proxy for NUT-18 payment requests to avoid CORS issues
+    """
+    target_url = request.data.get('url')
+    payload = request.data.get('payload')
+
+    if not target_url:
+        return Response({
+            'success': False,
+            'error': 'url is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if not payload:
+        return Response({
+            'success': False,
+            'error': 'payload is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        response = requests.post(target_url, json=payload, timeout=30)
+        response.raise_for_status()
+
+        return Response({
+            'success': True,
+            'data': response.json() if response.content else {}
+        })
+    except requests.exceptions.RequestException as e:
+        return Response({
+            'success': False,
+            'error': f'Payment request failed: {str(e)}'
+        }, status=status.HTTP_502_BAD_GATEWAY)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Error processing payment request: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
 def lightning_address_quote_view(request):
     """
     Get Lightning invoice from Lightning address
