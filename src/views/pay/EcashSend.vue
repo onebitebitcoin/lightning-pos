@@ -192,7 +192,13 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores/locale'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import apiClient from '@/services/api'
-import { createBlindedOutputs, deserializeOutputDatas, signaturesToProofs } from '@/services/cashuProtocol'
+import {
+  createBlindedOutputs,
+  deserializeOutputDatas,
+  signaturesToProofs,
+  buildSwapOutputsFromOutputDatas
+} from '@/services/cashuProtocol'
+import type { CashuSwapOutput } from '@/services/cashuProtocol'
 import { createPaymentPayload, parsePaymentRequest, sendPaymentViaPost, type Nut18PaymentRequest } from '@/services/nut18'
 import { sendPaymentViaNostr } from '@/services/nostrTransport'
 
@@ -668,14 +674,20 @@ async function handleLegacyEcashSend(request: LegacyEcashRequest) {
     throw new Error(mismatch)
   }
 
+  const mintKeys = await fetchMintKeys(request.mint)
   const receiverOutputDatas = await deserializeOutputDatas(request.outputs || [])
-  const receiverOutputs = receiverOutputDatas.map(output => output.blindedMessage)
+  if (!receiverOutputDatas.length) {
+    throw new Error(t('ecashSend.errors.invalidRequest', '수신자 출력 정보를 불러오지 못했습니다.'))
+  }
+  const receiverOutputs = buildSwapOutputsFromOutputDatas(receiverOutputDatas, amount, mintKeys)
+  if (!receiverOutputs.length) {
+    throw new Error(t('ecashSend.errors.invalidRequest', '수신자 출력 정보를 불러오지 못했습니다.'))
+  }
 
   const change = Math.max(0, Number(total) - Number(amount))
-  let changeOutputs: string[] = []
+  let changeOutputs: CashuSwapOutput[] = []
   let changeOutputDatas: any[] | undefined
   if (change > 0) {
-    const mintKeys = await fetchMintKeys(request.mint)
     const built = await createBlindedOutputs(change, mintKeys)
     changeOutputs = built.outputs
     changeOutputDatas = built.outputDatas
@@ -732,7 +744,7 @@ async function handleInvoiceSend() {
   }
 
   const change = Math.max(0, Number(total) - Number(need))
-  let changeOutputs: string[] | undefined
+  let changeOutputs: CashuSwapOutput[] | undefined
   let changeOutputDatas: any[] | undefined
   if (change > 0) {
     const mintKeys = await fetchMintKeys(ecashStore.mintUrl)

@@ -19,6 +19,86 @@ export interface SerializedOutputData {
   blindedMessage: string
   blindingFactor: string
   secret: number[] | string | Uint8Array
+  amount?: number
+  keysetId?: string
+}
+
+export interface CashuSwapOutput {
+  amount: number
+  B_: string
+  id: string
+}
+
+function normalizeKeyset(mintKeys: any) {
+  if (Array.isArray(mintKeys?.keysets) && mintKeys.keysets.length) {
+    return mintKeys.keysets[0]
+  }
+  if (Array.isArray(mintKeys) && mintKeys.length) {
+    return mintKeys[0]
+  }
+  if (mintKeys) {
+    return mintKeys
+  }
+  throw new Error('Mint keys are missing')
+}
+
+function resolveKeysetId(keyset: any) {
+  const id = keyset?.id || keyset?.keyset_id || keyset?.keysetId
+  if (!id) {
+    throw new Error('Mint keyset id is missing')
+  }
+  return String(id)
+}
+
+function splitAmountIntoDenominations(amount: number) {
+  const denominations: number[] = []
+  let remaining = Math.floor(amount)
+  while (remaining > 0) {
+    const power = Math.floor(Math.log2(remaining))
+    const value = 2 ** power
+    denominations.push(value)
+    remaining -= value
+  }
+  return denominations
+}
+
+function ensureOutputAmounts(outputDatas: any[], amount: number) {
+  const extracted = outputDatas
+    .map(data => Number(data?.amount ?? data?.value ?? 0))
+    .filter(value => Number.isFinite(value) && value > 0)
+
+  if (extracted.length === outputDatas.length && extracted.every(value => value > 0)) {
+    return extracted
+  }
+
+  return splitAmountIntoDenominations(amount)
+}
+
+export function buildSwapOutputsFromOutputDatas(outputDatas: any[], amountHint: number, mintKeys: any): CashuSwapOutput[] {
+  if (!Array.isArray(outputDatas) || outputDatas.length === 0) {
+    return []
+  }
+
+  const keyset = normalizeKeyset(mintKeys)
+  const keysetId = resolveKeysetId(keyset)
+  const outputAmounts = ensureOutputAmounts(outputDatas, Number(amountHint))
+
+  if (outputAmounts.length !== outputDatas.length) {
+    throw new Error('Failed to build blinded outputs for requested amount')
+  }
+
+  return outputDatas.map((data: any, index: number) => {
+    const blindedMessage = data?.B_ || data?.blindedMessage
+    if (!blindedMessage) {
+      throw new Error('Missing blinded message in output data')
+    }
+    const resolvedId = data?.id || data?.keyset_id || data?.keysetId || keysetId
+    return {
+      amount: Number(outputAmounts[index]),
+      B_: String(blindedMessage),
+      id: String(resolvedId)
+    }
+  })
 }
 
 export async function createBlindedOutputs(amount: number, mintKeys: any) {
@@ -32,14 +112,10 @@ export async function createBlindedOutputs(amount: number, mintKeys: any) {
     throw new Error('Cashu module not available')
   }
 
-  const keyset = Array.isArray(mintKeys?.keysets)
-    ? mintKeys.keysets[0]
-    : Array.isArray(mintKeys)
-      ? mintKeys[0]
-      : mintKeys
-
+  const keyset = normalizeKeyset(mintKeys)
   const outputDatas = OutputData.createRandomData(Number(amount), keyset)
-  const outputs = outputDatas.map((data: any) => data.blindedMessage)
+  const outputs = buildSwapOutputsFromOutputDatas(outputDatas, Number(amount), mintKeys)
+
   return { outputDatas, outputs }
 }
 
@@ -54,11 +130,7 @@ export async function signaturesToProofs(signatures: any[], mintKeys: any, outpu
     throw new Error('Cashu module not available')
   }
 
-  const keyset = Array.isArray(mintKeys?.keysets)
-    ? mintKeys.keysets[0]
-    : Array.isArray(mintKeys)
-      ? mintKeys[0]
-      : mintKeys
+  const keyset = normalizeKeyset(mintKeys)
 
   return signatures.map((signature, index) => outputDatas[index].toProof(signature, keyset))
 }
@@ -78,11 +150,18 @@ export function serializeOutputDatas(outputDatas: any[]): SerializedOutputData[]
           ? output.blindingFactor.toString()
           : (output.blindingFactor ?? '').toString()
 
-      return {
+      const serialized: SerializedOutputData = {
         blindedMessage: output.blindedMessage,
         blindingFactor,
         secret: secretArray
       }
+      if (output?.amount) {
+        serialized.amount = Number(output.amount)
+      }
+      if (output?.id || output?.keyset_id || output?.keysetId) {
+        serialized.keysetId = String(output.id || output.keyset_id || output.keysetId)
+      }
+      return serialized
     })
     .filter(Boolean) as SerializedOutputData[]
 }
@@ -138,7 +217,15 @@ export async function deserializeOutputDatas(serialized: SerializedOutputData[])
         }
         const factor = ensureBigInt(item.blindingFactor)
         const secret = decodeSecret(item.secret)
-        return new OutputData(item.blindedMessage, factor, secret)
+        const output = new OutputData(item.blindedMessage, factor, secret)
+        if (item.amount && output) {
+          output.amount = Number(item.amount)
+        }
+        if (item.keysetId && output) {
+          output.id = item.keysetId
+          output.keysetId = item.keysetId
+        }
+        return output
       } catch (error) {
         console.warn('Failed to deserialize OutputData:', error)
         return null

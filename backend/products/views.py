@@ -733,11 +733,33 @@ def cashu_swap_view(request):
             'outputs': outputs
         }
 
+        print(f"[DEBUG SWAP] Request URL: {swap_url}")
+        print(f"[DEBUG SWAP] Payload keys: {payload.keys()}")
+        print(f"[DEBUG SWAP] Inputs count: {len(inputs) if inputs else 0}")
+        print(f"[DEBUG SWAP] Outputs count: {len(outputs) if outputs else 0}")
+        print(f"[DEBUG SWAP] First input sample: {inputs[0] if inputs and len(inputs) > 0 else 'None'}")
+        print(f"[DEBUG SWAP] First output sample: {outputs[0] if outputs and len(outputs) > 0 else 'None'}")
+
         response = requests.post(swap_url, json=payload, timeout=30)
+
+        print(f"[DEBUG SWAP] Response status: {response.status_code}")
+        print(f"[DEBUG SWAP] Response text: {response.text}")
+
         response.raise_for_status()
 
         return Response(response.json())
+    except requests.exceptions.HTTPError as e:
+        error_detail = e.response.text if hasattr(e, 'response') and e.response else str(e)
+        print(f"[ERROR SWAP] HTTPError: {str(e)}")
+        print(f"[ERROR SWAP] Detail: {error_detail}")
+        return Response({
+            'success': False,
+            'error': f'Failed to swap tokens: {str(e)}',
+            'detail': error_detail,
+            'mint_url': swap_url
+        }, status=status.HTTP_502_BAD_GATEWAY)
     except requests.exceptions.RequestException as e:
+        print(f"[ERROR SWAP] RequestException: {str(e)}")
         return Response({
             'success': False,
             'error': f'Failed to swap tokens: {str(e)}'
