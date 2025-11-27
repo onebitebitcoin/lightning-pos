@@ -1,4 +1,3 @@
-import axios from "axios";
 import { apiClient } from "./api";
 
 export type FiatCurrency = 'KRW' | 'USD' | 'JPY'
@@ -10,18 +9,11 @@ export interface BitcoinPriceData {
   timestamp: number
 }
 
-export interface BitcoinPriceResponse {
-  bitcoin: {
-    krw: number
-    usd: number
-    jpy: number
-  }
-}
-
 class BitcoinService {
   private cache: BitcoinPriceData | null = null
-  private cacheExpiration = 5 * 60 * 1000 // 5 minutes
-  private apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=krw,usd,jpy'
+  private cacheExpiration = 1 * 60 * 1000 // 1 minute
+  private upbitTickerUrl = 'https://api.upbit.com/v1/ticker?markets=KRW-BTC,USDT-BTC'
+  private forexUrl = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD,FRX.KRWJPY'
 
   async getCurrentPrice(): Promise<BitcoinPriceData> {
     // Return cached data if still valid
@@ -30,23 +22,58 @@ class BitcoinService {
     }
 
     try {
-      const response = await fetch(this.apiUrl)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const [tickerResponse, forexResponse] = await Promise.all([
+        fetch(this.upbitTickerUrl),
+        fetch(this.forexUrl).catch(() => null) // Forex 데이터는 실패해도 KRW 가격은 사용할 수 있게 허용
+      ])
+
+      if (!tickerResponse.ok) {
+        throw new Error(`Upbit ticker HTTP error: ${tickerResponse.status}`)
       }
-      
-      const data: BitcoinPriceResponse = await response.json()
-      
+
+      const tickerData: Array<{
+        market: string
+        trade_price: number
+      }> = await tickerResponse.json()
+
+      const forexData: Array<{
+        code: string
+        basePrice: number
+        currencyUnit: number
+      }> | null = forexResponse && forexResponse.ok ? await forexResponse.json() : null
+
+      const krwTicker = tickerData.find(item => item.market === 'KRW-BTC')
+      const usdTicker = tickerData.find(item => item.market === 'USDT-BTC')
+
+      if (!krwTicker?.trade_price) {
+        throw new Error('Upbit KRW-BTC 가격을 가져오지 못했습니다')
+      }
+
+      const usdRate = forexData?.find(rate => rate.code === 'FRX.KRWUSD')
+      const jpyRate = forexData?.find(rate => rate.code === 'FRX.KRWJPY')
+
+      const krwPerUsd = usdRate ? usdRate.basePrice / Math.max(usdRate.currencyUnit, 1) : null
+      const krwPerJpy = jpyRate ? jpyRate.basePrice / Math.max(jpyRate.currencyUnit, 1) : null
+
+      const krwPrice = krwTicker.trade_price
+      const usdPrice = usdTicker?.trade_price
+        ?? (krwPerUsd ? krwPrice / krwPerUsd : 0)
+      const jpyPrice = krwPerJpy ? krwPrice / krwPerJpy : 0
+
       this.cache = {
-        krw: data.bitcoin.krw,
-        usd: data.bitcoin.usd,
-        jpy: data.bitcoin.jpy,
+        krw: krwPrice,
+        usd: usdPrice,
+        jpy: jpyPrice,
         timestamp: Date.now()
       }
-      
+
       return this.cache
     } catch (error) {
       console.error('비트코인 가격 조회 실패:', error)
+
+      if (this.cache) {
+        return this.cache
+      }
       
       // Return fallback price if API fails (approximately 100M KRW per BTC as of 2024)
       const fallbackPrice: BitcoinPriceData = {
@@ -164,6 +191,7 @@ class BitcoinService {
       };
     }
   }
+
 }
 
 export const bitcoinService = new BitcoinService()

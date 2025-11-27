@@ -543,6 +543,51 @@ function getMintMismatchMessage(proofs: CashuProof[], targetMint?: string) {
   )
 }
 
+async function verifyAndCleanProofs(
+  selectedProofs: CashuProof[],
+  mintUrl: string,
+  requiredAmount: number
+): Promise<CashuProof[]> {
+  try {
+    const { removeSpentProofs } = await import('@/services/cashuCheck')
+    const { spent, unspent } = await removeSpentProofs(mintUrl, selectedProofs)
+
+    if (spent.length > 0) {
+      console.log(`[EcashSend] Found ${spent.length} spent tokens, removing from store`)
+      // Remove spent proofs from store
+      ecashStore.removeProofs(spent)
+
+      // Calculate if we still have enough after removing spent tokens
+      const remainingTotal = unspent.reduce((sum, p) => sum + (p.amount || 0), 0)
+
+      if (remainingTotal < requiredAmount) {
+        // Need to re-select proofs
+        const retrySelection = ecashStore.selectProofsForAmount(requiredAmount)
+        if (!retrySelection.ok) {
+          throw new Error(
+            t(
+              'ecashSend.errors.insufficientAfterCleanup',
+              '일부 토큰이 이미 사용되어 잔액이 부족합니다. 설정 페이지에서 "사용된 토큰 정리"를 먼저 실행해주세요.'
+            )
+          )
+        }
+        // Return newly selected valid proofs
+        return retrySelection.picked
+      }
+
+      // Return only unspent proofs
+      return unspent
+    }
+
+    // All tokens are valid
+    return selectedProofs
+  } catch (checkError) {
+    console.warn('[EcashSend] Failed to verify token state, proceeding with original selection:', checkError)
+    // If check fails, continue with original proofs
+    return selectedProofs
+  }
+}
+
 async function fetchMintKeys(targetMint: string) {
   const response = await apiClient.get('/cashu/keys/', {
     params: { mintUrl: targetMint }
@@ -579,7 +624,7 @@ async function handleNut18Send(request: Nut18PaymentRequest & { protocol: 'nut18
     throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
   }
 
-  const { ok, picked, total } = ecashStore.selectProofsForAmount(amount)
+  let { ok, picked, total } = ecashStore.selectProofsForAmount(amount)
   if (!ok) {
     throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
   }
@@ -589,6 +634,10 @@ async function handleNut18Send(request: Nut18PaymentRequest & { protocol: 'nut18
     throw new Error(mismatch)
   }
 
+  // Verify tokens are not already spent before attempting swap
+  picked = await verifyAndCleanProofs(picked, ecashStore.mintUrl, amount)
+  total = picked.reduce((sum, p) => sum + (p.amount || 0), 0)
+
   const mintKeys = await fetchMintKeys(ecashStore.mintUrl)
   const paymentOutputs = await createBlindedOutputs(amount, mintKeys)
   const change = Math.max(0, Number(total) - Number(amount))
@@ -596,12 +645,35 @@ async function handleNut18Send(request: Nut18PaymentRequest & { protocol: 'nut18
   const combinedOutputs = [...paymentOutputs.outputs, ...changeOutputs.outputs]
   const combinedOutputDatas = [...paymentOutputs.outputDatas, ...changeOutputs.outputDatas]
 
-  const response = await apiClient.post('/cashu/swap/', {
-    inputs: picked,
-    outputs: combinedOutputs,
-    mintUrl: ecashStore.mintUrl,
-    requestId: request.id
-  })
+  let response
+  try {
+    response = await apiClient.post('/cashu/swap/', {
+      inputs: picked,
+      outputs: combinedOutputs,
+      mintUrl: ecashStore.mintUrl,
+      requestId: request.id
+    })
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error || error?.message
+    const errorCode = error?.response?.data?.code
+
+    // Check for "Token already spent" error
+    if (errorMsg && errorMsg.toLowerCase().includes('already spent')) {
+      // Remove the spent proofs from local storage
+      ecashStore.removeProofs(picked)
+
+      throw new Error(
+        t(
+          'ecashSend.errors.tokenAlreadySpent',
+          '토큰이 이미 사용되었습니다. 사용된 토큰을 제거했으니 다시 시도해주세요.'
+        )
+      )
+    }
+
+    // Re-throw with better message
+    throw new Error(errorMsg || t('ecashSend.errors.swapFailed', 'e-cash 교환에 실패했습니다.'))
+  }
+
   const swapData = response.data
   const signatures = swapData?.signatures || swapData?.promises || []
   const allProofs = await signaturesToProofs(signatures, mintKeys, combinedOutputDatas)
@@ -611,6 +683,7 @@ async function handleNut18Send(request: Nut18PaymentRequest & { protocol: 'nut18
 
   const payload = createPaymentPayload({
     id: request.id,
+    amount,
     memo: request.description || '',
     mint: ecashStore.mintUrl,
     unit: request.unit || 'sat',
@@ -664,7 +737,7 @@ async function handleLegacyEcashSend(request: LegacyEcashRequest) {
     )
   }
 
-  const { ok, picked, total } = ecashStore.selectProofsForAmount(amount)
+  let { ok, picked, total } = ecashStore.selectProofsForAmount(amount)
   if (!ok) {
     throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
   }
@@ -673,6 +746,10 @@ async function handleLegacyEcashSend(request: LegacyEcashRequest) {
   if (mismatch) {
     throw new Error(mismatch)
   }
+
+  // Verify tokens are not already spent before attempting swap
+  picked = await verifyAndCleanProofs(picked, request.mint, amount)
+  total = picked.reduce((sum, p) => sum + (p.amount || 0), 0)
 
   const mintKeys = await fetchMintKeys(request.mint)
   const receiverOutputDatas = await deserializeOutputDatas(request.outputs || [])
@@ -693,12 +770,34 @@ async function handleLegacyEcashSend(request: LegacyEcashRequest) {
     changeOutputDatas = built.outputDatas
   }
 
-  const response = await apiClient.post('/cashu/swap/', {
-    inputs: picked,
-    outputs: [...receiverOutputs, ...changeOutputs],
-    mintUrl: request.mint,
-    requestId: request.requestId
-  })
+  let response
+  try {
+    response = await apiClient.post('/cashu/swap/', {
+      inputs: picked,
+      outputs: [...receiverOutputs, ...changeOutputs],
+      mintUrl: request.mint,
+      requestId: request.requestId
+    })
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error || error?.response?.data?.detail || error?.message
+
+    // Check for "Token already spent" error
+    if (errorMsg && (errorMsg.toLowerCase().includes('already spent') || errorMsg.toLowerCase().includes('token already'))) {
+      // Remove the spent proofs from local storage
+      ecashStore.removeProofs(picked)
+
+      throw new Error(
+        t(
+          'ecashSend.errors.tokenAlreadySpent',
+          '토큰이 이미 사용되었습니다. 사용된 토큰을 제거했으니 다시 시도해주세요.'
+        )
+      )
+    }
+
+    // Re-throw with better message
+    throw new Error(errorMsg || t('ecashSend.errors.swapFailed', 'e-cash 교환에 실패했습니다.'))
+  }
+
   const data = response.data
   const signatures = data?.signatures || []
   let changeProofs: CashuProof[] = []
@@ -733,7 +832,7 @@ async function handleInvoiceSend() {
   }
 
   const { quoteData, need } = invoiceQuote.value
-  const { ok, picked, total } = ecashStore.selectProofsForAmount(need)
+  let { ok, picked, total } = ecashStore.selectProofsForAmount(need)
   if (!ok) {
     throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
   }
@@ -742,6 +841,10 @@ async function handleInvoiceSend() {
   if (mismatch) {
     throw new Error(mismatch)
   }
+
+  // Verify tokens are not already spent before attempting melt
+  picked = await verifyAndCleanProofs(picked, ecashStore.mintUrl, need)
+  total = picked.reduce((sum, p) => sum + (p.amount || 0), 0)
 
   const change = Math.max(0, Number(total) - Number(need))
   let changeOutputs: CashuSwapOutput[] | undefined
@@ -764,7 +867,29 @@ async function handleInvoiceSend() {
     meltPayload.outputs = changeOutputs
   }
 
-  const response = await apiClient.post('/cashu/melt/', meltPayload)
+  let response
+  try {
+    response = await apiClient.post('/cashu/melt/', meltPayload)
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error || error?.response?.data?.detail || error?.message
+
+    // Check for "Token already spent" error
+    if (errorMsg && (errorMsg.toLowerCase().includes('already spent') || errorMsg.toLowerCase().includes('token already'))) {
+      // Remove the spent proofs from local storage
+      ecashStore.removeProofs(picked)
+
+      throw new Error(
+        t(
+          'ecashSend.errors.tokenAlreadySpent',
+          '토큰이 이미 사용되었습니다. 사용된 토큰을 제거했으니 다시 시도해주세요.'
+        )
+      )
+    }
+
+    // Re-throw with better message
+    throw new Error(errorMsg || t('ecashSend.errors.meltFailed', '라이트닝 결제에 실패했습니다.'))
+  }
+
   const data = response.data
   const signatures = data?.change || data?.signatures || data?.promises || []
   let changeProofs: CashuProof[] = []

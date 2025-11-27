@@ -2,8 +2,10 @@ type NostrToolsModule = {
   nip19: any
   relayInit: (url: string) => any
   nip04: any
-  generatePrivateKey: () => string
-  finalizeEvent: (event: any, privateKey: string) => any
+  generateSecretKey?: () => Uint8Array
+  generatePrivateKey?: () => string
+  getPublicKey?: (privateKey: Uint8Array) => string
+  finalizeEvent: (event: any, privateKey: string | Uint8Array) => any
 }
 
 const NOSTR_TOOLS_URL = 'https://esm.sh/nostr-tools@2.7.2?bundle'
@@ -76,7 +78,7 @@ export async function sendPaymentViaNostr(options: NostrTransportOptions) {
   }
 
   const tools = await loadNostrTools()
-  const { nip19, relayInit, nip04, generatePrivateKey, finalizeEvent } = tools
+  const { nip19, relayInit, nip04, generateSecretKey, generatePrivateKey, getPublicKey, finalizeEvent } = tools
 
   const decoded = nip19.decode(nprofile)
   if (!decoded || decoded.type !== 'nprofile' || !decoded.data?.pubkey) {
@@ -92,7 +94,16 @@ export async function sendPaymentViaNostr(options: NostrTransportOptions) {
     throw new Error('No relays available for Nostr transport')
   }
 
-  const senderPrivKey = generatePrivateKey()
+  // Use generateSecretKey for nostr-tools v2.x, fallback to generatePrivateKey for v1.x
+  let senderPrivKey: Uint8Array | string
+  if (generateSecretKey) {
+    senderPrivKey = generateSecretKey()
+  } else if (generatePrivateKey) {
+    senderPrivKey = generatePrivateKey()
+  } else {
+    throw new Error('No key generation function available in nostr-tools')
+  }
+
   const plaintext = JSON.stringify(payload)
   const encrypted = await nip04.encrypt(senderPrivKey, targetPubkey, plaintext)
 

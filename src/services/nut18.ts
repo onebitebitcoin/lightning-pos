@@ -352,15 +352,17 @@ function decodeCborItem(data: Uint8Array, startOffset = 0): { value: CborEncodab
 
 export type Nut18PaymentPayload = {
   id: string
+  amount: number
   memo?: string
   mint: string
   unit?: string
   proofs: any[]
 }
 
-export function createPaymentPayload({ id, memo = '', mint, unit = 'sat', proofs }: Nut18PaymentPayload) {
+export function createPaymentPayload({ id, amount, memo = '', mint, unit = 'sat', proofs }: Nut18PaymentPayload) {
   return {
     id,
+    amount,
     memo,
     mint,
     unit,

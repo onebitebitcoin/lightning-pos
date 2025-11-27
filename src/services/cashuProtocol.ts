@@ -30,11 +30,24 @@ export interface CashuSwapOutput {
 }
 
 function normalizeKeyset(mintKeys: any) {
-  if (Array.isArray(mintKeys?.keysets) && mintKeys.keysets.length) {
-    return mintKeys.keysets[0]
+  const pickFromArray = (arr: any[]) => {
+    if (!arr.length) return null
+    const byCurrent = mintKeys?.current_keyset
+      ? arr.find(key => key?.id === mintKeys.current_keyset || key?.keyset_id === mintKeys.current_keyset)
+      : null
+    const active = arr.find(
+      key => key?.active === true || key?.state === 'active' || key?.current === true || key?.is_active === true
+    )
+    return byCurrent || active || arr[0]
   }
-  if (Array.isArray(mintKeys) && mintKeys.length) {
-    return mintKeys[0]
+
+  if (Array.isArray(mintKeys?.keysets)) {
+    const picked = pickFromArray(mintKeys.keysets)
+    if (picked) return picked
+  }
+  if (Array.isArray(mintKeys)) {
+    const picked = pickFromArray(mintKeys)
+    if (picked) return picked
   }
   if (mintKeys) {
     return mintKeys
@@ -74,6 +87,89 @@ function ensureOutputAmounts(outputDatas: any[], amount: number) {
   return splitAmountIntoDenominations(amount)
 }
 
+function stringifyBlindedMessage(data: any) {
+  if (!data) return ''
+
+  const toHex = (value: any) => {
+    if (!value) return ''
+    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) return value.toString('hex')
+    if (value instanceof Uint8Array || Array.isArray(value)) {
+      return Array.from(value)
+        .map((byte: number) => byte.toString(16).padStart(2, '0'))
+        .join('')
+    }
+    return ''
+  }
+
+  // Try direct string access
+  if (typeof data === 'string') return data
+  if (typeof data?.B_ === 'string') return data.B_
+  if (typeof data?.blindedMessage === 'string') return data.blindedMessage
+
+  // Check if blindedMessage is an object with B_ property (Cashu v2.7.1 format)
+  if (data?.blindedMessage && typeof data.blindedMessage === 'object') {
+    if (typeof data.blindedMessage.B_ === 'string') {
+      return data.blindedMessage.B_
+    }
+  }
+
+  // Try toHex() method (for Point objects)
+  if (data?.blindedMessage?.toHex && typeof data.blindedMessage.toHex === 'function') {
+    try {
+      const result = data.blindedMessage.toHex()
+      if (result && typeof result === 'string') return result
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  if (data?.B_?.toHex && typeof data.B_.toHex === 'function') {
+    try {
+      const result = data.B_.toHex()
+      if (result && typeof result === 'string') return result
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  // Try toHex property (might be a getter)
+  if (typeof data?.blindedMessage?.toHex === 'string') return data.blindedMessage.toHex
+  if (typeof data?.B_?.toHex === 'string') return data.B_.toHex
+
+  // Try hex property
+  if (typeof data?.blindedMessage?.hex === 'string') return data.blindedMessage.hex
+  if (typeof data?.B_?.hex === 'string') return data.B_.hex
+
+  // Try toString() but validate the result
+  if (data?.blindedMessage?.toString && typeof data.blindedMessage.toString === 'function') {
+    try {
+      const result = data.blindedMessage.toString()
+      if (result && typeof result === 'string' && !result.startsWith('[object') && result.length > 10) {
+        return result
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  if (data?.B_?.toString && typeof data.B_.toString === 'function') {
+    try {
+      const result = data.B_.toString()
+      if (result && typeof result === 'string' && !result.startsWith('[object') && result.length > 10) {
+        return result
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  // Try array/buffer conversion
+  const hexFromArray = toHex(data?.blindedMessage || data?.B_)
+  if (hexFromArray) return hexFromArray
+
+  return ''
+}
+
 export function buildSwapOutputsFromOutputDatas(outputDatas: any[], amountHint: number, mintKeys: any): CashuSwapOutput[] {
   if (!Array.isArray(outputDatas) || outputDatas.length === 0) {
     return []
@@ -88,7 +184,7 @@ export function buildSwapOutputsFromOutputDatas(outputDatas: any[], amountHint: 
   }
 
   return outputDatas.map((data: any, index: number) => {
-    const blindedMessage = data?.B_ || data?.blindedMessage
+    const blindedMessage = stringifyBlindedMessage(data)
     if (!blindedMessage) {
       throw new Error('Missing blinded message in output data')
     }
@@ -113,7 +209,17 @@ export async function createBlindedOutputs(amount: number, mintKeys: any) {
   }
 
   const keyset = normalizeKeyset(mintKeys)
+
+  if (typeof OutputData.createRandomData !== 'function') {
+    throw new Error('OutputData.createRandomData is not a function. Cashu library version mismatch?')
+  }
+
   const outputDatas = OutputData.createRandomData(Number(amount), keyset)
+
+  if (!Array.isArray(outputDatas) || outputDatas.length === 0) {
+    throw new Error('OutputData.createRandomData returned invalid data')
+  }
+
   const outputs = buildSwapOutputsFromOutputDatas(outputDatas, Number(amount), mintKeys)
 
   return { outputDatas, outputs }
