@@ -22,11 +22,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("이미 존재하는 사용자명입니다.")
         return value
     
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("이미 존재하는 이메일입니다.")
-        return value
-    
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         user = User.objects.create_user(**validated_data)
@@ -87,15 +82,6 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("이미 존재하는 사용자명입니다.")
-        return value
-
-    def validate_email(self, value):
-        # Allow current user to keep their email
-        if self.instance and self.instance.email == value:
-            return value
-
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("이미 존재하는 이메일입니다.")
         return value
 
     def validate_lightning_address(self, value):

@@ -6,7 +6,7 @@ class User(AbstractUser):
     """
     Custom User model for the kiosk system
     """
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_kiosk_admin = models.BooleanField(default=False)
