@@ -33,6 +33,22 @@ ensure_frontend_env() {
   fi
 }
 
+ensure_port_free() {
+  local port=$1
+
+  if command -v lsof >/dev/null 2>&1; then
+    local pids
+    pids=$(lsof -ti tcp:"$port" || true)
+
+    if [ -n "$pids" ]; then
+      log "Port $port is in use by PID(s): $pids; terminating"
+      kill "$pids" 2>/dev/null || true
+    fi
+  else
+    log "lsof not found; skipping port check for $port"
+  fi
+}
+
 run_backend() {
   (
     set -e
@@ -46,6 +62,7 @@ run_backend() {
       log "Skipping migrations (SKIP_MIGRATIONS=1)"
     fi
 
+    ensure_port_free 8001
     log "Starting Django dev server on http://localhost:8001"
     python manage.py runserver 0.0.0.0:8001
   )
@@ -56,6 +73,7 @@ run_frontend() {
     set -e
     cd "$FRONTEND_DIR"
     ensure_frontend_env
+    ensure_port_free 5173
     log "Starting Vite dev server on http://localhost:5173"
     npm run dev
   )

@@ -162,8 +162,8 @@
           <div class="text-6xl mb-4 text-primary-500 flex justify-center">
             <UiIcon name="celebration" class="h-12 w-12" />
           </div>
-          <h3 class="text-2xl font-semibold text-gray-800 mb-2">{{ localeStore.t('register.accountCreated', '계정 생성 완료!') }}</h3>
-          <p class="text-gray-600 mb-6">{{ successMessage }}</p>
+          <h3 class="text-2xl font-semibold text-text-primary mb-2">{{ localeStore.t('register.accountCreated', '계정 생성 완료!') }}</h3>
+          <p class="text-text-secondary mb-6">{{ successMessage }}</p>
           <button
             @click="goToLogin"
             class="btn btn-primary w-full py-3 px-4 rounded-lg font-medium"

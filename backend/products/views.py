@@ -738,7 +738,18 @@ def cashu_swap_view(request):
         print(f"[DEBUG SWAP] Inputs count: {len(inputs) if inputs else 0}")
         print(f"[DEBUG SWAP] Outputs count: {len(outputs) if outputs else 0}")
         print(f"[DEBUG SWAP] First input sample: {inputs[0] if inputs and len(inputs) > 0 else 'None'}")
-        print(f"[DEBUG SWAP] First output sample: {outputs[0] if outputs and len(outputs) > 0 else 'None'}")
+        if outputs and len(outputs) > 0:
+            first_output = outputs[0]
+            b_val = first_output.get('B_') if isinstance(first_output, dict) else None
+            b_preview = ''
+            if isinstance(b_val, str):
+                b_preview = f"{b_val[:32]}... (len={len(b_val)})"
+            elif b_val is not None:
+                b_preview = f"type={type(b_val)} value={str(b_val)[:64]}"
+            print(f"[DEBUG SWAP] First output sample: {first_output}")
+            print(f"[DEBUG SWAP] First output B_ preview: {b_preview}")
+        else:
+            print(f"[DEBUG SWAP] First output sample: None")
 
         response = requests.post(swap_url, json=payload, timeout=30)
 
@@ -752,12 +763,27 @@ def cashu_swap_view(request):
         error_detail = e.response.text if hasattr(e, 'response') and e.response else str(e)
         print(f"[ERROR SWAP] HTTPError: {str(e)}")
         print(f"[ERROR SWAP] Detail: {error_detail}")
+
+        # Parse mint error response
+        mint_error = None
+        error_code = None
+        try:
+            if hasattr(e, 'response') and e.response:
+                error_json = e.response.json()
+                mint_error = error_json.get('detail') or error_json.get('error')
+                error_code = error_json.get('code')
+        except:
+            pass
+
+        # Return mint's error directly for better UX
+        response_status = e.response.status_code if hasattr(e, 'response') and e.response else 502
         return Response({
             'success': False,
-            'error': f'Failed to swap tokens: {str(e)}',
+            'error': mint_error or f'Failed to swap tokens: {str(e)}',
             'detail': error_detail,
+            'code': error_code,
             'mint_url': swap_url
-        }, status=status.HTTP_502_BAD_GATEWAY)
+        }, status=response_status)
     except requests.exceptions.RequestException as e:
         print(f"[ERROR SWAP] RequestException: {str(e)}")
         return Response({

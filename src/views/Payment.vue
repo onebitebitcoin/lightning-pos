@@ -307,143 +307,20 @@
         </div>
       </Transition>
     </Teleport>
-
-      <!-- QR Code Modal -->
-      <div
-        v-if="showQRCode"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        @click="closeQRCode"
-      >
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transition-colors duration-200" @click.stop>
-          <div class="text-center">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-              {{ getPaymentModalTitle() }}
-            </h3>
-            
-            <!-- Lightning Address Display -->
-            <div v-if="paymentMethod === 'lightning' && activeLightningAddress" class="mb-4">
-              <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3">
-            <div class="text-xs text-indigo-600 dark:text-indigo-400 font-medium mb-1">
-              {{ t('payment.wallet.target', '결제 대상 지갑') }}
-            </div>
-                <div class="text-sm font-mono text-indigo-800 dark:text-indigo-200 break-all flex items-center gap-1">
-                  <UiIcon name="lightning" class="h-4 w-4" />
-                  <span>{{ activeLightningAddress }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- QR Code Container -->
-            <div class="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4 inline-block">
-              <!-- Loading State -->
-              <div v-show="isGeneratingInvoice" class="flex flex-col items-center space-y-4 p-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
-                <div class="text-sm text-gray-600">
-                  {{ getLoadingMessage() }}
-                </div>
-              </div>
-              
-              <!-- QR Code -->
-              <canvas ref="qrCanvas" v-show="!isGeneratingInvoice" class="block"></canvas>
-            </div>
-            
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-              <span v-if="isGeneratingInvoice">
-                {{ getLoadingMessage() }}
-              </span>
-              <span
-                v-else-if="paymentMethod === 'ecash' && isWaitingForEcashPayment"
-              >
-                {{ t('payment.status.ecashWaiting', 'e-cash 결제를 확인 중입니다. 결제가 완료되면 자동으로 주문이 확정됩니다.') }}
-              </span>
-              <span v-else>
-                {{ getQRScanMessage() }}
-              </span>
-            </p>
-            <div
-              v-if="paymentMethod === 'ecash' && !isGeneratingInvoice && ecashRequestText"
-              class="mb-4 space-y-2"
-            >
-              <button
-                type="button"
-                class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                @click="copyEcashRequestText"
-              >
-                <UiIcon name="copy" class="h-4 w-4" />
-                <span>{{ t('payment.actions.copyRequest', '결제 텍스트 복사') }}</span>
-              </button>
-              <p
-                v-if="ecashCopyFeedback"
-                :class="[
-                  'text-sm',
-                  ecashCopyFeedback.type === 'success'
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                ]"
-              >
-                {{ ecashCopyFeedback.message }}
-              </p>
-            </div>
-            
-            <div class="flex space-x-3">
-              <button
-                @click="closeQRCode"
-                class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                {{ t('payment.actions.cancel', '취소') }}
-              </button>
-              <button
-                @click="completePayment"
-                class="btn btn-primary flex-1 px-4 py-2 rounded-lg"
-              >
-                {{ t('payment.actions.complete', '결제 완료') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Success Modal -->
-      <div
-        v-if="showSuccess"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      >
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 text-center transition-colors duration-200">
-        <div class="text-6xl mb-4 text-success-500 flex justify-center">
-          <UiIcon name="checkCircle" class="h-12 w-12" />
-        </div>
-          <h3 class="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
-            {{ t('payment.success.title', '결제 성공!') }}
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300 mb-6">
-            {{ t('payment.success.message', '구매해 주셔서 감사합니다') }}
-          </p>
-          <button
-            @click="returnToShop"
-            class="btn btn-primary w-full py-3 px-4 font-medium"
-          >
-            {{ t('payment.success.continue', '쇼핑 계속하기') }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
-import { bitcoinService } from '@/services/bitcoin'
-import QRCode from 'qrcode'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useEcashStore } from '@/stores/ecash'
-import { createPaymentRequest, createHttpPostTransport } from '@/services/nut18'
-import { API_BASE_URL } from '@/services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -453,22 +330,10 @@ const bitcoinStore = useBitcoinStore()
 const localeStore = useLocaleStore()
 const ecashStore = useEcashStore()
 const t = localeStore.t
-const apiBaseUrl = API_BASE_URL.replace(/\/+$/, '')
-const ecashTransportBaseUrl = (
-  import.meta.env.VITE_ECASH_TRANSPORT_BASE_URL || 'https://pos.onebitebitcoin.com'
-).replace(/\/+$/, '')
 
 const paymentMethod = ref('lightning')
-const showQRCode = ref(false)
-const showSuccess = ref(false)
-const qrCanvas = ref<HTMLCanvasElement>()
-const isGeneratingInvoice = ref(false)
-const activeLightningAddress = ref<string>('')
-const isWaitingForEcashPayment = ref(false)
-const ecashRequestText = ref('')
-const ecashCopyFeedback = ref<{ type: 'success' | 'error'; message: string } | null>(null)
-let ecashPollingTimer: number | null = null
-let ecashCopyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
+const customDiscountValue = ref<number | null>(null)
+const isCustomDiscount = ref(false)
 
 // Check if user has configured wallet addresses
 const hasLightningAddress = computed(() => {
@@ -480,8 +345,6 @@ const hasUsdtAddress = computed(() => {
 })
 
 const discountOptions = [5, 10, 15, 20, 25]
-const customDiscountValue = ref<number | null>(null)
-const isCustomDiscount = ref(false)
 const hasCartItems = computed(() => cartStore.itemCount > 0)
 const formattedTotal = computed(() => formatPrice(cartStore.total))
 const satsTotal = computed(() => {
@@ -491,7 +354,7 @@ const satsTotal = computed(() => {
   if (!sats) return ''
   return bitcoinStore.formatSats(sats)
 })
-const mobilePaySummaryVisible = computed(() => hasCartItems.value && !showQRCode.value && !showSuccess.value)
+const mobilePaySummaryVisible = computed(() => hasCartItems.value)
 
 const formatPrice = (value: number | string): string => {
   const numeric = Number(value || 0)
@@ -499,54 +362,6 @@ const formatPrice = (value: number | string): string => {
     return '₩0'
   }
   return `₩${numeric.toLocaleString('ko-KR')}`
-}
-
-// Lightning Network configuration
-const DEFAULT_LIGHTNING_DOMAIN = 'walletofsatoshi.com' // Default Lightning domain
-const FALLBACK_LIGHTNING_ADDRESS = 'nsw@getalby.com' // Fallback if user has no Lightning address
-const DEFAULT_MEMO = 'Shop Payment'
-
-// Get user's Lightning address or construct it from username
-function getUserLightningAddress(): string {
-  // First check if user has a custom Lightning address in their profile
-  if (authStore.user?.lightning_address) {
-    return authStore.user.lightning_address
-  }
-
-  // If not, construct one using their username and default domain
-  if (authStore.username) {
-    return `${authStore.username}@${DEFAULT_LIGHTNING_DOMAIN}`
-  }
-
-  // Fallback to default Lightning address
-  return FALLBACK_LIGHTNING_ADDRESS
-}
-
-// Get user's USDT address
-function getUserUsdtAddress(): string {
-  // Return user's USDT address from profile
-  if (authStore.user?.usdt_address) {
-    return authStore.user.usdt_address
-  }
-
-  // No fallback for USDT - must be configured
-  return ''
-}
-
-// Get fallback Lightning addresses to try if primary fails
-function getFallbackLightningAddresses(): string[] {
-  const fallbacks = []
-  
-  // If using constructed address, try with different domains
-  if (authStore.username && !authStore.user?.lightning_address) {
-    fallbacks.push(`${authStore.username}@getalby.com`)
-    fallbacks.push(`${authStore.username}@strike.army`)
-  }
-  
-  // Always include the main fallback
-  fallbacks.push(FALLBACK_LIGHTNING_ADDRESS)
-  
-  return fallbacks
 }
 
 // Initialize Bitcoin store
@@ -561,360 +376,11 @@ if (!hasLightningAddress.value && hasUsdtAddress.value) {
 
 async function handlePayment() {
   if (!paymentMethod.value) return
-
-  stopEcashFlow()
-
-  if (paymentMethod.value === 'cash') {
-    await completePayment()
-    return
-  }
-
-  // Show QR modal and start loading state
-  showQRCode.value = true
-  isGeneratingInvoice.value = true
-
-  await nextTick() // 모달 렌더링
-
-  if (qrCanvas.value) {
-    // QR 코드 생성
-    let qrData = ''
-
-    // Lightning and USDT both use Lightning Network invoice generation
-    if (paymentMethod.value === 'lightning' || paymentMethod.value === 'usdt') {
-      // Generate real Lightning invoice using LNURL with fallback support
-      try {
-        // Ensure bitcoin price is loaded
-        if (!bitcoinStore.btcPriceKrw) {
-          console.log('💰 비트코인 가격 데이터가 없습니다. 로딩 중...')
-          await bitcoinStore.fetchBitcoinPrice()
-        }
-
-        const satsAmount = bitcoinStore.krwToSats(cartStore.total)
-        const paymentTypeLabel = getPaymentTypeLabel()
-        const memo = `${paymentTypeLabel} - ${cartStore.total.toLocaleString('ko-KR')}원`
-
-        console.log(`🚀 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 시작`)
-        console.log('💰 KRW 금액:', cartStore.total)
-        console.log('💰 BTC 가격:', bitcoinStore.btcPriceKrw)
-        console.log('💰 변환된 사츠:', satsAmount, '사츠')
-        console.log('📝 메모:', memo)
-
-        if (satsAmount <= 0) {
-          throw new Error('사츠 변환 실패: 비트코인 가격 데이터를 가져올 수 없습니다')
-        }
-
-        // Get address based on payment method
-        const primaryAddress = paymentMethod.value === 'usdt'
-          ? getUserUsdtAddress()
-          : getUserLightningAddress()
-
-        console.log(`⚡ 기본 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 주소 시도:`, primaryAddress)
-
-        let result = await bitcoinService.getLnurl(primaryAddress, satsAmount, memo)
-        let usedAddress = primaryAddress
-
-        // If primary address fails with wallet not found and it's Lightning, try fallbacks
-        if (!result.success && result.errorType === 'WALLET_NOT_FOUND' && paymentMethod.value === 'lightning') {
-          const fallbackAddresses = getFallbackLightningAddresses()
-          console.log('❌ 기본 주소 실패, 대체 주소 시도:', fallbackAddresses)
-
-          for (const fallbackAddress of fallbackAddresses) {
-            console.log('🔄 대체 주소 시도:', fallbackAddress)
-            result = await bitcoinService.getLnurl(fallbackAddress, satsAmount, memo)
-
-            if (result.success) {
-              console.log('✅ 대체 주소로 인보이스 생성 성공:', fallbackAddress)
-              usedAddress = fallbackAddress
-              break
-            }
-
-            console.log('❌ 대체 주소 실패:', fallbackAddress, result.error)
-
-            // If this fallback also fails with wallet not found, try next one
-            if (result.errorType !== 'WALLET_NOT_FOUND') {
-              break // Don't try more fallbacks for other types of errors
-            }
-          }
-        }
-
-        if (result.success && result.invoice) {
-          console.log(`🎉 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 성공!`)
-          console.log('📄 인보이스:', result.invoice.substring(0, 50) + '...')
-          console.log('📍 사용한 주소:', usedAddress)
-
-          qrData = result.invoice
-          activeLightningAddress.value = usedAddress
-
-          // Generate QR code immediately after getting invoice
-          try {
-            console.log('🔲 QR 코드 생성 중...')
-            console.log('📱 QR 데이터 길이:', qrData.length)
-            console.log('🎯 QR 데이터 미리보기:', qrData.substring(0, 100) + '...')
-
-            await QRCode.toCanvas(qrCanvas.value, qrData, {
-              width: 300,
-              margin: 2,
-              color: {
-                dark: '#000000',
-                light: '#FFFFFF'
-              }
-            })
-
-            console.log('✅ QR 코드 생성 성공!')
-            // Stop loading state after successful QR generation
-            isGeneratingInvoice.value = false
-          } catch (qrError) {
-            console.error('💥 QR 코드 생성 오류:', qrError)
-            isGeneratingInvoice.value = false
-            alert(t('payment.errors.qr', 'QR 코드 생성에 실패했습니다.'))
-            showQRCode.value = false
-            return
-          }
-        } else {
-          console.log(`💥 모든 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 주소 시도 실패!`)
-          console.log('🔍 최종 오류 유형:', result.errorType)
-          console.log('❌ 최종 오류 메시지:', result.error)
-
-          // Stop loading state on error
-          isGeneratingInvoice.value = false
-          activeLightningAddress.value = ''
-
-          // Show user-friendly error message based on error type
-          let errorMessage = t('payment.errors.invoice', 'Lightning 인보이스 생성에 실패했습니다.')
-
-          switch (result.errorType) {
-            case 'WALLET_NOT_FOUND':
-              errorMessage = t('payment.errors.invoiceWallet', 'Lightning 지갑을 찾을 수 없습니다.\n주소: {address}\n\n설정에서 올바른 Lightning 주소를 설정하거나\n다른 결제 방법을 선택해주세요.', {
-                address: primaryAddress,
-              })
-              break
-            case 'INVALID_AMOUNT':
-              errorMessage = t('payment.errors.invoiceLimit', '결제 금액이 Lightning 지갑 한도를 벗어납니다.\n{detail}\n\n다른 결제 방법을 선택해주세요.', {
-                detail: result.error ?? '',
-              })
-              break
-            case 'NETWORK_ERROR':
-              errorMessage = t('payment.errors.invoiceNetwork', '네트워크 오류가 발생했습니다.\n{detail}\n\n잠시 후 다시 시도하거나 다른 결제 방법을 선택해주세요.', {
-                detail: result.error ?? '',
-              })
-              break
-            default:
-              errorMessage = t('payment.errors.invoiceGeneric', '{detail}\n\n다른 결제 방법을 선택해주세요.', {
-                detail: result.error ?? '',
-              })
-          }
-
-          alert(errorMessage)
-          showQRCode.value = false
-          return
-        }
-      } catch (error) {
-        console.error(`💥 ${paymentMethod.value === 'usdt' ? 'USDT' : '라이트닝'} 인보이스 생성 중 예상치 못한 오류:`, error)
-        // Stop loading state on unexpected error
-        isGeneratingInvoice.value = false
-        activeLightningAddress.value = ''
-        alert(t('payment.errors.unexpected', '예상치 못한 오류가 발생했습니다.\n다른 결제 방법을 선택해주세요.'))
-        showQRCode.value = false
-        return
-      }
-    } else if (paymentMethod.value === 'ecash') {
-      try {
-        if (!bitcoinStore.btcPriceKrw) {
-          await bitcoinStore.fetchBitcoinPrice()
-        }
-
-        const satsAmount = bitcoinStore.krwToSats(cartStore.total)
-        if (!satsAmount || satsAmount <= 0) {
-          throw new Error('사츠 변환에 실패했습니다')
-        }
-
-        const normalizedSats = Math.max(1, Math.round(satsAmount))
-        const requestId = `creq_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-        const transportUrl = buildEcashTransportUrl(requestId)
-        const memo = getPaymentTypeLabel()
-        const description = `${memo} - ${cartStore.total.toLocaleString('ko-KR')} KRW`
-
-        const requestString = createPaymentRequest({
-          id: requestId,
-          amount: normalizedSats,
-          unit: 'sat',
-          single_use: true,
-          mints: [ecashStore.mintUrl],
-          description,
-          transports: [createHttpPostTransport(transportUrl)]
-        })
-
-        console.log('💳 e-cash payment request generated:', requestId)
-        qrData = requestString
-        ecashRequestText.value = requestString
-        startEcashPaymentPolling(requestId)
-        isWaitingForEcashPayment.value = true
-
-        await QRCode.toCanvas(qrCanvas.value, qrData, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        })
-
-        isGeneratingInvoice.value = false
-      } catch (error) {
-        console.error('💥 e-cash 요청 생성 오류:', error)
-        isGeneratingInvoice.value = false
-        isWaitingForEcashPayment.value = false
-        alert(t('payment.errors.qr', 'QR 코드 생성에 실패했습니다.'))
-        showQRCode.value = false
-      }
-    }
-  }
-}
-
-function buildEcashTransportUrl(requestId: string) {
-  return `${ecashTransportBaseUrl}/api/products/payments/requests/${encodeURIComponent(requestId)}/`
-}
-
-function stopEcashFlow() {
-  if (ecashPollingTimer !== null) {
-    clearInterval(ecashPollingTimer)
-    ecashPollingTimer = null
-  }
-  isWaitingForEcashPayment.value = false
-  resetEcashRequestState()
-}
-
-function startEcashPaymentPolling(requestId: string) {
-  const checkUrl = buildEcashTransportUrl(requestId)
-  let attempts = 0
-  const maxAttempts = 60
-
-  const poll = async () => {
-    try {
-      const response = await fetch(checkUrl)
-      if (response.ok) {
-        const payload = await response.json()
-        const hasProofs = payload?.paid && Array.isArray(payload?.proofs) && payload.proofs.length > 0
-        if (hasProofs) {
-          await handleEcashPaymentPayload(payload, requestId)
-          return
-        }
-      } else if (response.status !== 404) {
-        console.error('e-cash 결제 상태 확인에 실패했습니다:', response.statusText)
-      }
-    } catch (error) {
-      console.error('e-cash 결제 폴링 중 오류:', error)
-    }
-
-    attempts += 1
-    if (attempts >= maxAttempts) {
-      console.warn('e-cash 결제 확인 제한 시간 초과')
-      stopEcashFlow()
-    }
-  }
-
-  poll()
-  ecashPollingTimer = window.setInterval(poll, 3000)
-}
-
-function resetEcashRequestState() {
-  ecashRequestText.value = ''
-  if (ecashCopyFeedbackTimer) {
-    clearTimeout(ecashCopyFeedbackTimer)
-    ecashCopyFeedbackTimer = null
-  }
-  ecashCopyFeedback.value = null
-}
-
-function setEcashCopyFeedback(type: 'success' | 'error', message: string) {
-  ecashCopyFeedback.value = { type, message }
-  if (ecashCopyFeedbackTimer) {
-    clearTimeout(ecashCopyFeedbackTimer)
-  }
-  ecashCopyFeedbackTimer = window.setTimeout(() => {
-    ecashCopyFeedback.value = null
-    ecashCopyFeedbackTimer = null
-  }, 3500)
-}
-
-async function copyEcashRequestText() {
-  if (!ecashRequestText.value) return
-  if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-    setEcashCopyFeedback('error', t('ecashSend.errors.clipboard', '클립보드 접근이 거부되었습니다.'))
-    return
-  }
-  try {
-    await navigator.clipboard.writeText(ecashRequestText.value)
-    setEcashCopyFeedback('success', t('ecashSend.copied', '요청 텍스트를 복사했습니다.'))
-  } catch (error) {
-    console.error('Failed to copy e-cash request text:', error)
-    setEcashCopyFeedback('error', t('ecashSend.errors.clipboard', '클립보드 접근이 거부되었습니다.'))
-  }
-}
-
-async function handleEcashPaymentPayload(payload: any, requestId: string) {
-  try {
-    const proofs = Array.isArray(payload?.proofs) ? payload.proofs : []
-    if (!proofs.length) {
-      console.warn('수신된 e-cash 결제에 proof 데이터가 없습니다.')
-      return
-    }
-
-    const mintForProofs = payload?.mint || ecashStore.mintUrl
-    ecashStore.addProofs(
-      proofs.map((proof: Record<string, any>) => ({
-        ...proof,
-        mintUrl: proof?.mintUrl || mintForProofs
-      })),
-      mintForProofs
-    )
-
-    await consumeEcashRequest(requestId)
-    stopEcashFlow()
-    await completePayment()
-  } catch (error) {
-    console.error('e-cash 결제 처리 중 오류:', error)
-  }
-}
-
-async function consumeEcashRequest(requestId: string) {
-  try {
-    const consumeUrl = `${buildEcashTransportUrl(requestId)}?consume=true`
-    await fetch(consumeUrl)
-  } catch (error) {
-    console.error('e-cash 결제 요청 정리 중 오류:', error)
-  }
-}
-
-function closeQRCode() {
-  showQRCode.value = false
-  isGeneratingInvoice.value = false
-  activeLightningAddress.value = ''
-  stopEcashFlow()
-}
-
-async function completePayment() {
-  stopEcashFlow()
-  showQRCode.value = false
-  isGeneratingInvoice.value = false
-  activeLightningAddress.value = ''
   
-  try {
-    const result = await cartStore.createOrder(paymentMethod.value)
-    if (result.success) {
-      showSuccess.value = true
-    } else {
-      alert(result.message || t('payment.errors.orderCreation', '주문 생성에 실패했습니다'))
-    }
-  } catch (error) {
-    console.error('결제 완료 처리 오류:', error)
-    alert(t('payment.errors.completion', '결제 처리 중 오류가 발생했습니다'))
-  }
-}
-
-function returnToShop() {
-  showSuccess.value = false
-  router.push('/shop')
+  router.push({
+    name: 'payment-qr',
+    query: { method: paymentMethod.value }
+  })
 }
 
 // Discount handling functions
@@ -937,61 +403,4 @@ function applyCustomDiscount() {
     isCustomDiscount.value = true
   }
 }
-
-// Payment method helper functions
-function getPaymentModalTitle(): string {
-  switch (paymentMethod.value) {
-    case 'lightning':
-      return t('payment.modal.lightningTitle', '라이트닝 인보이스')
-    case 'ecash':
-      return t('payment.modal.ecashTitle', 'e-cash 결제')
-    case 'usdt':
-      return t('payment.modal.usdtTitle', 'USDT 결제')
-    default:
-      return t('payment.modal.defaultTitle', '결제 QR 코드')
-  }
-}
-
-function getLoadingMessage(): string {
-  switch (paymentMethod.value) {
-    case 'lightning':
-      return t('payment.status.lightning', '잠시만 기다려주세요. 라이트닝 인보이스를 생성하고 있습니다...')
-    case 'ecash':
-      return t('payment.status.ecash', '잠시만 기다려주세요. e-cash 인보이스를 생성하고 있습니다...')
-    case 'usdt':
-      return t('payment.status.usdt', '잠시만 기다려주세요. USDT 인보이스를 생성하고 있습니다...')
-    default:
-      return t('payment.status.generic', 'QR 코드를 생성하고 있습니다...')
-  }
-}
-
-function getQRScanMessage(): string {
-  switch (paymentMethod.value) {
-    case 'lightning':
-      return t('payment.instructions.lightning', '라이트닝 지갑으로 QR 코드를 스캔하세요')
-    case 'ecash':
-      return t('payment.instructions.ecash', 'e-cash 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)')
-    case 'usdt':
-      return t('payment.instructions.usdt', 'USDT 지갑으로 QR 코드를 스캔하세요 (라이트닝 네트워크 기반)')
-    default:
-      return t('payment.instructions.generic', '결제를 완료하려면 QR 코드를 스캔하세요')
-  }
-}
-
-function getPaymentTypeLabel(): string {
-  switch (paymentMethod.value) {
-    case 'lightning':
-      return t('payment.modal.memo.lightning', 'Lightning Payment')
-    case 'ecash':
-      return t('payment.modal.memo.ecash', 'e-cash Payment')
-    case 'usdt':
-      return t('payment.modal.memo.usdt', 'USDT Payment')
-    default:
-      return DEFAULT_MEMO
-  }
-}
-
-onBeforeUnmount(() => {
-  stopEcashFlow()
-})
 </script>

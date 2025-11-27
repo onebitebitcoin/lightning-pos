@@ -412,3 +412,6 @@ def generate_lightning_invoice_view(request):
             'error': f'Unexpected error: {str(e)}',
             'errorType': 'UNKNOWN'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+ 
