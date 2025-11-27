@@ -307,7 +307,7 @@ export const translations: Record<LanguageCode, TranslationMap> = {
     'payment.discounts.title': '할인 적용',
     'payment.discounts.optionPercent': '{percent}% 할인',
     'payment.discounts.none': '할인 없음',
-    'payment.discounts.customLabel': '커스텀 할인율 (%)',
+    'payment.discounts.customLabel': '직접 입력하기',
     'payment.discounts.customPlaceholder': '할인율 입력',
     'payment.discounts.apply': '적용',
     'payment.discounts.hint': '0-100% 사이의 값을 입력하세요',

@@ -182,24 +182,6 @@
               />
             </label>
             
-            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
-              <input
-                v-model="paymentMethod"
-                type="radio"
-                value="ecash"
-                class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
-              />
-              <div class="flex-1">
-                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
-                  {{ t('payment.methods.ecash.title', 'e-cash 결제') }}
-                </p>
-                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
-                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (Cashu)') }}
-                </p>
-              </div>
-              <UiIcon name="coin" class="h-6 w-6 text-primary-500" />
-            </label>
-            
             <label
               :class="[
                 'flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-200',
@@ -228,6 +210,25 @@
                 name="banknote"
                 :class="['h-6 w-6', hasUsdtAddress ? 'text-primary-500' : 'opacity-50']"
               />
+            </label>
+
+            <label class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-not-allowed opacity-60 transition-colors duration-200">
+              <input
+                v-model="paymentMethod"
+                type="radio"
+                value="ecash"
+                class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                disabled
+              />
+              <div class="flex-1">
+                <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
+                  {{ t('payment.methods.ecash.title', 'e-cash 결제') }}
+                </p>
+                <p class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (Cashu)') }}
+                </p>
+              </div>
+              <UiIcon name="coin" class="h-6 w-6 text-primary-500" />
             </label>
           </div>
 
@@ -553,9 +554,9 @@ bitcoinStore.initialize()
 ecashStore.initialize()
 
 // Set default payment method based on available wallet addresses
-// If lightning address is not set, switch to ecash
-if (!hasLightningAddress.value) {
-  paymentMethod.value = 'ecash'
+// If lightning address is not set, try to switch to usdt
+if (!hasLightningAddress.value && hasUsdtAddress.value) {
+  paymentMethod.value = 'usdt'
 }
 
 async function handlePayment() {
