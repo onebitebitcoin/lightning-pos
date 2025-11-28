@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
     <header class="glass-header transition-all duration-300 sticky top-0 z-20">
-      <div class="container mx-auto px-4 py-3 md:py-4">
+      <div class="container mx-auto px-0 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
           <h1 class="text-lg font-bold text-text-primary select-none">
@@ -204,9 +204,9 @@
       </div>
     </header>
 
-    <div class="container mx-auto px-3 xs:px-4 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col lg:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
+    <div class="container mx-auto px-0 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col xl:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
       <!-- Mobile Cart Toggle -->
-      <div class="lg:hidden mb-3 xs:mb-4">
+      <div class="hidden mb-3 xs:mb-4">
         <button
           @click="showMobileCart = !showMobileCart"
           class="btn btn-primary w-full py-2 xs:py-3 px-3 xs:px-4 flex items-center justify-between text-sm xs:text-base"
@@ -221,9 +221,8 @@
 
         <!-- Mobile Cart -->
         <div
-          v-if="showMobileCart"
           ref="mobileCartRef"
-          class="lg:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up"
+          class="xl:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up"
         >
           <div class="flex items-center justify-between mb-3 xs:mb-4">
             <h3 class="text-base xs:text-lg tablet:text-xl font-semibold text-gray-900 dark:text-white">
@@ -316,7 +315,7 @@
       </div>
 
       <!-- Products Grid -->
-      <div class="flex-1 lg:order-1">
+      <div class="flex-1 xl:order-1">
         <!-- Category Filter Breadcrumb -->
         <div class="mb-4 md:mb-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
@@ -380,7 +379,7 @@
         </div>
 
         <!-- Products Grid -->
-        <div v-else class="grid grid-cols-1 xs:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 xs:gap-4 tablet:gap-6">
+        <div v-else class="grid grid-cols-1 xs:grid-cols-2 tablet:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3 xs:gap-4 tablet:gap-6">
           <div
             v-for="product in productStore.availableProducts"
             :key="product.id"
@@ -474,7 +473,7 @@
       </div>
 
       <!-- Desktop Cart Sidebar -->
-        <div class="hidden lg:block lg:order-2 w-72 xl:w-80 card p-4 xl:p-6 h-fit sticky top-24">
+        <div class="hidden xl:block xl:order-2 w-72 xl:w-80 card p-4 xl:p-6 h-fit sticky top-24">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
               {{ t('shop.cart.title', '장바구니') }}
@@ -800,7 +799,7 @@
       <Transition name="mobile-sheet">
         <div
           v-if="hasCartItems"
-          class="lg:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
+          class="xl:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
         >
           <div class="pointer-events-auto card rounded-3xl shadow-large border border-border-primary bg-white/95 dark:bg-gray-950/90">
             <div class="p-4 space-y-3">
