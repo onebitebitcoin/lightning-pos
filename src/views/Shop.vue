@@ -205,115 +205,6 @@
     </header>
 
     <div class="container mx-auto px-0 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col xl:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
-      <!-- Mobile Cart Toggle -->
-      <div class="hidden mb-3 xs:mb-4">
-        <button
-          @click="showMobileCart = !showMobileCart"
-          class="btn btn-primary w-full py-2 xs:py-3 px-3 xs:px-4 flex items-center justify-between text-sm xs:text-base"
-        >
-          <span>{{ t('shop.cart.itemsLabel', '장바구니 ({count}개)', { count: cartStore.itemCount }) }}</span>
-          <UiIcon
-            :name="showMobileCart ? 'chevronUp' : 'chevronDown'"
-            class="h-5 w-5"
-          />
-        </button>
-      </div>
-
-        <!-- Mobile Cart -->
-        <div
-          v-if="showMobileCart"
-          ref="mobileCartRef"
-          class="xl:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up"
-        >
-          <div class="flex items-center justify-between mb-3 xs:mb-4">
-            <h3 class="text-base xs:text-lg tablet:text-xl font-semibold text-gray-900 dark:text-white">
-              {{ t('shop.cart.title', '장바구니') }}
-            </h3>
-            <div class="flex items-center space-x-2">
-            <button
-              v-if="cartStore.items.length > 0"
-              @click="cartStore.clearCart"
-              class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              :title="t('shop.cart.clear', '장바구니 비우기')"
-            >
-              <UiIcon name="trash" class="h-5 w-5" />
-            </button>
-            <span class="badge badge-primary text-xs xs:text-sm">
-              {{ t('shop.cart.itemsCount', '{count}개 상품', { count: cartStore.itemCount }) }}
-            </span>
-          </div>
-          </div>
-
-          <div class="mb-3">
-            <button
-              @click="openDirectInputModal"
-              class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg bg-primary-50/70 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
-            >
-              <UiIcon name="plus" class="h-4 w-4" />
-              <span>{{ t('shop.cart.directInput', '직접 입력하기') }}</span>
-            </button>
-          </div>
-
-        <!-- Mobile Cart Loading -->
-        <div v-if="cartStore.isLoading" class="text-center py-4">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
-        </div>
-
-        <!-- Mobile Empty Cart -->
-        <div v-else-if="cartStore.items.length === 0" class="text-center py-4">
-          <div class="text-gray-400 dark:text-gray-500 text-2xl mb-2">
-            <UiIcon name="cart" class="h-8 w-8 mx-auto" />
-          </div>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.empty', '장바구니가 비어있습니다') }}</p>
-        </div>
-
-        <!-- Mobile Cart Items -->
-        <div v-else class="space-y-2 mb-4">
-          <div
-            v-for="item in cartStore.items"
-            :key="item.id"
-            class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200"
-          >
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-gray-800 dark:text-white text-sm truncate">{{ item.product_name }}</p>
-              <p class="text-xs text-gray-600 dark:text-gray-300">
-                {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
-              </p>
-            </div>
-            <div class="flex items-center space-x-1 ml-2">
-              <button
-                @click="handleUpdateQuantity(item.id, item.quantity - 1)"
-                :disabled="cartStore.isUpdatingItem(item.id)"
-                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm disabled:opacity-50"
-              >
-                -
-              </button>
-              <span class="w-6 text-center font-medium text-gray-800 dark:text-white text-sm">{{ item.quantity }}</span>
-              <button
-                @click="handleUpdateQuantity(item.id, item.quantity + 1)"
-                :disabled="cartStore.isUpdatingItem(item.id)"
-                class="w-6 h-6 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 text-sm disabled:opacity-50"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="cartStore.items.length > 0" class="border-t dark:border-gray-600 pt-3">
-          <div class="flex justify-between text-base font-semibold text-gray-800 dark:text-white mb-3">
-            <span>{{ t('shop.cart.total', '총계') }}:</span>
-            <span>{{ formatPrice(cartStore.subtotal) }}</span>
-          </div>
-          <button
-            @click="$router.push('/payment')"
-            class="btn btn-primary w-full py-2 px-4 rounded-lg font-medium"
-          >
-            {{ t('shop.cart.checkout', '결제하기') }}
-          </button>
-        </div>
-      </div>
 
       <!-- Products Grid -->
       <div class="flex-1 xl:order-1">
@@ -796,52 +687,142 @@
       </div>
     </div>
 
-    <Teleport to="body">
-      <Transition name="mobile-sheet">
-        <div
-          v-if="hasCartItems"
-          class="xl:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
-        >
-          <div class="pointer-events-auto card rounded-3xl shadow-large border border-border-primary bg-white/95 dark:bg-gray-950/90">
-            <div class="p-4 space-y-3">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                    {{ t('shop.cart.total', '총계') }}
-                  </p>
-                  <p class="text-2xl font-bold text-text-primary">
-                    {{ formatPrice(cartStore.subtotal) }}
-                  </p>
-                  <p
-                    v-if="subtotalSatsLabel"
-                    class="text-xs text-primary-600 dark:text-primary-400 font-medium"
-                  >
-                    {{ subtotalSatsLabel }}
-                  </p>
-                </div>
+    <!-- Cart Modal (Mobile/Tablet) -->
+    <div
+      v-if="showCartModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click="closeCartModal"
+    >
+      <div 
+        class="card w-full max-w-lg animate-fade-in max-h-[85vh] flex flex-col"
+        @click.stop
+      >
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+              {{ t('shop.cart.title', '장바구니') }}
+            </h2>
+            <span class="badge badge-primary text-sm">
+              {{ t('shop.cart.itemsCount', '{count}개', { count: cartStore.itemCount }) }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="cartStore.items.length > 0"
+              @click="cartStore.clearCart"
+              class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              :title="t('shop.cart.clear', '장바구니 비우기')"
+            >
+              <UiIcon name="trash" class="h-5 w-5" />
+            </button>
+            <button
+              @click="closeCartModal"
+              class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            >
+              <span class="text-xl text-gray-500 dark:text-gray-400">✕</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content (Scrollable) -->
+        <div class="p-4 overflow-y-auto flex-1">
+          <div class="mb-4">
+            <button
+              @click="openDirectInputModal"
+              class="w-full flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg bg-primary-50/70 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+            >
+              <UiIcon name="plus" class="h-4 w-4" />
+              <span>{{ t('shop.cart.directInput', '직접 입력하기') }}</span>
+            </button>
+          </div>
+
+          <!-- Cart Loading -->
+          <div v-if="cartStore.isLoading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-2"></div>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('shop.cart.loading', '장바구니 로딩 중...') }}</p>
+          </div>
+
+          <!-- Empty Cart -->
+          <div v-else-if="cartStore.items.length === 0" class="text-center py-8">
+            <div class="text-gray-400 dark:text-gray-500 text-4xl mb-2">
+              <UiIcon name="cart" class="h-10 w-10 mx-auto" />
+            </div>
+            <p class="text-gray-500 dark:text-gray-400">{{ t('shop.cart.empty', '장바구니가 비어있습니다') }}</p>
+          </div>
+
+          <!-- Cart Items -->
+          <div v-else class="space-y-3">
+            <div
+              v-for="item in cartStore.items"
+              :key="item.id"
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200"
+            >
+              <div class="flex-1 min-w-0 mr-3">
+                <p class="font-medium text-gray-800 dark:text-white truncate">{{ item.product_name }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                  {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
+                </p>
+              </div>
+              <div class="flex items-center space-x-2 shrink-0">
                 <button
-                  @click="$router.push('/payment')"
-                  class="btn btn-primary flex-1 py-3 px-4 text-sm font-semibold"
+                  @click="handleUpdateQuantity(item.id, item.quantity - 1)"
+                  :disabled="cartStore.isUpdatingItem(item.id)"
+                  class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:opacity-50"
                 >
-                  {{ t('shop.cart.checkout', '결제하기') }}
+                  -
+                </button>
+                <span class="w-8 text-center font-medium text-gray-800 dark:text-white">{{ item.quantity }}</span>
+                <button
+                  @click="handleUpdateQuantity(item.id, item.quantity + 1)"
+                  :disabled="cartStore.isUpdatingItem(item.id)"
+                  class="w-8 h-8 rounded-full bg-bg-secondary text-text-primary hover:bg-bg-tertiary transition-colors flex items-center justify-center disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:opacity-50"
+                >
+                  +
                 </button>
               </div>
-              <button
-                type="button"
-                @click="openMobileCartPanel"
-                class="w-full flex items-center justify-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <UiIcon name="cart" class="h-4 w-4" />
-                <span>{{ t('shop.cart.openFromSummary', '장바구니 상세 보기') }}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-text-secondary dark:text-text-primary">
-                  {{ t('shop.cart.itemsCount', '{count}개 상품', { count: cartStore.itemCount }) }}
-                </span>
-              </button>
             </div>
           </div>
         </div>
-      </Transition>
-    </Teleport>
+
+        <!-- Modal Footer (Total & Checkout) -->
+        <div v-if="cartStore.items.length > 0" class="p-4 border-t border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 rounded-b-2xl">
+          <div class="mb-4">
+            <div class="flex justify-between text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              <span>{{ t('shop.cart.total', '총계') }}:</span>
+              <span>{{ formatPrice(cartStore.subtotal) }}</span>
+            </div>
+            <div class="flex justify-between text-sm text-primary-600 dark:text-primary-400">
+              <span>{{ t('shop.cart.bitcoinLabel', 'Bitcoin') }}:</span>
+              <span>{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</span>
+            </div>
+          </div>
+          <button
+            @click="$router.push('/payment')"
+            class="btn btn-primary w-full py-3 px-4 text-lg font-semibold shadow-lg shadow-primary-500/20"
+          >
+            {{ t('shop.cart.checkout', '결제하기') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Cart Button (FAB) -->
+    <button
+      @click="openCartModal"
+      class="xl:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+      :aria-label="t('shop.cart.open', '장바구니 열기')"
+    >
+      <div class="relative">
+        <UiIcon name="cart" class="h-7 w-7" />
+        <span
+          v-if="cartStore.itemCount > 0"
+          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center border-2 border-white dark:border-gray-800"
+        >
+          {{ cartStore.itemCount }}
+        </span>
+      </div>
+    </button>
   </div>
 </template>
 
@@ -875,9 +856,10 @@ const t = localeStore.t
 let stopBitcoinAutoRefresh: (() => void) | null = null
 
 // Mobile UI state
-const showMobileCart = ref(false)
 const showMobileMenu = ref(false)
-const mobileCartRef = ref<HTMLDivElement | null>(null)
+
+// Cart modal state
+const showCartModal = ref(false)
 
 // Product modal state
 const showProductModal = ref(false)
@@ -919,17 +901,6 @@ const productDiscountPercent = (product: Product): number => {
   return Math.round(((regular - sale) / regular) * 100)
 }
 
-const hasCartItems = computed(() => cartStore.items.length > 0)
-
-const subtotalSatsLabel = computed(() => {
-  if (!hasCartItems.value) return ''
-  const subtotal = Number(cartStore.subtotal || 0)
-  if (subtotal <= 0) return ''
-  const sats = bitcoinStore.krwToSats(subtotal)
-  if (!sats) return ''
-  return bitcoinStore.formatSats(sats)
-})
-
 // Initialize data when component mounts
 onMounted(async () => {
   // Initialize cart if user is logged in
@@ -958,6 +929,7 @@ onUnmounted(() => {
 
   document.removeEventListener('keydown', handleEscapeKey)
   document.removeEventListener('keydown', handleDirectInputEscape)
+  document.removeEventListener('keydown', handleCartModalEscape)
 })
 
 onBeforeRouteLeave((to) => {
@@ -980,12 +952,21 @@ onBeforeRouteLeave((to) => {
     })
 })
 
-function openMobileCartPanel() {
-  showMobileCart.value = true
+// Cart Modal functions
+function openCartModal() {
+  showCartModal.value = true
+  document.addEventListener('keydown', handleCartModalEscape)
+}
 
-  nextTick(() => {
-    mobileCartRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  })
+function closeCartModal() {
+  showCartModal.value = false
+  document.removeEventListener('keydown', handleCartModalEscape)
+}
+
+function handleCartModalEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeCartModal()
+  }
 }
 
 // Handle adding product to cart
