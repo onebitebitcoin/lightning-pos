@@ -221,6 +221,7 @@
 
         <!-- Mobile Cart -->
         <div
+          v-if="showMobileCart"
           ref="mobileCartRef"
           class="xl:hidden mb-4 xs:mb-6 card p-3 xs:p-4 tablet:p-6 animate-slide-up"
         >
