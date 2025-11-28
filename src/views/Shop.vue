@@ -35,18 +35,18 @@
                 <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
                 </span>
-                <span
-                  v-else-if="bitcoinStore.error"
-                  class="text-red-500"
-                  :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
-                >
-                  <UiIcon name="warning" class="h-4 w-4" />
-                </span>
                 <template v-else>
                   <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                   <span class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
                   <span
-                    v-if="bitcoinStore.priceStatus === 'stale'"
+                    v-if="bitcoinStore.error"
+                    class="text-red-500 text-xs ml-1"
+                    :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
+                  >
+                    ({{ t('common.updateNeeded', '업데이트 필요') }})
+                  </span>
+                  <span
+                    v-else-if="bitcoinStore.priceStatus === 'stale'"
                     class="text-text-secondary"
                     :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
                   >
@@ -125,18 +125,18 @@
                   <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
-                <span
-                  v-else-if="bitcoinStore.error"
-                  class="text-red-500"
-                  :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
-                >
-                    <UiIcon name="warning" class="h-4 w-4" />
-                  </span>
                   <template v-else>
                     <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                     <span class="text-text-primary">{{ btcPriceDisplay }}</span>
                     <span
-                      v-if="bitcoinStore.priceStatus === 'stale'"
+                      v-if="bitcoinStore.error"
+                      class="text-red-500 text-xs ml-1"
+                      :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
+                    >
+                      ({{ t('common.updateNeeded', '업데이트 필요') }})
+                    </span>
+                    <span
+                      v-else-if="bitcoinStore.priceStatus === 'stale'"
                       class="text-text-secondary"
                       :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
                     >
@@ -690,11 +690,11 @@
     <!-- Cart Modal (Mobile/Tablet) -->
     <div
       v-if="showCartModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
       @click="closeCartModal"
     >
       <div 
-        class="card w-full max-w-lg animate-fade-in max-h-[85vh] flex flex-col"
+        class="card w-full sm:max-w-md animate-slide-in-right max-h-full flex flex-col rounded-none"
         @click.stop
       >
         <!-- Modal Header -->
@@ -729,7 +729,7 @@
         <div class="p-4 overflow-y-auto flex-1">
           <div class="mb-4">
             <button
-              @click="openDirectInputModal"
+              @click="closeCartModal(); openDirectInputModal()"
               class="w-full flex items-center justify-center gap-2 px-3 py-3 text-sm font-medium text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 rounded-lg bg-primary-50/70 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
             >
               <UiIcon name="plus" class="h-4 w-4" />
