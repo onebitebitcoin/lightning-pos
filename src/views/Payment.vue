@@ -235,7 +235,7 @@
           <button
             @click="handlePayment"
             :disabled="!paymentMethod || isGeneratingInvoice"
-            class="btn btn-primary w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg hidden sm:inline-flex sm:justify-center"
+            class="btn btn-primary w-full py-3 px-3 xs:px-4 text-sm xs:text-base tablet:text-lg flex justify-center"
           >
             <div class="text-center">
               <div v-if="isGeneratingInvoice" class="flex items-center justify-center space-x-2">
@@ -253,60 +253,6 @@
         </div>
     </div>
 
-    <Teleport to="body">
-      <Transition name="mobile-sheet">
-        <div
-          v-if="mobilePaySummaryVisible"
-          class="sm:hidden fixed inset-x-0 bottom-0 z-30 px-3 xs:px-4 pb-3 safe-area-bottom pointer-events-none"
-        >
-          <div class="pointer-events-auto card rounded-3xl shadow-large border border-border-primary bg-white/95 dark:bg-gray-950/90">
-            <div class="p-4 space-y-3">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                    {{ t('payment.summary.total', '총액') }}
-                  </p>
-                  <p class="text-2xl font-bold text-text-primary">
-                    {{ formattedTotal }}
-                  </p>
-                  <p
-                    v-if="satsTotal"
-                    class="text-xs text-warning-600 dark:text-warning-400 font-medium"
-                  >
-                    {{ satsTotal }}
-                  </p>
-                  <p
-                    v-if="cartStore.discount > 0"
-                    class="text-[11px] font-medium text-success-600 dark:text-success-400"
-                  >
-                    {{ t('payment.discounts.applied', '{percent}% 할인 적용', { percent: cartStore.discount }) }}
-                  </p>
-                </div>
-                <button
-                  @click="handlePayment"
-                  :disabled="!paymentMethod || isGeneratingInvoice"
-                  class="btn btn-primary flex-1 py-3 px-4 text-sm font-semibold"
-                >
-                  <span v-if="isGeneratingInvoice" class="flex items-center justify-center gap-2">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>{{ t('payment.purchase.generating', '인보이스 생성 중...') }}</span>
-                  </span>
-                  <span v-else>{{ t('payment.purchase.payAmount', '{amount} 결제하기', { amount: formattedTotal }) }}</span>
-                </button>
-              </div>
-              <button
-                type="button"
-                @click="$router.push('/shop')"
-                class="w-full flex items-center justify-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <UiIcon name="arrowLeft" class="h-4 w-4" />
-                <span>{{ t('payment.actions.editCart', '상품 수정하기') }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
     </div>
   </div>
 </template>

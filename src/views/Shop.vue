@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
     <header class="glass-header transition-all duration-300 sticky top-0 z-20">
-      <div class="container mx-auto px-0 py-3 md:py-4">
+      <div class="container mx-auto px-2 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
           <h1 class="text-lg font-bold text-text-primary select-none">
@@ -204,7 +204,7 @@
       </div>
     </header>
 
-    <div class="container mx-auto px-0 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col xl:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
+    <div class="container mx-auto px-2 pt-3 xs:pt-4 tablet:pt-6 lg:pt-8 pb-32 lg:pb-10 flex flex-col xl:flex-row gap-3 xs:gap-4 tablet:gap-6 lg:gap-8 safe-area-bottom">
 
       <!-- Products Grid -->
       <div class="flex-1 xl:order-1">
@@ -758,11 +758,19 @@
               :key="item.id"
               class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200"
             >
-              <div class="flex-1 min-w-0 mr-3">
-                <p class="font-medium text-gray-800 dark:text-white truncate">{{ item.product_name }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-300">
-                  {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
-                </p>
+              <div class="flex items-center gap-3 flex-1 min-w-0 mr-3">
+                <img
+                  :src="item.product_image"
+                  :alt="item.product_name"
+                  class="w-12 h-12 object-cover rounded-md flex-shrink-0"
+                  @error="handleImageError"
+                />
+                <div>
+                  <p class="font-medium text-gray-800 dark:text-white truncate">{{ item.product_name }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">
+                    {{ t('shop.cart.priceEach', '개당 {price}', { price: formatPrice(Number(item.product_price || 0)) }) }}
+                  </p>
+                </div>
               </div>
               <div class="flex items-center space-x-2 shrink-0">
                 <button
