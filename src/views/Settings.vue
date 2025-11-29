@@ -235,7 +235,7 @@
         </div>
       </div>
 
-      <div class="card mb-4 p-4 md:p-6">
+      <div class="card mb-4 p-4 md:p-6" v-if="false">
         <div class="flex flex-col gap-1 mb-6">
           <h3 class="text-lg md:text-xl font-semibold text-text-primary">
             {{ t('settings.environment.title', '언어/통화 선택') }}
