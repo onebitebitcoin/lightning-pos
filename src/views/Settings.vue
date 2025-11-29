@@ -591,7 +591,7 @@
       </div>
 
       <!-- e-Cash Management -->
-      <div class="card p-4 md:p-6 space-y-6 mt-6">
+      <div class="card p-4 md:p-6 space-y-6 mt-6" v-if="authStore.user?.ecash_enabled">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-primary-600">{{ t('settings.ecash.badge', 'e-cash 관리') }}</p>
