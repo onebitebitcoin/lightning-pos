@@ -344,7 +344,7 @@
                   </button>
                   <button
                     @click="handleAddToCart(product)"
-                    :disabled="cartStore.isAddingToCart(product.id)"
+                    :disabled="cartStore.isAddingToCart(product.id) || !!bitcoinStore.error"
                     class="btn btn-primary flex-1 py-2 xs:py-2.5 tablet:py-3 text-xs xs:text-sm tablet:text-base"
                   >
                     <span v-if="cartStore.isAddingToCart(product.id)" class="flex items-center space-x-2">
@@ -553,7 +553,7 @@
                 <div class="flex space-x-3 pt-2">
                   <button
                     @click="handleAddToCart(selectedProduct); closeProductModal()"
-                    :disabled="cartStore.isAddingToCart(selectedProduct.id)"
+                    :disabled="cartStore.isAddingToCart(selectedProduct.id) || !!bitcoinStore.error"
                     class="btn btn-primary flex-1 py-3 text-base xs:text-lg"
                   >
                     <span v-if="cartStore.isAddingToCart(selectedProduct.id)" class="flex items-center space-x-2">
@@ -668,7 +668,7 @@
                 </button>
                 <button
                   type="submit"
-                  :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput"
+                  :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput || !!bitcoinStore.error"
                   class="btn btn-primary flex-1 px-4 py-3 rounded-lg"
                 >
                   <span v-if="isAddingDirectInput" class="flex items-center space-x-2">
