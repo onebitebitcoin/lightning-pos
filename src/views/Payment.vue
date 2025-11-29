@@ -117,31 +117,22 @@
           <div class="space-y-2 pt-4 border-t">
             <div class="flex justify-between text-gray-600 dark:text-gray-300">
               <span>{{ t('payment.summary.subtotal', '소계') }}:</span>
-              <div class="text-right">
-                <div>{{ formatPrice(cartStore.subtotal) }}</div>
-                <div class="text-xs text-warning-600 dark:text-warning-400">
-                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}
-                </div>
-              </div>
-            </div>
+                      <div class="text-right">
+                        <div class="text-warning-600 dark:text-warning-400 font-medium">{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-300">{{ formatPrice(cartStore.subtotal) }}</div>
+                      </div>            </div>
             <div v-if="cartStore.discount > 0" class="flex justify-between text-green-600 dark:text-green-400">
               <span>{{ t('payment.summary.discount', '할인 ({percent}%)', { percent: cartStore.discount }) }}:</span>
-              <div class="text-right">
-                <div>-{{ formatPrice(cartStore.subtotal * cartStore.discount / 100) }}</div>
-                <div class="text-xs">
-                  -{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal * cartStore.discount / 100)) }}
-                </div>
-              </div>
-            </div>
+                      <div class="text-right">
+                        <div class="text-xs text-green-600 dark:text-green-400">-{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal * cartStore.discount / 100)) }}</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-300">-{{ formatPrice(cartStore.subtotal * cartStore.discount / 100) }}</div>
+                      </div>            </div>
             <div class="flex justify-between text-xl font-bold text-gray-800 dark:text-white pt-2 border-t dark:border-gray-600">
               <span>{{ t('payment.summary.total', '총액') }}:</span>
-              <div class="text-right">
-                <div>{{ formatPrice(cartStore.total) }}</div>
-                <div class="text-sm text-warning-600 dark:text-warning-400 font-medium">
-                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
-                </div>
-              </div>
-            </div>
+                      <div class="text-right">
+                        <div class="text-lg text-warning-600 dark:text-warning-400 font-bold">{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300">{{ formatPrice(cartStore.total) }}</div>
+                      </div>            </div>
           </div>
         </div>
 
@@ -243,10 +234,8 @@
                 <span>{{ t('payment.purchase.generating', '인보이스 생성 중...') }}</span>
               </div>
               <div v-else>
-                <div>{{ t('payment.purchase.payAmount', '{amount} 결제하기', { amount: formatPrice(cartStore.total) }) }}</div>
-                <div class="text-xs opacity-90">
-                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}
-                </div>
+                <div class="text-base">{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.total)) }}</div>
+                <div class="text-xs opacity-80">{{ t('payment.purchase.payAmount', '{amount} 결제하기', { amount: formatPrice(cartStore.total) }) }}</div>
               </div>
             </div>
           </button>
