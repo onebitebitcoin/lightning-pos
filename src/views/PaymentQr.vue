@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-bg-secondary transition-colors duration-300">
+  <div class="payment-qr-root min-h-screen bg-bg-secondary transition-colors duration-300">
     <!-- Header -->
     <header class="glass-header transition-all duration-300 sticky top-0 z-20">
       <div class="container mx-auto px-4 py-4 flex flex-wrap items-center gap-3 justify-between">
@@ -18,10 +18,10 @@
       </div>
     </header>
 
-    <div class="max-w-lg mx-auto px-4 py-8">
+    <div class="payment-qr-content max-w-lg mx-auto px-4">
       <!-- QR Code Container -->
       <div class="mb-3">
-        <div class="relative w-full max-w-md mx-auto bg-white dark:bg-gray-900 rounded-lg p-3">
+        <div class="qr-shell relative mx-auto bg-white dark:bg-gray-900 rounded-lg p-3">
           <!-- Loading State -->
           <div
             v-show="isGeneratingInvoice"
@@ -37,7 +37,7 @@
           <div v-show="!isGeneratingInvoice" class="flex justify-center items-center aspect-square">
             <canvas
               ref="qrCanvas"
-              class="block w-full h-full rounded"
+              class="block w-full h-auto rounded"
               style="image-rendering: crisp-edges;"
             ></canvas>
           </div>
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Instructions -->
-      <div class="text-center mb-6">
+      <div class="qr-instructions text-center mb-6">
         <p v-if="isGeneratingInvoice" class="text-sm text-gray-600 dark:text-gray-300">
           {{ getLoadingMessage() }}
         </p>
@@ -85,7 +85,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex gap-3">
+      <div class="qr-actions flex gap-3">
         <button
           @click="goBack"
           class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 font-medium"
@@ -307,7 +307,7 @@ async function generateInvoice() {
 
     if (qrCanvas.value && qrData) {
       await QRCode.toCanvas(qrCanvas.value, qrData, {
-        width: 500,
+        scale: 6,
         margin: 1,
         color: { dark: '#000000', light: '#FFFFFF' }
       })
@@ -454,3 +454,52 @@ onBeforeUnmount(() => {
 })
 
 </script>
+
+<style scoped>
+.payment-qr-content {
+  padding: 2rem 0;
+}
+
+@media (max-height: 640px) {
+  .payment-qr-content {
+    padding: 1.25rem 0;
+  }
+
+  .qr-instructions {
+    margin-bottom: 1.25rem;
+  }
+}
+
+.qr-shell {
+  width: min(92vw, 380px);
+}
+
+@media (min-width: 768px) {
+  .qr-shell {
+    width: min(85vw, 440px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .qr-shell {
+    width: 360px;
+  }
+}
+
+@media (orientation: landscape) {
+  .qr-shell {
+    width: min(70vh, 80vw, 340px);
+  }
+}
+
+@media (orientation: landscape) and (min-width: 768px) {
+  .qr-shell {
+    width: min(65vh, 70vw, 360px);
+  }
+}
+
+.qr-shell canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+</style>
