@@ -592,28 +592,27 @@
 
       <!-- e-Cash Management -->
       <div class="card p-4 md:p-6 space-y-6 mt-6" v-if="authStore.user?.ecash_enabled">
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <p class="text-sm font-medium text-primary-600">{{ t('settings.ecash.badge', 'e-cash 관리') }}</p>
             <h2 class="text-lg md:text-xl font-semibold text-text-primary">
-              {{ t('settings.ecash.title', 'Cashu e-cash') }}
+              {{ t('settings.ecash.title', 'e-cash 관리') }}
             </h2>
             <p class="text-sm text-text-secondary mt-1">
-              {{ t('settings.ecash.description', 'Cashu 기반 e-cash 토큰을 안전하게 관리하고 백업하거나 복원할 수 있습니다.') }}
+              {{ t('settings.ecash.description', '토큰 백업, 복원 및 관리') }}
             </p>
           </div>
           <div class="flex items-center gap-2">
             <RouterLink
               to="/pay/send"
-              class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-primary-500 focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+              class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <UiIcon name="send" class="h-4 w-4" />
-              <span>{{ t('settings.ecash.actions.send', 'e-cash 보내기') }}</span>
+              <span>{{ t('settings.ecash.actions.send', '보내기') }}</span>
             </RouterLink>
             <button
               type="button"
               @click="handleEcashBackup"
-              class="p-2 rounded-lg border border-border-primary text-text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               :title="t('settings.ecash.actions.backup', '백업')"
             >
               <UiIcon name="download" class="h-5 w-5" />
@@ -621,7 +620,7 @@
             <button
               type="button"
               @click="triggerEcashRestore"
-              class="p-2 rounded-lg border border-border-primary text-text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               :title="t('settings.ecash.actions.restore', '복원')"
             >
               <UiIcon name="upload" class="h-5 w-5" />
@@ -644,30 +643,30 @@
             <input
               v-model="ecashMintForm.mintUrl"
               type="text"
-              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
               :placeholder="t('settings.ecash.mintPlaceholder', '예: mint.coinos.io')"
             />
             <p class="text-xs text-text-secondary">
-              {{ t('settings.ecash.mintHelper', 'https:// 접두사가 없으면 자동으로 추가되며, 기본값은 mint.coinos.io 입니다.') }}
+              {{ t('settings.ecash.mintHelper', 'https:// 접두사가 없으면 자동으로 추가됩니다.') }}
             </p>
             <div class="flex flex-wrap gap-2 pt-2">
               <button
                 type="button"
-                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
+                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 @click="saveEcashMintUrl"
               >
                 {{ t('settings.ecash.actions.save', '저장') }}
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-lg border border-border-primary text-text-primary text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 @click="refreshEcashHoldings"
               >
                 {{ t('settings.ecash.actions.refresh', '새로고침') }}
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-lg bg-orange-500 dark:bg-orange-600 text-white text-sm font-medium hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="cleanupSpentTokens"
                 :disabled="isCleaningTokens || !hasEcashHoldings"
               >
@@ -676,29 +675,29 @@
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-lg bg-red-500 dark:bg-red-600 text-white text-sm font-medium hover:bg-red-600 dark:hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="deleteAllTokens"
                 :disabled="!hasEcashHoldings"
               >
-                {{ t('settings.ecash.actions.deleteAll', '모든 토큰 삭제') }}
+                {{ t('settings.ecash.actions.deleteAll', '모두 삭제') }}
               </button>
             </div>
           </div>
-          <div class="rounded-2xl border border-border-primary/70 bg-gray-50 dark:bg-gray-900/40 p-4 space-y-3">
+          <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2">
             <div class="flex items-center justify-between">
               <p class="text-sm font-medium text-text-secondary">
                 {{ t('settings.ecash.total', '총 보유량') }}
               </p>
-              <span v-if="isAutoCheckingTokens" class="text-xs text-orange-500 dark:text-orange-400 flex items-center gap-1">
-                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-500"></div>
+              <span v-if="isAutoCheckingTokens" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-500"></div>
                 {{ t('settings.ecash.checking', '확인 중...') }}
               </span>
             </div>
-            <p class="text-3xl font-bold text-text-primary">
+            <p class="text-2xl font-semibold text-text-primary">
               {{ ecashTotalSats ? bitcoinStore.formatSats(ecashTotalSats) : '0 sats' }}
             </p>
             <p class="text-xs text-text-secondary">
-              {{ t('settings.ecash.holdingsDescription', 'mint 별 e-cash 잔액을 확인하세요.') }}
+              {{ t('settings.ecash.holdingsDescription', 'Mint 별 토큰 잔액') }}
             </p>
           </div>
         </div>
@@ -706,7 +705,7 @@
         <div class="flex justify-end mb-2">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg bg-blue-500 dark:bg-blue-600 text-white text-sm font-medium hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             @click="checkAllMints"
             :disabled="!hasEcashHoldings"
           >
@@ -714,9 +713,9 @@
           </button>
         </div>
 
-        <div class="overflow-x-auto border border-border-primary/60 rounded-2xl">
-          <table class="min-w-full divide-y divide-border-primary/40 text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-800/60 text-text-secondary uppercase tracking-wide text-xs">
+        <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800 text-text-secondary text-xs">
               <tr>
                 <th class="px-4 py-3 text-left font-semibold w-8"></th>
                 <th class="px-4 py-3 text-left font-semibold">
@@ -741,7 +740,7 @@
               </tr>
               <template v-for="(holding, index) in ecashHoldings" :key="holding.mintUrl">
                 <tr
-                  class="border-b border-border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors"
+                  class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <td class="px-4 py-3 cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
                     <UiIcon
@@ -782,7 +781,7 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-text-primary font-semibold cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
+                  <td class="px-4 py-3 text-text-primary font-medium cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
                     {{ bitcoinStore.formatSats(holding.amount) }}
                   </td>
                   <td class="px-4 py-3 text-text-secondary">
@@ -790,7 +789,7 @@
                       <span class="cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">{{ holding.count.toLocaleString() }}</span>
                       <button
                         @click.stop="deleteTokensByMint(holding.mintUrl)"
-                        class="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors ml-2"
+                        class="px-2 py-1 text-xs border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-2"
                         :title="t('settings.ecash.actions.deleteMint', '이 Mint의 모든 토큰 삭제')"
                       >
                         {{ t('settings.ecash.actions.delete', '삭제') }}
@@ -798,25 +797,25 @@
                     </div>
                   </td>
                 </tr>
-                <tr v-if="expandedMints.has(holding.mintUrl)" class="bg-gray-50/50 dark:bg-gray-800/20">
+                <tr v-if="expandedMints.has(holding.mintUrl)" class="bg-gray-50 dark:bg-gray-800">
                   <td colspan="5" class="px-0 py-0">
                     <div class="px-8 py-4 space-y-2">
                       <div
                         v-for="(proof, proofIndex) in getProofsByMint(holding.mintUrl)"
                         :key="proof.secret || proofIndex"
-                        class="bg-white dark:bg-gray-900 border border-border-primary/40 rounded-lg p-4 space-y-2 text-xs"
+                        class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2 text-xs"
                       >
                         <div class="flex items-center justify-between mb-2">
-                          <span class="font-semibold text-text-primary">
+                          <span class="font-medium text-text-primary">
                             {{ t('settings.ecash.proof.title', '토큰 #{index}', { index: proofIndex + 1 }) }}
                           </span>
                           <div class="flex items-center gap-2">
-                            <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
+                            <span class="text-base font-medium text-text-primary">
                               {{ proof.amount }} sats
                             </span>
                             <button
                               @click.stop="deleteProof(proof)"
-                              class="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                              class="px-2 py-1 text-xs border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                               :title="t('settings.ecash.proof.delete', '이 토큰 삭제')"
                             >
                               {{ t('settings.ecash.proof.deleteBtn', '삭제') }}
