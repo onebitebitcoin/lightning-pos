@@ -316,17 +316,28 @@
             v-for="(product, index) in productStore.products"
             :key="product.id"
             class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-all duration-200"
-            draggable="true"
-            @dragstart="onDragStart(index, $event)"
-            @dragover.prevent
-            @drop="onDrop(index)"
-            @dragend="draggedItemIndex = null"
-            :class="{ 'opacity-50 scale-95': draggedItemIndex === index }"
           >
             <div class="flex items-start space-x-3">
-              <!-- Drag Handle -->
-              <div class="text-gray-400 dark:text-gray-500 cursor-grab active:cursor-grabbing pt-6 touch-none">
-                <UiIcon name="menu" class="h-5 w-5" />
+              <!-- Reorder Buttons -->
+              <div class="flex flex-col gap-1 pt-4">
+                <button
+                  type="button"
+                  class="p-1 rounded-full border border-border-primary text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                  :disabled="index === 0"
+                  @click="moveProduct(index, 'up')"
+                  :aria-label="t('settings.products.moveUp', '위로 이동')"
+                >
+                  <UiIcon name="chevronUp" class="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  class="p-1 rounded-full border border-border-primary text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                  :disabled="index === productStore.products.length - 1"
+                  @click="moveProduct(index, 'down')"
+                  :aria-label="t('settings.products.moveDown', '아래로 이동')"
+                >
+                  <UiIcon name="chevronDown" class="h-4 w-4" />
+                </button>
               </div>
 
               <!-- Product Image -->
@@ -437,15 +448,28 @@
                 v-for="(product, index) in productStore.products"
                 :key="product.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                draggable="true"
-                @dragstart="onDragStart(index, $event)"
-                @dragover.prevent
-                @drop="onDrop(index)"
-                @dragend="draggedItemIndex = null"
-                :class="{ 'opacity-50 bg-gray-100 dark:bg-gray-800': draggedItemIndex === index }"
               >
-                <td class="px-2 py-4 whitespace-nowrap text-center cursor-grab active:cursor-grabbing">
-                  <UiIcon name="menu" class="h-5 w-5 text-gray-400 dark:text-gray-500 mx-auto" />
+                <td class="px-2 py-4 whitespace-nowrap text-center">
+                  <div class="inline-flex flex-col gap-1">
+                    <button
+                      type="button"
+                      class="p-1 rounded-full border border-border-primary text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                      :disabled="index === 0"
+                      @click="moveProduct(index, 'up')"
+                      :aria-label="t('settings.products.moveUp', '위로 이동')"
+                    >
+                      <UiIcon name="chevronUp" class="h-4 w-4 mx-auto" />
+                    </button>
+                    <button
+                      type="button"
+                      class="p-1 rounded-full border border-border-primary text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                      :disabled="index === productStore.products.length - 1"
+                      @click="moveProduct(index, 'down')"
+                      :aria-label="t('settings.products.moveDown', '아래로 이동')"
+                    >
+                      <UiIcon name="chevronDown" class="h-4 w-4 mx-auto" />
+                    </button>
+                  </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <img
@@ -1389,29 +1413,30 @@ onMounted(async () => {
   }
 })
 
-// Drag and Drop state
-const draggedItemIndex = ref<number | null>(null)
+// Product ordering helpers
 
-function onDragStart(index: number, event: DragEvent) {
-  draggedItemIndex.value = index
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.dropEffect = 'move'
-  }
-}
-
-function onDrop(targetIndex: number) {
-  if (draggedItemIndex.value === null || draggedItemIndex.value === targetIndex) {
-    draggedItemIndex.value = null
+function reorderProductList(fromIndex: number, toIndex: number) {
+  const currentProducts = [...productStore.products]
+  if (
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= currentProducts.length ||
+    toIndex >= currentProducts.length
+  ) {
     return
   }
 
-  const products = [...productStore.products]
-  const [removed] = products.splice(draggedItemIndex.value, 1)
-  products.splice(targetIndex, 0, removed)
-  
-  productStore.reorderProducts(products)
-  draggedItemIndex.value = null
+  const [removed] = currentProducts.splice(fromIndex, 1)
+  currentProducts.splice(toIndex, 0, removed)
+  productStore.reorderProducts(currentProducts)
+}
+
+function moveProduct(index: number, direction: 'up' | 'down') {
+  const targetIndex = direction === 'up' ? index - 1 : index + 1
+  if (targetIndex < 0 || targetIndex >= productStore.products.length) {
+    return
+  }
+  reorderProductList(index, targetIndex)
 }
 
 // Modal states
