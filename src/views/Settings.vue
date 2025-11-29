@@ -313,11 +313,22 @@
         <!-- Mobile Card View -->
         <div class="md:hidden space-y-4 p-4">
           <div
-            v-for="product in productStore.products"
+            v-for="(product, index) in productStore.products"
             :key="product.id"
-            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-colors"
+            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-all duration-200"
+            draggable="true"
+            @dragstart="onDragStart(index, $event)"
+            @dragover.prevent
+            @drop="onDrop(index)"
+            @dragend="draggedItemIndex = null"
+            :class="{ 'opacity-50 scale-95': draggedItemIndex === index }"
           >
             <div class="flex items-start space-x-3">
+              <!-- Drag Handle -->
+              <div class="text-gray-400 dark:text-gray-500 cursor-grab active:cursor-grabbing pt-6 touch-none">
+                <UiIcon name="menu" class="h-5 w-5" />
+              </div>
+
               <!-- Product Image -->
               <img
                 :src="product.image || product.image_url"
@@ -403,6 +414,7 @@
           <table class="w-full">
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <th class="w-10 px-2 py-3"></th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   {{ t('settings.table.image', '이미지') }}
                 </th>
@@ -422,10 +434,19 @@
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               <tr
-                v-for="product in productStore.products"
+                v-for="(product, index) in productStore.products"
                 :key="product.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                draggable="true"
+                @dragstart="onDragStart(index, $event)"
+                @dragover.prevent
+                @drop="onDrop(index)"
+                @dragend="draggedItemIndex = null"
+                :class="{ 'opacity-50 bg-gray-100 dark:bg-gray-800': draggedItemIndex === index }"
               >
+                <td class="px-2 py-4 whitespace-nowrap text-center cursor-grab active:cursor-grabbing">
+                  <UiIcon name="menu" class="h-5 w-5 text-gray-400 dark:text-gray-500 mx-auto" />
+                </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <img
                     :src="product.image || product.image_url"
@@ -1367,6 +1388,31 @@ onMounted(async () => {
     console.error('데이터 로드 실패:', error)
   }
 })
+
+// Drag and Drop state
+const draggedItemIndex = ref<number | null>(null)
+
+function onDragStart(index: number, event: DragEvent) {
+  draggedItemIndex.value = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+function onDrop(targetIndex: number) {
+  if (draggedItemIndex.value === null || draggedItemIndex.value === targetIndex) {
+    draggedItemIndex.value = null
+    return
+  }
+
+  const products = [...productStore.products]
+  const [removed] = products.splice(draggedItemIndex.value, 1)
+  products.splice(targetIndex, 0, removed)
+  
+  productStore.reorderProducts(products)
+  draggedItemIndex.value = null
+}
 
 // Modal states
 const showProductModal = ref(false)

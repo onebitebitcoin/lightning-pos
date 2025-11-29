@@ -12,6 +12,44 @@ export const useProductStore = defineStore('products', () => {
     products.value.filter(product => product.is_available)
   )
 
+  // Helper to apply saved order
+  function applySavedOrder(productList: Product[]): Product[] {
+    try {
+      const savedOrder = JSON.parse(localStorage.getItem('product_order') || '[]') as number[]
+      if (savedOrder.length === 0) return productList
+
+      // Create a map for O(1) lookup of order index
+      const orderMap = new Map(savedOrder.map((id, index) => [id, index]))
+
+      return [...productList].sort((a, b) => {
+        const indexA = orderMap.has(a.id) ? orderMap.get(a.id)! : Infinity
+        const indexB = orderMap.has(b.id) ? orderMap.get(b.id)! : Infinity
+        
+        // If both have saved order, sort by that
+        if (indexA !== Infinity && indexB !== Infinity) {
+          return indexA - indexB
+        }
+        
+        // If only one has saved order, put it first
+        if (indexA !== Infinity) return -1
+        if (indexB !== Infinity) return 1
+        
+        // Default: sort by ID descending (newest first) or keep original order
+        return b.id - a.id
+      })
+    } catch (e) {
+      console.error('Error applying product order:', e)
+      return productList
+    }
+  }
+
+  // Reorder products locally and persist
+  function reorderProducts(newProducts: Product[]) {
+    products.value = newProducts
+    const orderIds = newProducts.map(p => p.id)
+    localStorage.setItem('product_order', JSON.stringify(orderIds))
+  }
+
   // Load user's own products (for management/settings)
   async function fetchProducts() {
     isLoading.value = true
@@ -19,7 +57,7 @@ export const useProductStore = defineStore('products', () => {
 
     try {
       const fetchedProducts = await productsAPI.getProducts()
-      products.value = fetchedProducts
+      products.value = applySavedOrder(fetchedProducts)
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
       console.error('상품 가져오기 오류:', err)
@@ -35,7 +73,7 @@ export const useProductStore = defineStore('products', () => {
 
     try {
       const fetchedProducts = await productsAPI.getAvailableProducts(categoryId)
-      products.value = fetchedProducts
+      products.value = applySavedOrder(fetchedProducts)
     } catch (err: any) {
       error.value = err.message || '상품을 불러오는데 실패했습니다'
       console.error('판매 상품 가져오기 오류:', err)
@@ -225,6 +263,7 @@ export const useProductStore = defineStore('products', () => {
     deleteProduct,
     getProduct,
     clearError,
-    resetLocal
+    resetLocal,
+    reorderProducts
   }
 })
