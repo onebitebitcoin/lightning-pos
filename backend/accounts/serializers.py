@@ -64,7 +64,7 @@ class UserLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'lightning_address', 'usdt_address', 'created_at', 'is_kiosk_admin')
+        fields = ('id', 'username', 'email', 'lightning_address', 'usdt_address', 'ecash_enabled', 'created_at', 'is_kiosk_admin')
         read_only_fields = ('id', 'created_at')
 
 
@@ -73,7 +73,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'lightning_address', 'usdt_address')
+        fields = ('username', 'email', 'lightning_address', 'usdt_address', 'ecash_enabled')
 
     def validate_username(self, value):
         # Allow current user to keep their username

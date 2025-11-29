@@ -24,6 +24,11 @@ class User(AbstractUser):
         verbose_name='USDT 지갑 주소',
         help_text='예: username@speed.app'
     )
+    ecash_enabled = models.BooleanField(
+        default=False,
+        verbose_name='e-cash 결제 허용',
+        help_text='활성화하면 결제 페이지에서 e-cash 결제 옵션이 표시됩니다'
+    )
 
     # Override username to make it optional since we use email for login
     username = models.CharField(max_length=150, unique=True)
