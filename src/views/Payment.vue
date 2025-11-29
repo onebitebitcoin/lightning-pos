@@ -39,12 +39,17 @@
               <div>
                 <p class="font-medium text-gray-800 dark:text-white">{{ item.product_name }}</p>
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                  {{ item.quantity }} × {{ formatPrice(Number(item.product_price || 0)) }}
+                  {{ item.quantity }} × {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(item.product_price || 0))) }}
                 </p>
               </div>
-              <p class="font-medium text-gray-800 dark:text-white">
-                {{ formatPrice(Number(item.total_price || 0)) }}
-              </p>
+              <div class="text-right">
+                <p class="font-medium text-gray-800 dark:text-white">
+                  {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(item.total_price || 0))) }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ formatPrice(Number(item.total_price || 0)) }}
+                </p>
+              </div>
             </div>
           </div>
 
