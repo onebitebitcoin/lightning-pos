@@ -818,7 +818,8 @@
     <!-- Floating Cart Button (FAB) -->
     <button
       @click="openCartModal"
-      class="xl:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+      class="xl:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-indigo-800 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white shadow-lg shadow-indigo-800/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+      :class="{ 'animate-bump': isCartAnimating }"
       :aria-label="t('shop.cart.open', '장바구니 열기')"
     >
       <div class="relative">
@@ -868,6 +869,7 @@ const showMobileMenu = ref(false)
 
 // Cart modal state
 const showCartModal = ref(false)
+const isCartAnimating = ref(false)
 
 // Product modal state
 const showProductModal = ref(false)
@@ -977,6 +979,13 @@ function handleCartModalEscape(event: KeyboardEvent) {
   }
 }
 
+function triggerCartAnimation() {
+  isCartAnimating.value = true
+  setTimeout(() => {
+    isCartAnimating.value = false
+  }, 300)
+}
+
 // Handle adding product to cart
 async function handleAddToCart(product: Product) {
   if (!authStore.isLoggedIn) {
@@ -988,6 +997,8 @@ async function handleAddToCart(product: Product) {
     const result = await cartStore.addItem(product)
     if (!result.success) {
       alert(result.message || t('shop.errors.addFailed', '장바구니 추가에 실패했습니다'))
+    } else {
+      triggerCartAnimation()
     }
   } catch (error) {
     console.error('장바구니 추가 오류:', error)
@@ -1132,6 +1143,7 @@ async function handleDirectInput() {
     const result = await cartStore.addCustomItem(customItem)
     if (result.success) {
       closeDirectInputModal()
+      triggerCartAnimation()
     } else {
       alert(result.message || t('shop.errors.customAddFailed', '장바구니 추가에 실패했습니다'))
     }
@@ -1144,3 +1156,15 @@ async function handleDirectInput() {
 }
 
 </script>
+
+<style scoped>
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-bump {
+  animation: bump 0.3s ease-in-out;
+}
+</style>
