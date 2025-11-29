@@ -75,16 +75,7 @@ class BitcoinService {
         return this.cache
       }
       
-      // Return fallback price if API fails (approximately 100M KRW per BTC as of 2024)
-      const fallbackPrice: BitcoinPriceData = {
-        krw: 100000000,
-        usd: 75000,
-        jpy: 11000000,
-        timestamp: Date.now()
-      }
-      
-      this.cache = fallbackPrice
-      return fallbackPrice
+      throw error
     }
   }
 

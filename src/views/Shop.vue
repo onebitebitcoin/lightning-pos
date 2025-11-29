@@ -29,7 +29,10 @@
           
           <!-- Mobile Bitcoin Price -->
           <div class="p-2 mb-2">
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('header.btcPrice', 'BTC 가격') }}</div> 
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
+              {{ t('header.btcPrice', 'BTC 가격') }}
+              <span v-if="lastUpdatedTime" class="text-gray-400 font-normal">({{ lastUpdatedTime }})</span>
+            </div> 
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1 text-sm">
                 <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
@@ -37,16 +40,11 @@
                 </span>
                 <template v-else>
                   <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
-                  <span class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
+                  <span v-if="btcPriceDisplay" class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
+                  <span v-else class="text-red-500 font-medium text-xs">{{ t('common.priceUnavailable', '가격 정보 없음') }}</span>
+                  
                   <span
-                    v-if="bitcoinStore.error"
-                    class="text-red-500 text-xs ml-1"
-                    :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
-                  >
-                    ({{ t('common.updateNeeded', '업데이트 필요') }})
-                  </span>
-                  <span
-                    v-else-if="bitcoinStore.priceStatus === 'stale'"
+                    v-if="bitcoinStore.priceStatus === 'stale' && btcPriceDisplay"
                     class="text-text-secondary"
                     :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
                   >
@@ -118,25 +116,21 @@
             <!-- Bitcoin Price Indicator -->
             <div class="flex items-center space-x-3">
               <div class="text-right">
-                <div class="text-sm text-text-secondary">
+                <div class="text-sm text-text-secondary flex items-center justify-end gap-1">
                   {{ t('header.btcPrice', 'BTC 가격') }}
+                  <span v-if="lastUpdatedTime" class="text-xs text-gray-400">({{ lastUpdatedTime }})</span>
                 </div>
-                <div class="flex items-center space-x-1 text-sm font-medium">
+                <div class="flex items-center space-x-1 text-sm font-medium justify-end">
                   <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
                   <template v-else>
                     <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
-                    <span class="text-text-primary">{{ btcPriceDisplay }}</span>
+                    <span v-if="btcPriceDisplay" class="text-text-primary">{{ btcPriceDisplay }}</span>
+                    <span v-else class="text-red-500 text-xs">{{ t('common.priceUnavailable', '가격 정보 없음') }}</span>
+                    
                     <span
-                      v-if="bitcoinStore.error"
-                      class="text-red-500 text-xs ml-1"
-                      :title="t('common.priceUnavailable', '가격 정보를 불러올 수 없습니다')"
-                    >
-                      ({{ t('common.updateNeeded', '업데이트 필요') }})
-                    </span>
-                    <span
-                      v-else-if="bitcoinStore.priceStatus === 'stale'"
+                      v-if="bitcoinStore.priceStatus === 'stale' && btcPriceDisplay"
                       class="text-text-secondary"
                       :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
                     >
@@ -886,8 +880,16 @@ const selectedCategory = ref<string | number>('')
 
 const btcPriceDisplay = computed(() => {
   const price = bitcoinStore.getBtcPriceByCurrency(selectedCurrency.value)
-  if (!price) return '--'
+  if (!price) return null
   return formatter.value.format(price)
+})
+
+const lastUpdatedTime = computed(() => {
+  if (!bitcoinStore.lastUpdated) return null
+  return bitcoinStore.lastUpdated.toLocaleTimeString(localeStore.language, {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 })
 
 const formatPrice = (value: number | string): string => {
