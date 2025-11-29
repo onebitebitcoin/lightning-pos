@@ -110,7 +110,8 @@ if [ -f "package.json" ]; then
         npm run build-only
         
         echo "$FRONTEND_DEPLOY_DIR 에 배포 중..."
-        sudo rm -rf $FRONTEND_DEPLOY_DIR/*
+        # Preserve media and staticfiles directories
+        sudo find $FRONTEND_DEPLOY_DIR -mindepth 1 -maxdepth 1 ! -name 'media' ! -name 'staticfiles' -exec rm -rf {} +
         sudo cp -r dist/* $FRONTEND_DEPLOY_DIR/
         sudo chown -R www-data:www-data $FRONTEND_DEPLOY_DIR/
         sudo chmod -R 755 $FRONTEND_DEPLOY_DIR/
