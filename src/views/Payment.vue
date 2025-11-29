@@ -256,6 +256,7 @@ import { useBitcoinStore } from '@/stores/bitcoin'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useEcashStore } from '@/stores/ecash'
+import { useFiatCurrencyStore } from '@/stores/fiatCurrency'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -264,6 +265,7 @@ const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const localeStore = useLocaleStore()
 const ecashStore = useEcashStore()
+const fiatCurrencyStore = useFiatCurrencyStore()
 const t = localeStore.t
 
 const paymentMethod = ref('lightning')
@@ -294,9 +296,9 @@ const mobilePaySummaryVisible = computed(() => hasCartItems.value)
 const formatPrice = (value: number | string): string => {
   const numeric = Number(value || 0)
   if (Number.isNaN(numeric)) {
-    return '₩0'
+    return fiatCurrencyStore.formatKrw(0)
   }
-  return `₩${numeric.toLocaleString('ko-KR')}`
+  return fiatCurrencyStore.formatKrw(numeric)
 }
 
 // Initialize Bitcoin store

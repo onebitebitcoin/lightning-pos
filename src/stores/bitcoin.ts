@@ -13,6 +13,9 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
   const btcPriceUsd = computed(() => priceData.value?.usd || 0)
   const btcPriceJpy = computed(() => priceData.value?.jpy || 0)
   
+  const exchangeRateUsd = computed(() => priceData.value?.exchangeRates?.usd || 1350)
+  const exchangeRateJpy = computed(() => priceData.value?.exchangeRates?.jpy || 9)
+
   const isDataStale = computed(() => {
     if (!lastUpdated.value) return true
     const now = new Date()
@@ -127,6 +130,8 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     btcPriceKrw,
     btcPriceUsd,
     btcPriceJpy,
+    exchangeRateUsd,
+    exchangeRateJpy,
     isDataStale,
     priceStatus,
 

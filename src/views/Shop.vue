@@ -898,9 +898,9 @@ const lastUpdatedTime = computed(() => {
 const formatPrice = (value: number | string): string => {
   const numeric = Number(value || 0)
   if (Number.isNaN(numeric)) {
-    return formatter.value.format(0)
+    return fiatCurrencyStore.formatKrw(0)
   }
-  return formatter.value.format(numeric)
+  return fiatCurrencyStore.formatKrw(numeric)
 }
 
 const productHasDiscount = (product: Product): boolean => {
@@ -1139,9 +1139,12 @@ async function handleDirectInput() {
       t('shop.directInput.fallbackName', '직접 입력 항목')
     
     // Create a custom item object for the cart
+    // If not in KRW mode, convert the input amount to KRW
+    const priceInKrw = fiatCurrencyStore.convertSelectedToKrw(directInputAmount.value)
+    
     const customItem = {
       name: itemName,
-      price: directInputAmount.value,
+      price: Math.round(priceInKrw),
       description: directInputDescription.value.trim()
     }
 

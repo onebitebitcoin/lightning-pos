@@ -6,6 +6,10 @@ export interface BitcoinPriceData {
   krw: number
   usd: number
   jpy: number
+  exchangeRates: {
+    usd: number
+    jpy: number
+  }
   timestamp: number
 }
 
@@ -52,8 +56,8 @@ class BitcoinService {
       const usdRate = forexData?.find(rate => rate.code === 'FRX.KRWUSD')
       const jpyRate = forexData?.find(rate => rate.code === 'FRX.KRWJPY')
 
-      const krwPerUsd = usdRate ? usdRate.basePrice / Math.max(usdRate.currencyUnit, 1) : null
-      const krwPerJpy = jpyRate ? jpyRate.basePrice / Math.max(jpyRate.currencyUnit, 1) : null
+      const krwPerUsd = usdRate ? usdRate.basePrice / Math.max(usdRate.currencyUnit, 1) : 1350 // Fallback default
+      const krwPerJpy = jpyRate ? jpyRate.basePrice / Math.max(jpyRate.currencyUnit, 1) : 9 // Fallback default
 
       const krwPrice = krwTicker.trade_price
       const usdPrice = usdTicker?.trade_price
@@ -64,6 +68,10 @@ class BitcoinService {
         krw: krwPrice,
         usd: usdPrice,
         jpy: jpyPrice,
+        exchangeRates: {
+          usd: krwPerUsd,
+          jpy: krwPerJpy
+        },
         timestamp: Date.now()
       }
 
