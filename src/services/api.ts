@@ -151,6 +151,7 @@ export interface User {
   email: string
   lightning_address?: string
   usdt_address?: string
+  ecash_enabled?: boolean
   created_at: string
   is_kiosk_admin: boolean
 }
@@ -304,6 +305,7 @@ export const authAPI = {
     email?: string
     lightning_address?: string
     usdt_address?: string
+    ecash_enabled?: boolean
   }): Promise<{ success: boolean; message: string; user?: User; errors?: any }> {
     try {
       const response = await apiClient.put('/auth/profile/update/', profileData)

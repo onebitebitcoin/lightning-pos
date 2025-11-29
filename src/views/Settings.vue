@@ -132,6 +132,12 @@
               {{ authStore.user?.usdt_address || t('settings.userSection.notSet', '설정되지 않음') }}
             </span>
           </div>
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.ecashEnabled', 'e-cash 결제 허용:') }}</span>
+            <span :class="['font-medium', authStore.user?.ecash_enabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400']">
+              {{ authStore.user?.ecash_enabled ? t('settings.userSection.enabled', '활성화') : t('settings.userSection.disabled', '비활성화') }}
+            </span>
+          </div>
         </div>
 
         <!-- User Info Edit Form -->
@@ -207,6 +213,32 @@
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {{ t('settings.userSection.usdtHint', '라이트닝 기반 USDT 결제를 받으려면 speed.app 주소를 입력하세요') }}
               </p>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('settings.userSection.ecashEnabledLabel', 'e-cash 결제 허용') }}
+                </label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {{ t('settings.userSection.ecashEnabledHint', '활성화하면 결제 페이지에서 e-cash 결제 옵션이 표시됩니다') }}
+                </p>
+              </div>
+              <button
+                type="button"
+                @click="userForm.ecash_enabled = !userForm.ecash_enabled"
+                :class="[
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+                  userForm.ecash_enabled ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'
+                ]"
+              >
+                <span
+                  :class="[
+                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    userForm.ecash_enabled ? 'translate-x-6' : 'translate-x-1'
+                  ]"
+                />
+              </button>
             </div>
 
             <div class="flex space-x-3 pt-2">
@@ -559,7 +591,7 @@
       </div>
 
       <!-- e-Cash Management -->
-      <div class="card p-4 md:p-6 space-y-6 mt-6" v-if="false">
+      <div class="card p-4 md:p-6 space-y-6 mt-6">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <p class="text-sm font-medium text-primary-600">{{ t('settings.ecash.badge', 'e-cash 관리') }}</p>
@@ -1589,7 +1621,8 @@ const userForm = reactive({
   username: '',
   email: '',
   lightning_address: '',
-  usdt_address: ''
+  usdt_address: '',
+  ecash_enabled: false
 })
 
 // User form errors
@@ -1921,6 +1954,7 @@ function resetUserForm() {
   userForm.email = authStore.user?.email || ''
   userForm.lightning_address = authStore.user?.lightning_address || ''
   userForm.usdt_address = authStore.user?.usdt_address || ''
+  userForm.ecash_enabled = authStore.user?.ecash_enabled || false
   clearUserErrors()
 }
 
@@ -1951,7 +1985,8 @@ async function updateProfile() {
       username: userForm.username.trim(),
       email: userForm.email.trim(),
       lightning_address: userForm.lightning_address.trim() || undefined,
-      usdt_address: userForm.usdt_address.trim() || undefined
+      usdt_address: userForm.usdt_address.trim() || undefined,
+      ecash_enabled: userForm.ecash_enabled
     })
 
     if (result.success && result.user) {
