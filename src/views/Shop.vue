@@ -296,8 +296,26 @@
               
               <!-- Price display with KRW and Sats -->
               <div class="mb-3 xs:mb-4 space-y-1">
+                <!-- Bitcoin Price (Large) -->
+                <div class="flex items-center space-x-2">
+                  <p class="text-lg xs:text-xl font-semibold text-primary-600 dark:text-primary-400">
+                    {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
+                  </p>
+                  <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
+                    <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
+                  </span>
+                  <span
+                    v-else-if="bitcoinStore.priceStatus === 'stale'"
+                    class="text-xs text-gray-400"
+                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                  >
+                    ⚠️
+                  </span>
+                </div>
+
+                <!-- KRW Price (Small) -->
                 <div class="flex items-baseline gap-2">
-                  <p class="text-lg xs:text-xl tablet:text-2xl font-bold text-primary-600 dark:text-primary-400">
+                  <p class="text-sm xs:text-base text-text-secondary">
                     {{ formatPrice(Number(product.price || 0)) }}
                     <span
                       v-if="productHasDiscount(product)"
@@ -312,21 +330,6 @@
                   class="text-xs text-gray-500 dark:text-gray-400 line-through"
                 >
                   {{ formatPrice(Number(product.regular_price || 0)) }}
-                </div>
-                <div class="flex items-center space-x-2">
-                  <p class="text-xs xs:text-sm text-primary-600 dark:text-primary-400 font-medium">
-                    {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(Number(product.price || 0))) }}
-                  </p>
-                  <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
-                    <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
-                  </span>
-                  <span
-                    v-else-if="bitcoinStore.priceStatus === 'stale'"
-                    class="text-xs text-gray-400"
-                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
-                  >
-                    ⚠️
-                  </span>
                 </div>
               </div>
               
