@@ -441,12 +441,12 @@
         <div v-if="cartStore.items.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="mb-4">
             <div class="flex justify-between text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              <span>{{ t('shop.cart.total', '총계') }}:</span>
-              <span>{{ formatPrice(cartStore.subtotal) }}</span>
-            </div>
-            <div class="flex justify-between text-sm text-primary-600 dark:text-primary-400">
               <span>{{ t('shop.cart.bitcoinLabel', 'Bitcoin') }}:</span>
               <span>{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</span>
+            </div>
+            <div class="flex justify-between text-sm text-text-secondary">
+              <span>{{ t('shop.cart.total', '총계') }}:</span>
+              <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
           </div>
           <button
@@ -794,12 +794,12 @@
         <div v-if="cartStore.items.length > 0" class="p-4 border-t border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-800 rounded-b-2xl">
           <div class="mb-4">
             <div class="flex justify-between text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              <span>{{ t('shop.cart.total', '총계') }}:</span>
-              <span>{{ formatPrice(cartStore.subtotal) }}</span>
-            </div>
-            <div class="flex justify-between text-sm text-primary-600 dark:text-primary-400">
               <span>{{ t('shop.cart.bitcoinLabel', 'Bitcoin') }}:</span>
               <span>{{ bitcoinStore.formatSats(bitcoinStore.krwToSats(cartStore.subtotal)) }}</span>
+            </div>
+            <div class="flex justify-between text-sm text-text-secondary">
+              <span>{{ t('shop.cart.total', '총계') }}:</span>
+              <span>{{ formatPrice(cartStore.subtotal) }}</span>
             </div>
           </div>
           <button
