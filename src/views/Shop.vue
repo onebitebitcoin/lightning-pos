@@ -609,17 +609,47 @@
               </label>
               <input
                 id="directAmount"
-                v-model.number="directInputAmount"
-                  type="number"
-                  step="1"
-                  min="1"
-                  max="999999"
-                  required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors text-lg"
-                  :placeholder="t('shop.directInput.placeholderAmount', '금액을 입력하세요')"
-                  autofocus
-                />
+                v-model="directInputAmount"
+                type="text"
+                readonly
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg outline-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors text-2xl text-center font-semibold cursor-default"
+                :placeholder="t('shop.directInput.placeholderAmount', '0')"
+              />
+
+              <!-- Number Pad -->
+              <div class="grid grid-cols-3 gap-2 mt-4">
+                <button
+                  v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9]"
+                  :key="num"
+                  type="button"
+                  @click="appendNumber(num)"
+                  class="aspect-square flex items-center justify-center text-2xl font-semibold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors active:scale-95"
+                >
+                  {{ num }}
+                </button>
+                <button
+                  type="button"
+                  @click="clearAmount"
+                  class="aspect-square flex items-center justify-center text-xl font-semibold bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg transition-colors active:scale-95"
+                >
+                  C
+                </button>
+                <button
+                  type="button"
+                  @click="appendNumber(0)"
+                  class="aspect-square flex items-center justify-center text-2xl font-semibold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors active:scale-95"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  @click="backspace"
+                  class="aspect-square flex items-center justify-center text-xl font-semibold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors active:scale-95"
+                >
+                  ⌫
+                </button>
               </div>
+            </div>
 
             <div>
               <label for="directDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -636,13 +666,13 @@
               </div>
 
               <!-- Bitcoin Price Display -->
-              <div v-if="directInputAmount > 0" class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+              <div v-if="directInputAmount && parseInt(directInputAmount) > 0" class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {{ t('shop.directInput.bitcoinLabel', 'Bitcoin 금액') }}:
                 </div>
                 <div class="flex items-center space-x-2">
                   <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">
-                    {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(directInputAmount)) }}
+                    {{ bitcoinStore.formatSats(bitcoinStore.krwToSats(parseInt(directInputAmount))) }}
                   </span>
                   <span v-if="bitcoinStore.isLoading" class="text-xs text-gray-400">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
@@ -668,7 +698,7 @@
                 </button>
                 <button
                   type="submit"
-                  :disabled="!directInputAmount || directInputAmount <= 0 || isAddingDirectInput || !!bitcoinStore.error"
+                  :disabled="!directInputAmount || parseInt(directInputAmount) <= 0 || isAddingDirectInput || !!bitcoinStore.error"
                   class="btn btn-primary flex-1 px-4 py-3 rounded-lg"
                 >
                   <span v-if="isAddingDirectInput" class="flex items-center space-x-2">
@@ -874,7 +904,7 @@ const selectedProduct = ref<Product | null>(null)
 
 // Direct input modal state
 const showDirectInputModal = ref(false)
-const directInputAmount = ref<number>(0)
+const directInputAmount = ref<string>('')
 const directInputDescription = ref('')
 const isAddingDirectInput = ref(false)
 
@@ -1100,19 +1130,19 @@ async function selectCategory(categoryId: string | number) {
 // Handle direct input modal
 function openDirectInputModal() {
   showDirectInputModal.value = true
-  directInputAmount.value = 0
+  directInputAmount.value = ''
   directInputDescription.value = ''
-  
+
   // Add escape key listener
   document.addEventListener('keydown', handleDirectInputEscape)
 }
 
 function closeDirectInputModal() {
   showDirectInputModal.value = false
-  directInputAmount.value = 0
+  directInputAmount.value = ''
   directInputDescription.value = ''
   isAddingDirectInput.value = false
-  
+
   // Remove escape key listener
   document.removeEventListener('keydown', handleDirectInputEscape)
 }
@@ -1123,9 +1153,30 @@ function handleDirectInputEscape(event: KeyboardEvent) {
   }
 }
 
+// Number pad functions
+function appendNumber(num: number) {
+  const currentValue = directInputAmount.value
+  // Limit to 6 digits (max 999999)
+  if (currentValue.length < 6) {
+    directInputAmount.value = currentValue + num.toString()
+  }
+}
+
+function clearAmount() {
+  directInputAmount.value = ''
+}
+
+function backspace() {
+  const currentValue = directInputAmount.value
+  if (currentValue.length > 0) {
+    directInputAmount.value = currentValue.slice(0, -1)
+  }
+}
+
 // Handle direct input submission
 async function handleDirectInput() {
-  if (!directInputAmount.value || directInputAmount.value <= 0) {
+  const amount = parseInt(directInputAmount.value, 10)
+  if (!directInputAmount.value || isNaN(amount) || amount <= 0) {
     alert(t('shop.errors.invalidAmount', '올바른 금액을 입력해주세요'))
     return
   }
@@ -1137,10 +1188,10 @@ async function handleDirectInput() {
     const itemName =
       directInputDescription.value.trim() ||
       t('shop.directInput.fallbackName', '직접 입력 항목')
-    
+
     // Create a custom item object for the cart
     // If not in KRW mode, convert the input amount to KRW
-    const priceInKrw = fiatCurrencyStore.convertSelectedToKrw(directInputAmount.value)
+    const priceInKrw = fiatCurrencyStore.convertSelectedToKrw(amount)
     
     const customItem = {
       name: itemName,
