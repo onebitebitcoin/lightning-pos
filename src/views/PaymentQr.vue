@@ -285,24 +285,16 @@ async function generateInvoice() {
        if (!bitcoinStore.btcPriceKrw) await bitcoinStore.fetchBitcoinPrice()
        const satsAmount = bitcoinStore.krwToSats(cartStore.total)
        const normalizedSats = Math.max(1, Math.round(satsAmount))
-       const requestId = `creq_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-       const transportUrl = `${ecashTransportBaseUrl}/api/products/payments/requests/${encodeURIComponent(requestId)}/`
-       const description = `${getPaymentTypeLabel()} - ${cartStore.total.toLocaleString('ko-KR')} KRW`
+       // Use simple request ID for legacy server mediated protocol
+       const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
        
-       const requestString = createPaymentRequest({
-          id: requestId,
-          amount: normalizedSats,
-          unit: 'sat',
-          single_use: true,
-          mints: [ecashStore.mintUrl],
-          description,
-          transports: [createHttpPostTransport(transportUrl)]
-        })
+       // Legacy format: payment:requestId:amount
+       const requestString = `payment:${requestId}:${normalizedSats}`
         
-        qrData = requestString
-        ecashRequestText.value = requestString
-        startEcashPaymentPolling(requestId)
-        isWaitingForEcashPayment.value = true
+       qrData = requestString
+       ecashRequestText.value = requestString
+       startEcashPaymentPolling(requestId)
+       isWaitingForEcashPayment.value = true
     }
 
     if (qrCanvas.value && qrData) {

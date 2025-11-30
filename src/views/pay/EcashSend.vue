@@ -220,7 +220,13 @@ interface LegacyEcashRequest {
   description?: string
 }
 
-type ParsedRequest = (Nut18PaymentRequest & { protocol: 'nut18' }) | LegacyEcashRequest
+interface LegacyServerRequest {
+  protocol: 'legacy_server'
+  requestId: string
+  amount: number
+}
+
+type ParsedRequest = (Nut18PaymentRequest & { protocol: 'nut18' }) | LegacyEcashRequest | LegacyServerRequest
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -228,6 +234,10 @@ const ecashStore = useEcashStore()
 const localeStore = useLocaleStore()
 const bitcoinStore = useBitcoinStore()
 const t = localeStore.t
+
+const ecashTransportBaseUrl = (
+  import.meta.env.VITE_ECASH_TRANSPORT_BASE_URL || 'https://pos.onebitebitcoin.com'
+).replace(/\/+$/, '')
 
 const sendInput = ref('')
 const sendAmount = ref('')
@@ -269,13 +279,21 @@ const requestMintLabel = computed(() => {
   if (payload.protocol === 'legacy' && payload.mint) {
     return formatMintLabel(payload.mint)
   }
+  if (payload.protocol === 'legacy_server') {
+    // Legacy server request doesn't specify mint, uses sender's mint (implicit) or server's preferred
+    return '' 
+  }
   const mints = payload.protocol === 'nut18' && Array.isArray(payload.mints) ? payload.mints : []
   return mints.length ? formatMintLabel(mints[0]) : ''
 })
 
 const requestTransportLabel = computed(() => {
   const payload = requestPayload.value
-  if (!payload || payload.protocol !== 'nut18') return ''
+  if (!payload) return ''
+  if (payload.protocol === 'legacy_server') {
+    return `${t('ecashSend.transportHttp', 'HTTP POST')} · Server`
+  }
+  if (payload.protocol !== 'nut18') return ''
   const transports = payload.transports || []
   const postTransport = transports.find(transport => (transport?.t || (transport as any)?.type) === 'post')
   const postAddress = postTransport?.a || (postTransport as any)?.address || (postTransport as any)?.url
@@ -293,6 +311,9 @@ const requestTransportLabel = computed(() => {
 const requestMemo = computed(() => {
   const payload = requestPayload.value
   if (!payload) return ''
+  if (payload.protocol === 'legacy_server') {
+    return 'Server Payment'
+  }
   if (payload.protocol === 'nut18') {
     return payload.description || ''
   }
@@ -441,7 +462,7 @@ function isLightningAddress(value: string | null | undefined) {
 function isEcashRequest(value: string | null | undefined) {
   if (!value) return false
   const trimmed = value.trim().toLowerCase()
-  return trimmed.startsWith('cashu:request:') || trimmed.startsWith('creqa')
+  return trimmed.startsWith('cashu:request:') || trimmed.startsWith('creqa') || trimmed.startsWith('payment:')
 }
 
 function parseEcashRequest(value: string): ParsedRequest {
@@ -459,6 +480,18 @@ function parseEcashRequest(value: string): ParsedRequest {
       description: request.memo || request.description || ''
     }
   }
+  
+  if (/^payment:/i.test(trimmed)) {
+    const parts = trimmed.split(':')
+    if (parts.length >= 3) {
+      return {
+        protocol: 'legacy_server',
+        requestId: parts[1],
+        amount: Number(parts[2])
+      }
+    }
+  }
+
   const parsed = parsePaymentRequest(trimmed)
   return {
     ...parsed,
@@ -813,6 +846,83 @@ async function handleLegacyEcashSend(request: LegacyEcashRequest) {
   }
 }
 
+async function handleLegacyServerSend(request: LegacyServerRequest) {
+  const amount = Number(request.amount || 0)
+  if (!amount || amount <= 0) {
+    throw new Error(t('ecashSend.errors.invalidAmount', '금액이 올바르지 않습니다.'))
+  }
+
+  const available = ecashBalance.value
+  if (available < amount) {
+    throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
+  }
+
+  let { ok, picked, total } = ecashStore.selectProofsForAmount(amount)
+  if (!ok) {
+    throw new Error(t('ecashSend.errors.insufficient', '잔액이 부족합니다.'))
+  }
+
+  // Verify tokens are not already spent before attempting swap
+  picked = await verifyAndCleanProofs(picked, ecashStore.mintUrl, amount)
+  total = picked.reduce((sum, p) => sum + (p.amount || 0), 0)
+
+  const mintKeys = await fetchMintKeys(ecashStore.mintUrl)
+  const paymentOutputs = await createBlindedOutputs(amount, mintKeys)
+  const change = Math.max(0, Number(total) - Number(amount))
+  const changeOutputs = change > 0 ? await createBlindedOutputs(change, mintKeys) : { outputs: [], outputDatas: [] }
+  const combinedOutputs = [...paymentOutputs.outputs, ...changeOutputs.outputs]
+  const combinedOutputDatas = [...paymentOutputs.outputDatas, ...changeOutputs.outputDatas]
+
+  let response
+  try {
+    response = await apiClient.post('/cashu/swap/', {
+      inputs: picked,
+      outputs: combinedOutputs,
+      mintUrl: ecashStore.mintUrl,
+      requestId: request.requestId // Optional for tracking
+    })
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error || error?.message
+    
+    if (errorMsg && errorMsg.toLowerCase().includes('already spent')) {
+      ecashStore.removeProofs(picked)
+      throw new Error(t('ecashSend.errors.tokenAlreadySpent', '토큰이 이미 사용되었습니다.'))
+    }
+    throw new Error(errorMsg || t('ecashSend.errors.swapFailed', 'e-cash 교환에 실패했습니다.'))
+  }
+
+  const swapData = response.data
+  const signatures = swapData?.signatures || swapData?.promises || []
+  const allProofs = await signaturesToProofs(signatures, mintKeys, combinedOutputDatas)
+  const paymentProofCount = paymentOutputs.outputDatas.length
+  const paymentProofs = allProofs.slice(0, paymentProofCount)
+  const changeProofs = allProofs.slice(paymentProofCount)
+
+  try {
+    const transportUrl = `${ecashTransportBaseUrl}/api/products/payments/requests/${encodeURIComponent(request.requestId)}/`
+    
+    await apiClient.post(transportUrl, {
+      id: request.requestId,
+      proofs: paymentProofs,
+      amount: amount,
+      mint: ecashStore.mintUrl,
+      unit: 'sat'
+    })
+
+    ecashStore.removeProofs(picked)
+    if (changeProofs.length) {
+      ecashStore.addProofs(changeProofs, ecashStore.mintUrl)
+    }
+  } catch (error) {
+    console.error('Legacy server transport failed:', error)
+    const fallbackProofs = [...paymentProofs, ...changeProofs]
+    if (fallbackProofs.length) {
+      ecashStore.addProofs(fallbackProofs, ecashStore.mintUrl)
+    }
+    throw error
+  }
+}
+
 async function handleEcashRequestSend() {
   const payload = requestPayload.value
   if (!payload) {
@@ -821,6 +931,8 @@ async function handleEcashRequestSend() {
 
   if (payload.protocol === 'nut18') {
     await handleNut18Send(payload)
+  } else if (payload.protocol === 'legacy_server') {
+    await handleLegacyServerSend(payload)
   } else {
     await handleLegacyEcashSend(payload)
   }
