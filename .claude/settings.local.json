@@ -4,7 +4,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__filesystem__directory_tree",
+      "Bash(git show:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

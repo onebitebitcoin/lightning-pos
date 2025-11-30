@@ -139,7 +139,6 @@ import QRCode from 'qrcode'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useEcashStore } from '@/stores/ecash'
-import { createPaymentRequest, createHttpPostTransport } from '@/services/nut18'
 import { API_BASE_URL } from '@/services/api'
 
 const router = useRouter()
