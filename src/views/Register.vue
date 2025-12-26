@@ -2,6 +2,9 @@
   <div class="min-h-screen flex items-center justify-center bg-bg-secondary px-4 py-8">
     <div class="card p-6 xs:p-8 w-full max-w-md mx-4 tablet:max-w-lg tablet:p-10 animate-fade-in">
       <div class="text-center mb-6 tablet:mb-8">
+        <div class="flex justify-center mb-4">
+          <img src="/logo.png" alt="Logo" class="h-20 w-20 xs:h-24 xs:w-24 tablet:h-28 tablet:w-28 object-contain" />
+        </div>
         <h1 class="text-2xl xs:text-3xl tablet:text-4xl font-bold text-text-primary mb-2">
           {{ localeStore.t('register.createAccount', '계정 생성') }}
         </h1>

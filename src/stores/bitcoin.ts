@@ -20,7 +20,7 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     if (!lastUpdated.value) return true
     const now = new Date()
     const timeDiff = now.getTime() - lastUpdated.value.getTime()
-    return timeDiff > 5 * 60 * 1000 // 5 minutes
+    return timeDiff > 2 * 60 * 1000 // 2 minutes (auto-refresh is every 1 minute)
   })
 
   const priceStatus = computed(() => {
@@ -97,13 +97,12 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     error.value = null
   }
 
-  // Auto-refresh price data every 5 minutes
+  // Auto-refresh price data every 1 minute
   function startAutoRefresh(): () => void {
     const interval = setInterval(async () => {
-      if (isDataStale.value) {
-        await fetchBitcoinPrice()
-      }
-    }, 5 * 60 * 1000) // 5 minutes
+      // Always fetch (service layer handles 1-minute cache)
+      await fetchBitcoinPrice()
+    }, 1 * 60 * 1000) // 1 minute
 
     // Return cleanup function
     return () => clearInterval(interval)

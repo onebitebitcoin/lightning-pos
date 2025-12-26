@@ -249,7 +249,7 @@
         </div>
         
         <!-- Loading State -->
-        <div v-if="productStore.isLoading" class="flex justify-center items-center py-12">
+        <div v-if="productStore.isLoading || bitcoinStore.isLoading || !bitcoinStore.btcPriceKrw" class="flex justify-center items-center py-12">
           <div class="text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700 dark:border-indigo-400 mx-auto mb-4"></div>
             <p class="text-gray-600 dark:text-gray-300">
@@ -964,22 +964,21 @@ const productDiscountPercent = (product: Product): number => {
 
 // Initialize data when component mounts
 onMounted(async () => {
-  // Initialize cart if user is logged in
-  if (authStore.isLoggedIn) {
-    await cartStore.initialize()
-  }
-  
-  // Initialize Bitcoin price data
+  // Initialize Bitcoin price data FIRST (required for price display)
   await bitcoinStore.initialize()
-  
-  // Initialize categories (only those used in user's products)
-  await categoryStore.fetchUserProductCategories()
-  
-  // Initialize products store for shopping (load all available products)
-  await productStore.initialize()
-  
-  // Start auto-refresh for Bitcoin price
+
+  // Start auto-refresh for Bitcoin price (every 1 minute)
   stopBitcoinAutoRefresh = bitcoinStore.startAutoRefresh()
+
+  // Initialize other data in parallel after bitcoin price is ready
+  await Promise.all([
+    // Initialize cart if user is logged in
+    authStore.isLoggedIn ? cartStore.initialize() : Promise.resolve(),
+    // Initialize categories (only those used in user's products)
+    categoryStore.fetchUserProductCategories(),
+    // Initialize products store for shopping (load all available products)
+    productStore.initialize()
+  ])
 })
 
 onUnmounted(() => {
