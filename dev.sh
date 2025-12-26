@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Helper script to boot backend (Django) and frontend (Vite) dev servers together.
-# Usage: ./run.sh
+# Usage: ./dev.sh
 
 set -euo pipefail
 
@@ -10,7 +10,7 @@ FRONTEND_DIR="$ROOT_DIR"
 BACKEND_VENV="$BACKEND_DIR/venv"
 
 log() {
-  printf "\033[1;34m[run.sh]\033[0m %s\n" "$*"
+  printf "\033[1;34m[dev.sh]\033[0m %s\n" "$*"
 }
 
 ensure_backend_env() {

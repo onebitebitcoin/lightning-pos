@@ -18,6 +18,39 @@ class BitcoinService {
   private cacheExpiration = 1 * 60 * 1000 // 1 minute
   private upbitTickerUrl = 'https://api.upbit.com/v1/ticker?markets=KRW-BTC,USDT-BTC'
   private forexUrl = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD,FRX.KRWJPY'
+  private localStorageKey = 'bitcoin_price_cache'
+
+  constructor() {
+    // Load cache from localStorage on initialization
+    this.loadCacheFromStorage()
+  }
+
+  private loadCacheFromStorage(): void {
+    try {
+      const stored = localStorage.getItem(this.localStorageKey)
+      if (stored) {
+        const parsed = JSON.parse(stored) as BitcoinPriceData
+        // Only use if still valid
+        if (Date.now() - parsed.timestamp < this.cacheExpiration) {
+          this.cache = parsed
+        } else {
+          // Clear expired cache
+          localStorage.removeItem(this.localStorageKey)
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load bitcoin price cache from localStorage:', error)
+      localStorage.removeItem(this.localStorageKey)
+    }
+  }
+
+  private saveCacheToStorage(data: BitcoinPriceData): void {
+    try {
+      localStorage.setItem(this.localStorageKey, JSON.stringify(data))
+    } catch (error) {
+      console.warn('Failed to save bitcoin price cache to localStorage:', error)
+    }
+  }
 
   async getCurrentPrice(): Promise<BitcoinPriceData> {
     // Return cached data if still valid
@@ -75,6 +108,9 @@ class BitcoinService {
         timestamp: Date.now()
       }
 
+      // Save to localStorage
+      this.saveCacheToStorage(this.cache)
+
       return this.cache
     } catch (error) {
       console.error('비트코인 가격 조회 실패:', error)
@@ -118,6 +154,11 @@ class BitcoinService {
   // Clear the cache (useful for manual refresh)
   clearCache(): void {
     this.cache = null
+    try {
+      localStorage.removeItem(this.localStorageKey)
+    } catch (error) {
+      console.warn('Failed to clear bitcoin price cache from localStorage:', error)
+    }
   }
 
   // Get Lightning Network LNURL invoice with detailed error handling

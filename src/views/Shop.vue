@@ -5,9 +5,12 @@
       <div class="container mx-auto px-2 py-3 md:py-4">
         <!-- Mobile Header -->
         <div class="flex justify-between items-center md:hidden">
-          <h1 class="text-lg font-bold text-text-primary select-none">
-            {{ t('brand.name', '한입 POS') }}
-          </h1>
+          <div class="flex items-center gap-2">
+            <img src="/logo.png" alt="Logo" class="h-10 w-10 object-contain" />
+            <h1 class="text-lg font-bold text-text-primary select-none">
+              {{ t('brand.name', '한입 POS') }}
+            </h1>
+          </div>
           <button
             @click="showMobileMenu = !showMobileMenu"
             class="btn btn-secondary p-2 rounded-xl"
@@ -29,37 +32,38 @@
           
           <!-- Mobile Bitcoin Price -->
           <div class="p-2 mb-2">
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
-              {{ t('header.btcPrice', 'BTC 가격') }}
-              <span v-if="lastUpdatedTime" class="text-gray-400 font-normal">({{ lastUpdatedTime }})</span>
-            </div> 
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-1 text-sm">
-                <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
-                  <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
-                </span>
-                <template v-else>
-                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
-                  <span v-if="btcPriceDisplay" class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
-                  <span v-else class="text-red-500 font-medium text-xs">{{ t('common.priceUnavailable', '가격 정보 없음') }}</span>
-                  
-                  <span
-                    v-if="bitcoinStore.priceStatus === 'stale' && btcPriceDisplay"
-                    class="text-text-secondary"
-                    :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
-                  >
-                    <UiIcon name="warning" class="h-4 w-4" />
-                  </span>
-                </template>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  {{ t('header.btcPrice', 'BTC 가격') }}
+                  <span v-if="lastUpdatedTime" class="text-gray-400 font-normal">({{ lastUpdatedTime }})</span>
+                </div>
+                <button
+                  @click="bitcoinStore.refresh()"
+                  :disabled="bitcoinStore.isLoading"
+                  class="text-text-secondary hover:text-text-primary transition-colors p-1"
+                  :title="t('header.refreshPrice', '가격 새로고침')"
+                >
+                  <UiIcon name="refreshCw" class="h-4 w-4" />
+                </button>
               </div>
-              <button
-                @click="bitcoinStore.refresh()"
-                :disabled="bitcoinStore.isLoading"
-                class="text-text-secondary hover:text-text-primary transition-colors p-1"
-                :title="t('header.refreshPrice', '가격 새로고침')"
-              >
-                <UiIcon name="refresh" class="h-4 w-4" />
-              </button>
+            </div>
+            <div class="flex items-center space-x-1 text-sm">
+              <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
+                <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
+              </span>
+              <template v-else>
+                <span v-if="btcPriceDisplay" class="text-text-primary font-medium">{{ btcPriceDisplay }}</span>
+                <span v-else class="text-red-500 font-medium text-xs">{{ t('common.priceUnavailable', '가격 정보 없음') }}</span>
+
+                <span
+                  v-if="bitcoinStore.priceStatus === 'stale' && btcPriceDisplay"
+                  class="text-text-secondary"
+                  :title="t('common.priceStale', '가격 정보가 오래되었습니다')"
+                >
+                  <UiIcon name="warning" class="h-4 w-4" />
+                </span>
+              </template>
             </div>
           </div>
           
@@ -110,25 +114,35 @@
         <!-- Desktop Header -->
         <div class="hidden md:flex justify-between items-center">
           <div class="flex items-center space-x-6">
-            <h1 class="text-2xl font-bold text-text-primary select-none cursor-default">
-              {{ t('brand.name', '한입 POS') }}
-            </h1>
+            <div class="flex items-center gap-3">
+              <img src="/logo.png" alt="Logo" class="h-12 w-12 object-contain" />
+              <h1 class="text-2xl font-bold text-text-primary select-none cursor-default">
+                {{ t('brand.name', '한입 POS') }}
+              </h1>
+            </div>
             <!-- Bitcoin Price Indicator -->
             <div class="flex items-center space-x-3">
-              <div class="text-right">
-                <div class="text-sm text-text-secondary flex items-center justify-end gap-1">
+              <div>
+                <div class="text-sm text-text-secondary flex items-center gap-1 mb-1">
                   {{ t('header.btcPrice', 'BTC 가격') }}
                   <span v-if="lastUpdatedTime" class="text-xs text-gray-400">({{ lastUpdatedTime }})</span>
+                  <button
+                    @click="bitcoinStore.refresh()"
+                    :disabled="bitcoinStore.isLoading"
+                    class="text-text-secondary hover:text-text-primary transition-colors p-0.5 ml-1"
+                    :title="t('header.refreshPrice', '가격 새로고침')"
+                  >
+                    <UiIcon name="refreshCw" class="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                <div class="flex items-center space-x-1 text-sm font-medium justify-end">
+                <div class="flex items-center space-x-1 text-sm font-medium">
                   <span v-if="bitcoinStore.isLoading" class="text-text-secondary">
                     <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 inline-block"></div>
                   </span>
                   <template v-else>
-                    <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                     <span v-if="btcPriceDisplay" class="text-text-primary">{{ btcPriceDisplay }}</span>
                     <span v-else class="text-red-500 text-xs">{{ t('common.priceUnavailable', '가격 정보 없음') }}</span>
-                    
+
                     <span
                       v-if="bitcoinStore.priceStatus === 'stale' && btcPriceDisplay"
                       class="text-text-secondary"
@@ -139,14 +153,6 @@
                   </template>
                 </div>
               </div>
-              <button
-                @click="bitcoinStore.refresh()"
-                :disabled="bitcoinStore.isLoading"
-              class="text-text-secondary hover:text-text-primary transition-colors p-1"
-              :title="t('header.refreshPrice', '가격 새로고침')"
-              >
-                <UiIcon name="refresh" class="h-4 w-4" />
-              </button>
             </div>
           </div>
           <div class="flex items-center space-x-3">
@@ -267,7 +273,7 @@
         <!-- Products Grid -->
         <div v-else class="grid grid-cols-1 xs:grid-cols-2 tablet:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3 xs:gap-4 tablet:gap-6">
           <div
-            v-for="product in productStore.availableProducts"
+            v-for="product in filteredProducts"
             :key="product.id"
             class="card card-hover overflow-hidden group flex flex-col"
           >
@@ -911,6 +917,16 @@ const isAddingDirectInput = ref(false)
 // Category filtering
 const selectedCategory = ref<string | number>('')
 
+// Filter products by selected category (client-side filtering)
+const filteredProducts = computed(() => {
+  if (!selectedCategory.value || selectedCategory.value === '') {
+    return productStore.availableProducts
+  }
+  return productStore.availableProducts.filter(
+    product => product.category === selectedCategory.value
+  )
+})
+
 const btcPriceDisplay = computed(() => {
   const price = bitcoinStore.getBtcPriceByCurrency(selectedCurrency.value)
   if (!price) return null
@@ -1115,16 +1131,9 @@ function handleEscapeKey(event: KeyboardEvent) {
   }
 }
 
-// Handle category selection
-async function selectCategory(categoryId: string | number) {
-  try {
-    selectedCategory.value = categoryId
-    // Re-fetch available products with the selected category
-    const filterCategoryId = categoryId === '' ? undefined : String(categoryId)
-    await productStore.fetchAvailableProducts(filterCategoryId)
-  } catch (error) {
-    console.error('카테고리별 상품 필터링 오류:', error)
-  }
+// Handle category selection (client-side filtering, no API call)
+function selectCategory(categoryId: string | number) {
+  selectedCategory.value = categoryId
 }
 
 // Handle direct input modal

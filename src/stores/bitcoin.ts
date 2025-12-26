@@ -79,10 +79,17 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     return `₿ ₩${Math.round(btcPriceKrw.value).toLocaleString('ko-KR', { maximumFractionDigits: 0 })}`
   }
 
-  // Manual refresh
+  // Manual refresh with 1-minute caching
   async function refresh(): Promise<void> {
-    bitcoinService.clearCache()
-    await fetchBitcoinPrice()
+    // Check if cache is still valid (within 1 minute)
+    if (bitcoinService.isCacheValid()) {
+      // Use cached data - just update from cache without new API call
+      await fetchBitcoinPrice()
+    } else {
+      // Cache expired - clear and fetch new data
+      bitcoinService.clearCache()
+      await fetchBitcoinPrice()
+    }
   }
 
   // Clear error state

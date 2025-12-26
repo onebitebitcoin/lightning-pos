@@ -19,6 +19,10 @@
           <div class="flex items-center space-x-2">
             <!-- Mobile Bitcoin Price -->
             <div class="text-right text-xs">
+              <div class="text-gray-500 dark:text-gray-400 text-[10px] mb-0.5">
+                {{ t('header.btcPrice', 'BTC 가격') }}
+                <span v-if="lastUpdatedTime" class="text-gray-400">({{ lastUpdatedTime }})</span>
+              </div>
               <div class="flex items-center space-x-1">
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
                   <div class="animate-spin rounded-full h-2 w-2 border-b border-gray-400 inline-block"></div>
@@ -27,7 +31,6 @@
                   <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
-                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                   <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
                   <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" :title="t('common.priceStale', '가격 정보가 오래되었습니다')">
                     <UiIcon name="warning" class="h-4 w-4" />
@@ -61,9 +64,10 @@
           </div>
           <div class="flex items-center space-x-4">
             <!-- Bitcoin Price -->
-            <div class="text-right">
-              <div class="text-sm text-text-secondary">
+            <div>
+              <div class="text-sm text-text-secondary flex items-center gap-1">
                 {{ t('header.btcPrice', 'BTC 가격') }}
+                <span v-if="lastUpdatedTime" class="text-xs text-gray-400">({{ lastUpdatedTime }})</span>
               </div>
               <div class="flex items-center space-x-1 text-sm font-medium">
                 <span v-if="bitcoinStore.isLoading" class="text-gray-400">
@@ -73,7 +77,6 @@
                   <UiIcon name="warning" class="h-4 w-4" />
                 </span>
                 <template v-else>
-                  <UiIcon name="btc" class="h-4 w-4 text-orange-500" />
                   <span class="text-gray-900 dark:text-white">{{ formattedBtcPrice }}</span>
                   <span v-if="bitcoinStore.priceStatus === 'stale'" class="text-gray-400" :title="t('common.priceStale', '가격 정보가 오래되었습니다')">
                     <UiIcon name="warning" class="h-4 w-4" />
@@ -1493,6 +1496,14 @@ const formattedBtcPrice = computed(() => {
   const price = currentBtcPrice.value
   if (!price) return '--'
   return formatter.value.format(price)
+})
+
+const lastUpdatedTime = computed(() => {
+  if (!bitcoinStore.lastUpdated) return null
+  return bitcoinStore.lastUpdated.toLocaleTimeString(localeStore.language, {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 })
 
 function productHasDiscount(product: Product): boolean {

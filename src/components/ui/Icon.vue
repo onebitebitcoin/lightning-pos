@@ -62,6 +62,15 @@ const icons = {
       { tag: 'path', attrs: { d: 'M20 11a8.1 8.1 0 00-7-7.9V1l-3 3 3 3V5.1a6 6 0 11-5.2 8.9' } },
     ],
   },
+  refreshCw: {
+    viewBox: '0 0 24 24',
+    paths: [
+      { tag: 'path', attrs: { d: 'M21 2v6h-6' } },
+      { tag: 'path', attrs: { d: 'M3 12a9 9 0 0115-6.7L21 8' } },
+      { tag: 'path', attrs: { d: 'M3 22v-6h6' } },
+      { tag: 'path', attrs: { d: 'M21 12a9 9 0 01-15 6.7L3 16' } },
+    ],
+  },
   warning: {
     viewBox: '0 0 24 24',
     paths: [
