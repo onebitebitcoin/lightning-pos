@@ -869,7 +869,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import UiIcon from '@/components/ui/Icon.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -990,6 +990,24 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey)
   document.removeEventListener('keydown', handleDirectInputEscape)
   document.removeEventListener('keydown', handleCartModalEscape)
+})
+
+// Pause Bitcoin price auto-refresh when cart modal is open
+watch(showCartModal, (isOpen) => {
+  if (isOpen) {
+    bitcoinStore.pauseAutoRefresh()
+  } else {
+    bitcoinStore.resumeAutoRefresh()
+  }
+})
+
+// Pause Bitcoin price auto-refresh when direct input modal is open
+watch(showDirectInputModal, (isOpen) => {
+  if (isOpen) {
+    bitcoinStore.pauseAutoRefresh()
+  } else {
+    bitcoinStore.resumeAutoRefresh()
+  }
 })
 
 onBeforeRouteLeave((to) => {

@@ -12,7 +12,15 @@
       "Bash(mv:*)",
       "Bash(find:*)",
       "Bash(sips:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(for file in src/composables/useEcashSend.ts src/composables/useEcashReceive.ts src/composables/useEcashList.ts src/composables/useToast.ts src/composables/useClipboard.ts src/utils/formatters.ts)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then echo \"✅ $file\")",
+      "Bash(else echo \"❌ $file \\(missing\\)\")",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

@@ -7,6 +7,8 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdated = ref<Date | null>(null)
+  const autoRefreshInterval = ref<ReturnType<typeof setInterval> | null>(null)
+  const isPaused = ref(false)
 
   // Computed properties
   const btcPriceKrw = computed(() => priceData.value?.krw || 0)
@@ -99,13 +101,37 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
 
   // Auto-refresh price data every 1 minute
   function startAutoRefresh(): () => void {
-    const interval = setInterval(async () => {
+    // Clear any existing interval
+    if (autoRefreshInterval.value) {
+      clearInterval(autoRefreshInterval.value)
+    }
+
+    isPaused.value = false
+    autoRefreshInterval.value = setInterval(async () => {
+      // Skip refresh if paused
+      if (isPaused.value) return
+
       // Always fetch (service layer handles 1-minute cache)
       await fetchBitcoinPrice()
     }, 1 * 60 * 1000) // 1 minute
 
     // Return cleanup function
-    return () => clearInterval(interval)
+    return () => {
+      if (autoRefreshInterval.value) {
+        clearInterval(autoRefreshInterval.value)
+        autoRefreshInterval.value = null
+      }
+    }
+  }
+
+  // Pause auto-refresh (e.g., during cart review, direct input, or payment)
+  function pauseAutoRefresh(): void {
+    isPaused.value = true
+  }
+
+  // Resume auto-refresh
+  function resumeAutoRefresh(): void {
+    isPaused.value = false
   }
 
   function getBtcPriceByCurrency(currency: FiatCurrency): number {
@@ -131,6 +157,7 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     isLoading,
     error,
     lastUpdated,
+    isPaused,
 
     // Computed
     btcPriceKrw,
@@ -147,6 +174,8 @@ export const useBitcoinStore = defineStore('bitcoin', () => {
     refresh,
     clearError,
     startAutoRefresh,
+    pauseAutoRefresh,
+    resumeAutoRefresh,
     krwToSats,
     satsToKrw,
     formatSats,

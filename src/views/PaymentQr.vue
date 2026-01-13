@@ -42,6 +42,12 @@
             ></canvas>
           </div>
         </div>
+        <div
+          v-if="paymentMethod === 'ecash' && !isGeneratingInvoice && ecashRequestText"
+          class="mt-3 rounded-xl border border-dashed border-border-primary/60 bg-gray-50 p-3 text-xs font-mono text-text-secondary dark:bg-gray-900/40 dark:text-gray-200 break-all text-center"
+        >
+          {{ ecashRequestText }}
+        </div>
       </div>
 
       <!-- Instructions -->
@@ -140,6 +146,7 @@ import UiIcon from '@/components/ui/Icon.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useEcashStore } from '@/stores/ecash'
 import { API_BASE_URL } from '@/services/api'
+import { createHttpPostTransport, createPaymentRequest } from '@/services/nut18'
 
 const router = useRouter()
 const route = useRoute()
@@ -281,19 +288,27 @@ async function generateInvoice() {
         throw new Error(result.error || 'Invoice generation failed')
       }
     } else if (paymentMethod.value === 'ecash') {
-       if (!bitcoinStore.btcPriceKrw) await bitcoinStore.fetchBitcoinPrice()
-       const satsAmount = bitcoinStore.krwToSats(cartStore.total)
-       const normalizedSats = Math.max(1, Math.round(satsAmount))
-       // Use simple request ID for legacy server mediated protocol
-       const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-       
-       // Legacy format: payment:requestId:amount
-       const requestString = `payment:${requestId}:${normalizedSats}`
-        
-       qrData = requestString
-       ecashRequestText.value = requestString
-       startEcashPaymentPolling(requestId)
-       isWaitingForEcashPayment.value = true
+      if (!bitcoinStore.btcPriceKrw) await bitcoinStore.fetchBitcoinPrice()
+      const satsAmount = bitcoinStore.krwToSats(cartStore.total)
+      const normalizedSats = Math.max(1, Math.round(satsAmount))
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+      const postUrl = `${ecashTransportBaseUrl}/api/products/payments/requests/${encodeURIComponent(requestId)}/`
+      const mintList = ecashStore.mintUrl ? [ecashStore.mintUrl] : undefined
+
+      const requestString = createPaymentRequest({
+        id: requestId,
+        amount: normalizedSats,
+        unit: 'sat',
+        single_use: true,
+        mints: mintList,
+        description: `${getPaymentTypeLabel()} · ${cartStore.total.toLocaleString('ko-KR')}원`,
+        transports: [createHttpPostTransport(postUrl)]
+      })
+
+      qrData = requestString
+      ecashRequestText.value = requestString
+      startEcashPaymentPolling(requestId)
+      isWaitingForEcashPayment.value = true
     }
 
     if (qrCanvas.value && qrData) {
@@ -438,10 +453,14 @@ onMounted(() => {
   bitcoinStore.initialize()
   ecashStore.initialize()
   generateInvoice()
+  // Pause Bitcoin price auto-refresh while on payment QR page
+  bitcoinStore.pauseAutoRefresh()
 })
 
 onBeforeUnmount(() => {
   stopEcashFlow()
+  // Resume Bitcoin price auto-refresh when leaving payment QR page
+  bitcoinStore.resumeAutoRefresh()
 })
 
 </script>

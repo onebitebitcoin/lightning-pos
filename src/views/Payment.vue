@@ -209,32 +209,26 @@
             </label>
 
             <label
-              :class="[
-                'flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-200',
-                hasEcashEnabled ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-60'
-              ]"
+              class="flex items-center space-x-2 xs:space-x-3 p-3 xs:p-4 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-200 cursor-not-allowed opacity-60"
             >
               <input
                 v-model="paymentMethod"
                 type="radio"
                 value="ecash"
                 class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
-                :disabled="!hasEcashEnabled"
+                disabled
               />
               <div class="flex-1">
                 <p class="text-sm xs:text-base font-medium text-gray-800 dark:text-white">
                   {{ t('payment.methods.ecash.title', 'e-cash 결제') }}
                 </p>
-                <p v-if="hasEcashEnabled" class="text-xs xs:text-sm text-gray-600 dark:text-gray-300">
-                  {{ t('payment.methods.ecash.subtitle', '라이트닝 네트워크 기반 익명 결제 (Cashu)') }}
-                </p>
-                <p v-else class="text-xs text-warning-600 dark:text-warning-400 mt-1">
+                <p class="text-xs text-warning-600 dark:text-warning-400 mt-1">
                   {{ t('payment.methods.ecash.disabledHint', '사용자 설정에서 e-cash 결제를 활성화하면 사용할 수 있습니다') }}
                 </p>
               </div>
               <UiIcon
                 name="coin"
-                :class="['h-6 w-6', hasEcashEnabled ? 'text-primary-500' : 'opacity-50']"
+                class="h-6 w-6 opacity-50"
               />
             </label>
           </div>
@@ -263,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
@@ -364,4 +358,13 @@ function applyCustomDiscount() {
     isCustomDiscount.value = true
   }
 }
+
+// Pause Bitcoin price auto-refresh while on payment page
+onMounted(() => {
+  bitcoinStore.pauseAutoRefresh()
+})
+
+onUnmounted(() => {
+  bitcoinStore.resumeAutoRefresh()
+})
 </script>

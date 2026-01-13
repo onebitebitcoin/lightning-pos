@@ -135,12 +135,6 @@
               {{ authStore.user?.usdt_address || t('settings.userSection.notSet', '설정되지 않음') }}
             </span>
           </div>
-          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-24">{{ t('settings.userSection.ecashEnabled', 'e-cash 결제 허용:') }}</span>
-            <span :class="['font-medium', authStore.user?.ecash_enabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400']">
-              {{ authStore.user?.ecash_enabled ? t('settings.userSection.enabled', '활성화') : t('settings.userSection.disabled', '비활성화') }}
-            </span>
-          </div>
         </div>
 
         <!-- User Info Edit Form -->
@@ -216,32 +210,6 @@
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {{ t('settings.userSection.usdtHint', '라이트닝 기반 USDT 결제를 받으려면 speed.app 주소를 입력하세요') }}
               </p>
-            </div>
-
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('settings.userSection.ecashEnabledLabel', 'e-cash 결제 허용') }}
-                </label>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {{ t('settings.userSection.ecashEnabledHint', '활성화하면 결제 페이지에서 e-cash 결제 옵션이 표시됩니다') }}
-                </p>
-              </div>
-              <button
-                type="button"
-                @click="userForm.ecash_enabled = !userForm.ecash_enabled"
-                :class="[
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-                  userForm.ecash_enabled ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'
-                ]"
-              >
-                <span
-                  :class="[
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    userForm.ecash_enabled ? 'translate-x-6' : 'translate-x-1'
-                  ]"
-                />
-              </button>
             </div>
 
             <div class="flex space-x-3 pt-2">
@@ -601,280 +569,18 @@
               {{ t('settings.ecash.title', 'e-cash 관리') }}
             </h2>
             <p class="text-sm text-text-secondary mt-1">
-              {{ t('settings.ecash.description', '토큰 백업, 복원 및 관리') }}
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <RouterLink
-              to="/pay/send"
-              class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <UiIcon name="send" class="h-4 w-4" />
-              <span>{{ t('settings.ecash.actions.send', '보내기') }}</span>
-            </RouterLink>
-            <button
-              type="button"
-              @click="handleEcashBackup"
-              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              :title="t('settings.ecash.actions.backup', '백업')"
-            >
-              <UiIcon name="download" class="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              @click="triggerEcashRestore"
-              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              :title="t('settings.ecash.actions.restore', '복원')"
-            >
-              <UiIcon name="upload" class="h-5 w-5" />
-            </button>
-            <input
-              ref="ecashFileInput"
-              type="file"
-              accept="application/json"
-              class="hidden"
-              @change="handleEcashFileChange"
-            />
-          </div>
-        </div>
-
-        <div class="grid gap-6 md:grid-cols-2">
-          <div class="space-y-3">
-            <label class="text-sm font-medium text-text-primary">
-              {{ t('settings.ecash.mintLabel', 'Mint 서버 URL') }}
-            </label>
-            <input
-              v-model="ecashMintForm.mintUrl"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
-              :placeholder="t('settings.ecash.mintPlaceholder', '예: mint.coinos.io')"
-            />
-            <p class="text-xs text-text-secondary">
-              {{ t('settings.ecash.mintHelper', 'https:// 접두사가 없으면 자동으로 추가됩니다.') }}
-            </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                @click="saveEcashMintUrl"
-              >
-                {{ t('settings.ecash.actions.save', '저장') }}
-              </button>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                @click="refreshEcashHoldings"
-              >
-                {{ t('settings.ecash.actions.refresh', '새로고침') }}
-              </button>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="cleanupSpentTokens"
-                :disabled="isCleaningTokens || !hasEcashHoldings"
-              >
-                <span v-if="isCleaningTokens">{{ t('settings.ecash.actions.cleaning', '정리 중...') }}</span>
-                <span v-else>{{ t('settings.ecash.actions.cleanup', '사용된 토큰 정리') }}</span>
-              </button>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="deleteAllTokens"
-                :disabled="!hasEcashHoldings"
-              >
-                {{ t('settings.ecash.actions.deleteAll', '모두 삭제') }}
-              </button>
-            </div>
-          </div>
-          <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2">
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-medium text-text-secondary">
-                {{ t('settings.ecash.total', '총 보유량') }}
-              </p>
-              <span v-if="isAutoCheckingTokens" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-500"></div>
-                {{ t('settings.ecash.checking', '확인 중...') }}
-              </span>
-            </div>
-            <p class="text-2xl font-semibold text-text-primary">
-              {{ ecashTotalSats ? bitcoinStore.formatSats(ecashTotalSats) : '0 sats' }}
-            </p>
-            <p class="text-xs text-text-secondary">
-              {{ t('settings.ecash.holdingsDescription', 'Mint 별 토큰 잔액') }}
+              {{ t('settings.ecash.description', '토큰 보내기, 받기, 백업 및 관리') }}
             </p>
           </div>
         </div>
-
-        <div class="flex justify-end mb-2">
-          <button
-            type="button"
-            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            @click="checkAllMints"
-            :disabled="!hasEcashHoldings"
+        <div class="text-center py-8">
+          <RouterLink
+            to="/pay/ecash"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
-            {{ t('settings.ecash.actions.checkAll', '모든 Mint 확인') }}
-          </button>
-        </div>
-
-        <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-800 text-text-secondary text-xs">
-              <tr>
-                <th class="px-4 py-3 text-left font-semibold w-8"></th>
-                <th class="px-4 py-3 text-left font-semibold">
-                  {{ t('settings.ecash.table.mint', 'Mint') }}
-                </th>
-                <th class="px-4 py-3 text-left font-semibold">
-                  {{ t('settings.ecash.table.status', '상태') }}
-                </th>
-                <th class="px-4 py-3 text-left font-semibold">
-                  {{ t('settings.ecash.table.amount', '금액 (sats)') }}
-                </th>
-                <th class="px-4 py-3 text-left font-semibold">
-                  {{ t('settings.ecash.table.count', '토큰 수') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-900">
-              <tr v-if="!hasEcashHoldings">
-                <td colspan="5" class="px-4 py-6 text-center text-text-secondary">
-                  {{ t('settings.ecash.empty', '보유 중인 e-cash 토큰이 없습니다.') }}
-                </td>
-              </tr>
-              <template v-for="(holding, index) in ecashHoldings" :key="holding.mintUrl">
-                <tr
-                  class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <td class="px-4 py-3 cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
-                    <UiIcon
-                      :name="expandedMints.has(holding.mintUrl) ? 'chevronDown' : 'chevronRight'"
-                      class="h-4 w-4 text-text-secondary transition-transform"
-                    />
-                  </td>
-                  <td class="px-4 py-3 font-medium text-text-primary break-all cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
-                    {{ holding.mintUrl }}
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click.stop="checkMint(holding.mintUrl)"
-                        class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        :disabled="checkingMint.has(holding.mintUrl)"
-                        :title="t('settings.ecash.actions.checkMint', '이 Mint 확인')"
-                      >
-                        <UiIcon
-                          v-if="checkingMint.has(holding.mintUrl)"
-                          name="spinner"
-                          class="h-4 w-4 animate-spin text-gray-400"
-                        />
-                        <UiIcon
-                          v-else
-                          name="refresh"
-                          class="h-4 w-4 text-text-secondary"
-                        />
-                      </button>
-                      <div class="flex items-center gap-1">
-                        <UiIcon
-                          :name="getMintStatus(holding.mintUrl).icon"
-                          :class="['h-4 w-4', getMintStatus(holding.mintUrl).color]"
-                        />
-                        <span :class="['text-xs', getMintStatus(holding.mintUrl).color]">
-                          {{ getMintStatus(holding.mintUrl).text }}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 text-text-primary font-medium cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">
-                    {{ bitcoinStore.formatSats(holding.amount) }}
-                  </td>
-                  <td class="px-4 py-3 text-text-secondary">
-                    <div class="flex items-center justify-between">
-                      <span class="cursor-pointer" @click="toggleMintExpand(holding.mintUrl)">{{ holding.count.toLocaleString() }}</span>
-                      <button
-                        @click.stop="deleteTokensByMint(holding.mintUrl)"
-                        class="px-2 py-1 text-xs border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-2"
-                        :title="t('settings.ecash.actions.deleteMint', '이 Mint의 모든 토큰 삭제')"
-                      >
-                        {{ t('settings.ecash.actions.delete', '삭제') }}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="expandedMints.has(holding.mintUrl)" class="bg-gray-50 dark:bg-gray-800">
-                  <td colspan="5" class="px-0 py-0">
-                    <div class="px-8 py-4 space-y-2">
-                      <div
-                        v-for="(proof, proofIndex) in getProofsByMint(holding.mintUrl)"
-                        :key="proof.secret || proofIndex"
-                        class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2 text-xs"
-                      >
-                        <div class="flex items-center justify-between mb-2">
-                          <span class="font-medium text-text-primary">
-                            {{ t('settings.ecash.proof.title', '토큰 #{index}', { index: proofIndex + 1 }) }}
-                          </span>
-                          <div class="flex items-center gap-2">
-                            <span class="text-base font-medium text-text-primary">
-                              {{ proof.amount }} sats
-                            </span>
-                            <button
-                              @click.stop="deleteProof(proof)"
-                              class="px-2 py-1 text-xs border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                              :title="t('settings.ecash.proof.delete', '이 토큰 삭제')"
-                            >
-                              {{ t('settings.ecash.proof.deleteBtn', '삭제') }}
-                            </button>
-                          </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          <div>
-                            <span class="text-text-secondary">{{ t('settings.ecash.proof.secret', 'Secret:') }}</span>
-                            <div class="font-mono text-text-primary break-all bg-gray-100 dark:bg-gray-800 p-2 rounded mt-1">
-                              {{ proof.secret || 'N/A' }}
-                            </div>
-                          </div>
-                          <div>
-                            <span class="text-text-secondary">{{ t('settings.ecash.proof.id', 'Keyset ID:') }}</span>
-                            <div class="font-mono text-text-primary break-all bg-gray-100 dark:bg-gray-800 p-2 rounded mt-1">
-                              {{ proof.id || 'N/A' }}
-                            </div>
-                          </div>
-                          <div>
-                            <span class="text-text-secondary">{{ t('settings.ecash.proof.c', 'C (Signature):') }}</span>
-                            <div class="font-mono text-text-primary break-all bg-gray-100 dark:bg-gray-800 p-2 rounded mt-1">
-                              {{ proof.C || 'N/A' }}
-                            </div>
-                          </div>
-                          <div>
-                            <span class="text-text-secondary">{{ t('settings.ecash.proof.mint', 'Mint URL:') }}</span>
-                            <div class="font-mono text-text-primary break-all bg-gray-100 dark:bg-gray-800 p-2 rounded mt-1">
-                              {{ proof.mintUrl || 'N/A' }}
-                            </div>
-                          </div>
-                        </div>
-                        <div v-if="proof.dleq" class="mt-2 pt-2 border-t border-border-primary/30">
-                          <span class="text-text-secondary font-semibold">{{ t('settings.ecash.proof.dleq', 'DLEQ Proof:') }}</span>
-                          <div class="grid grid-cols-1 gap-1 mt-1">
-                            <div class="flex items-start space-x-2">
-                              <span class="text-text-secondary">e:</span>
-                              <span class="font-mono text-text-primary break-all flex-1">{{ proof.dleq.e || 'N/A' }}</span>
-                            </div>
-                            <div class="flex items-start space-x-2">
-                              <span class="text-text-secondary">s:</span>
-                              <span class="font-mono text-text-primary break-all flex-1">{{ proof.dleq.s || 'N/A' }}</span>
-                            </div>
-                            <div v-if="proof.dleq.r" class="flex items-start space-x-2">
-                              <span class="text-text-secondary">r:</span>
-                              <span class="font-mono text-text-primary break-all flex-1">{{ proof.dleq.r }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+            <UiIcon name="box" class="h-5 w-5" />
+            <span>{{ t('settings.ecash.goToManage', 'e-cash 관리 페이지로 이동') }}</span>
+          </RouterLink>
         </div>
       </div>
 
@@ -1150,21 +856,18 @@ import { useProductStore } from '@/stores/products'
 import { useThemeStore } from '@/stores/theme'
 import { useBitcoinStore } from '@/stores/bitcoin'
 import { useCategoryStore } from '@/stores/categories'
-import { useEcashStore } from '@/stores/ecash'
 import type { Product } from '@/services/api'
 import { authAPI } from '@/services/api'
 import { useLocaleStore } from '@/stores/locale'
 import { useFiatCurrencyStore } from '@/stores/fiatCurrency'
 import type { FiatCurrency } from '@/services/bitcoin'
 import type { LanguageCode } from '@/locales/translations'
-import { removeSpentProofs, checkMintAvailability, type MintAvailability } from '@/services/cashuCheck'
 
 const authStore = useAuthStore()
 const productStore = useProductStore()
 const themeStore = useThemeStore()
 const bitcoinStore = useBitcoinStore()
 const categoryStore = useCategoryStore()
-const ecashStore = useEcashStore()
 const localeStore = useLocaleStore()
 const t = localeStore.t
 const fiatCurrencyStore = useFiatCurrencyStore()
@@ -1183,269 +886,6 @@ const currencyTranslationKeys: Record<FiatCurrency, string> = {
   USD: 'settings.currency.option.usd',
   JPY: 'settings.currency.option.jpy'
 }
-
-const ecashHoldings = computed(() => ecashStore.holdings)
-const ecashTotalSats = computed(() => ecashStore.totalSats)
-const hasEcashHoldings = computed(() => ecashStore.proofsCount > 0)
-
-// E-cash proof expansion state
-const expandedMints = ref<Set<string>>(new Set())
-const isCleaningTokens = ref(false)
-const isAutoCheckingTokens = ref(false)
-
-// Mint availability state
-const mintAvailability = ref<Map<string, MintAvailability>>(new Map())
-const checkingMint = ref<Set<string>>(new Set())
-
-function toggleMintExpand(mintUrl: string) {
-  if (expandedMints.value.has(mintUrl)) {
-    expandedMints.value.delete(mintUrl)
-  } else {
-    expandedMints.value.add(mintUrl)
-  }
-  // Trigger reactivity
-  expandedMints.value = new Set(expandedMints.value)
-}
-
-function getProofsByMint(mintUrl: string) {
-  return ecashStore.proofs.filter(proof => (proof.mintUrl || ecashStore.mintUrl) === mintUrl)
-}
-
-function deleteProof(proof: any) {
-  if (!confirm(t('settings.ecash.proof.confirmDelete', '이 토큰을 삭제하시겠습니까? ({amount} sats)', { amount: proof.amount }))) {
-    return
-  }
-
-  const result = ecashStore.removeProofs([proof])
-  ecashStore.refreshHoldings()
-
-  if (result.removed > 0) {
-    showSuccessMessage(
-      t('settings.ecash.proof.deleted', '토큰이 삭제되었습니다.')
-    )
-  }
-}
-
-function deleteTokensByMint(mintUrl: string) {
-  const proofsToDelete = getProofsByMint(mintUrl)
-  const totalAmount = proofsToDelete.reduce((sum, p) => sum + (p.amount || 0), 0)
-
-  if (!confirm(
-    t(
-      'settings.ecash.mint.confirmDelete',
-      '이 Mint의 모든 토큰을 삭제하시겠습니까?\n\nMint: {mint}\n토큰 수: {count}개\n총 금액: {amount} sats',
-      { mint: mintUrl, count: proofsToDelete.length, amount: totalAmount }
-    )
-  )) {
-    return
-  }
-
-  const result = ecashStore.removeProofs(proofsToDelete)
-  ecashStore.refreshHoldings()
-
-  if (result.removed > 0) {
-    showSuccessMessage(
-      t('settings.ecash.mint.deleted', '{count}개의 토큰이 삭제되었습니다.', { count: result.removed })
-    )
-  }
-}
-
-function deleteAllTokens() {
-  const allProofs = ecashStore.getProofsSnapshot()
-  const totalAmount = allProofs.reduce((sum, p) => sum + (p.amount || 0), 0)
-
-  if (!confirm(
-    t(
-      'settings.ecash.all.confirmDelete',
-      '모든 e-cash 토큰을 삭제하시겠습니까?\n\n총 토큰 수: {count}개\n총 금액: {amount} sats\n\n⚠️ 이 작업은 되돌릴 수 없습니다!',
-      { count: allProofs.length, amount: totalAmount }
-    )
-  )) {
-    return
-  }
-
-  // Double confirm for all deletion
-  if (!confirm(
-    t('settings.ecash.all.confirmDeleteAgain', '정말로 모든 토큰을 삭제하시겠습니까?')
-  )) {
-    return
-  }
-
-  ecashStore.setProofs([])
-  ecashStore.refreshHoldings()
-
-  showSuccessMessage(
-    t('settings.ecash.all.deleted', '모든 토큰이 삭제되었습니다.')
-  )
-}
-
-async function checkMint(mintUrl: string) {
-  if (checkingMint.value.has(mintUrl)) {
-    return
-  }
-
-  checkingMint.value.add(mintUrl)
-  checkingMint.value = new Set(checkingMint.value)
-
-  try {
-    const result = await checkMintAvailability(mintUrl)
-    mintAvailability.value.set(mintUrl, result)
-    mintAvailability.value = new Map(mintAvailability.value)
-  } catch (error) {
-    console.error(`Failed to check mint ${mintUrl}:`, error)
-    mintAvailability.value.set(mintUrl, {
-      available: false,
-      error: 'Check failed'
-    })
-    mintAvailability.value = new Map(mintAvailability.value)
-  } finally {
-    checkingMint.value.delete(mintUrl)
-    checkingMint.value = new Set(checkingMint.value)
-  }
-}
-
-async function checkAllMints() {
-  const mints = ecashHoldings.value.map(h => h.mintUrl)
-  await Promise.all(mints.map(mint => checkMint(mint)))
-}
-
-function getMintStatus(mintUrl: string): { icon: string; color: string; text: string } {
-  if (checkingMint.value.has(mintUrl)) {
-    return { icon: 'spinner', color: 'text-gray-400', text: t('settings.ecash.mint.checking', '확인 중...') }
-  }
-
-  const status = mintAvailability.value.get(mintUrl)
-  if (!status) {
-    return { icon: 'warning', color: 'text-gray-400', text: t('settings.ecash.mint.unknown', '미확인') }
-  }
-
-  if (status.available) {
-    return { icon: 'checkCircle', color: 'text-green-500', text: t('settings.ecash.mint.available', '사용 가능') }
-  }
-
-  return { icon: 'warning', color: 'text-red-500', text: status.error || t('settings.ecash.mint.unavailable', '사용 불가') }
-}
-
-async function autoCheckAndCleanupTokens(showMessages = false) {
-  if (isAutoCheckingTokens.value || isCleaningTokens.value) {
-    return { totalSpent: 0, totalChecked: 0 }
-  }
-
-  const allProofs = ecashStore.getProofsSnapshot()
-  if (allProofs.length === 0) {
-    return { totalSpent: 0, totalChecked: 0 }
-  }
-
-  isAutoCheckingTokens.value = true
-  try {
-    // Group proofs by mint
-    const proofsByMint = new Map<string, typeof allProofs>()
-    allProofs.forEach(proof => {
-      const mint = proof.mintUrl || ecashStore.mintUrl
-      if (!proofsByMint.has(mint)) {
-        proofsByMint.set(mint, [])
-      }
-      proofsByMint.get(mint)!.push(proof)
-    })
-
-    let totalSpent = 0
-    let totalChecked = 0
-
-    // Check each mint separately
-    for (const [mint, proofs] of proofsByMint) {
-      try {
-        const { spent, checked } = await removeSpentProofs(mint, proofs)
-        totalChecked += checked
-
-        if (spent.length > 0) {
-          ecashStore.removeProofs(spent)
-          totalSpent += spent.length
-        }
-      } catch (error) {
-        console.error(`Failed to check proofs for mint ${mint}:`, error)
-      }
-    }
-
-    ecashStore.refreshHoldings()
-
-    if (showMessages && totalSpent > 0) {
-      showSuccessMessage(
-        t(
-          'settings.ecash.cleanup.autoSuccess',
-          '{count}개의 사용된 토큰을 자동으로 제거했습니다.',
-          { count: totalSpent }
-        )
-      )
-    }
-
-    return { totalSpent, totalChecked }
-  } catch (error) {
-    console.error('Failed to auto-cleanup spent tokens:', error)
-    return { totalSpent: 0, totalChecked: 0 }
-  } finally {
-    isAutoCheckingTokens.value = false
-  }
-}
-
-async function cleanupSpentTokens() {
-  if (isCleaningTokens.value || !hasEcashHoldings.value) {
-    return
-  }
-
-  isCleaningTokens.value = true
-  try {
-    const { totalSpent, totalChecked } = await autoCheckAndCleanupTokens(false)
-
-    if (totalSpent > 0) {
-      showSuccessMessage(
-        t(
-          'settings.ecash.cleanup.success',
-          '{count}개의 사용된 토큰을 제거했습니다.',
-          { count: totalSpent }
-        )
-      )
-    } else if (totalChecked > 0) {
-      showSuccessMessage(
-        t('settings.ecash.cleanup.allValid', '모든 토큰이 유효합니다.')
-      )
-    } else {
-      showSuccessMessage(
-        t('settings.ecash.cleanup.checkFailed', '토큰 상태를 확인할 수 없습니다.')
-      )
-    }
-  } catch (error) {
-    console.error('Failed to cleanup spent tokens:', error)
-    showSuccessMessage(
-      t('settings.ecash.cleanup.error', '토큰 정리 중 오류가 발생했습니다.')
-    )
-  } finally {
-    isCleaningTokens.value = false
-  }
-}
-
-// Initialize products and Bitcoin price when component mounts
-onMounted(async () => {
-  try {
-    await Promise.all([
-      productStore.initializeForSettings(),
-      bitcoinStore.initialize(),
-      categoryStore.initialize(),
-      ecashStore.initialize()
-    ])
-    ecashMintForm.mintUrl = ecashStore.mintUrl
-    ecashStore.refreshHoldings()
-
-    // Auto-check and remove spent tokens in background
-    if (hasEcashHoldings.value) {
-      // Run in background without blocking UI
-      autoCheckAndCleanupTokens(true).catch(error => {
-        console.error('Auto-cleanup failed:', error)
-      })
-    }
-  } catch (error) {
-    console.error('데이터 로드 실패:', error)
-  }
-})
 
 // Product ordering helpers
 
@@ -1482,8 +922,6 @@ const imageError = ref(false)
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const showSuccess = ref(false)
-const ecashMintForm = reactive({ mintUrl: '' })
-const ecashFileInput = ref<HTMLInputElement | null>(null)
 
 // User settings states
 const showUserSettings = ref(false)
@@ -1538,61 +976,18 @@ const handleLanguageSelect = (event: Event) => {
   localeStore.setLanguage(target.value as LanguageCode)
 }
 
-function saveEcashMintUrl() {
-  ecashStore.setMintUrl(ecashMintForm.mintUrl)
-  showSuccessMessage(t('settings.ecash.saveMintSuccess', 'Mint 서버 URL이 저장되었습니다.'))
-}
-
-function refreshEcashHoldings() {
-  ecashStore.refreshHoldings()
-  showSuccessMessage(t('settings.ecash.refreshSuccess', 'e-cash 잔액을 새로고침했습니다.'))
-}
-
-function handleEcashBackup() {
+// Initialize products and Bitcoin price when component mounts
+onMounted(async () => {
   try {
-    const data = ecashStore.exportProofs(true)
-    const blob = new Blob([data], { type: 'application/json' })
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `cashu-backup-${timestamp}.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-    showSuccessMessage(t('settings.ecash.backupSuccess', 'e-cash 백업 파일을 다운로드했습니다.'))
+    await Promise.all([
+      productStore.initializeForSettings(),
+      bitcoinStore.initialize(),
+      categoryStore.initialize()
+    ])
   } catch (error) {
-    console.error('e-cash backup failed:', error)
-    showSuccessMessage(t('settings.ecash.backupFailed', 'e-cash 백업 파일을 만드는 데 실패했습니다.'), true)
+    console.error('데이터 로드 실패:', error)
   }
-}
-
-function triggerEcashRestore() {
-  ecashFileInput.value?.click()
-}
-
-async function handleEcashFileChange(event: Event) {
-  const target = event.target as HTMLInputElement | null
-  const file = target?.files?.[0]
-  if (!file) return
-
-  try {
-    const text = await file.text()
-    const result = ecashStore.importProofs(text)
-    ecashStore.refreshHoldings()
-    showSuccessMessage(
-      t('settings.ecash.restoreSuccess', '{count}개의 토큰을 불러왔습니다.', { count: result.added })
-    )
-  } catch (error) {
-    console.error('e-cash restore failed:', error)
-    showSuccessMessage(t('settings.ecash.restoreFailed', 'e-cash 복원에 실패했습니다. JSON 파일을 확인해주세요.'), true)
-  } finally {
-    if (target) {
-      target.value = ''
-    }
-  }
-}
+})
 
 // Product form
 const productForm = reactive({
@@ -1642,14 +1037,6 @@ const userFormErrors = reactive({
   lightning_address: '',
   usdt_address: ''
 })
-
-watch(
-  () => ecashStore.mintUrl,
-  value => {
-    ecashMintForm.mintUrl = value
-  },
-  { immediate: true }
-)
 
 // Computed property to get all category names for suggestions
 const allCategoryNames = computed(() => {

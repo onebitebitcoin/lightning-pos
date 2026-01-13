@@ -8,6 +8,68 @@ export interface CheckStateResult {
   witness?: string
 }
 
+type MintStateResponse = {
+  spendable?: any[]
+  states?: any
+}
+
+function extractProofIdentifier(proof: CashuProof): string | null {
+  if (!proof || typeof proof !== 'object') {
+    return null
+  }
+  const yField = typeof (proof as any).Y === 'string' ? (proof as any).Y.trim() : ''
+  if (yField) {
+    return yField
+  }
+  const commitment = typeof (proof as any).C === 'string' ? (proof as any).C.trim() : ''
+  if (commitment) {
+    return commitment
+  }
+  return null
+}
+
+function normalizeState(value: any): ProofState {
+  if (typeof value === 'boolean') {
+    return value ? 'UNSPENT' : 'SPENT'
+  }
+  if (typeof value === 'string') {
+    const upper = value.toUpperCase()
+    if (upper === 'SPENT' || upper === 'UNSPENT' || upper === 'PENDING') {
+      return upper as ProofState
+    }
+  }
+  return 'UNKNOWN'
+}
+
+function mapSecretsByIdentifier(proofs: CashuProof[]) {
+  const identifierToSecret = new Map<string, string>()
+  const knownSecrets = new Set<string>()
+  const identifiers: string[] = []
+  let missingIdentifier = false
+
+  proofs.forEach(proof => {
+    if (proof?.secret) {
+      knownSecrets.add(proof.secret)
+    }
+    const identifier = extractProofIdentifier(proof)
+    if (!identifier) {
+      missingIdentifier = true
+      return
+    }
+    identifiers.push(identifier)
+    if (proof?.secret) {
+      identifierToSecret.set(identifier, proof.secret)
+    }
+  })
+
+  return {
+    identifiers,
+    identifierToSecret,
+    knownSecrets,
+    hasCompleteIdentifiers: !missingIdentifier && identifiers.length === proofs.length
+  }
+}
+
 export async function checkProofsState(
   mintUrl: string,
   proofs: CashuProof[]
@@ -19,57 +81,104 @@ export async function checkProofsState(
   try {
     const normalizedMintUrl = mintUrl.replace(/\/$/, '')
 
-    // Use /v1/check endpoint which accepts proofs directly
-    const checkUrl = `${normalizedMintUrl}/v1/check`
-
-    // Format proofs for check endpoint (only need { Ys: [...] })
-    // Y is the public key derived from secret, but we'll send the full proof
-    const proofsToCheck = proofs.map(proof => ({
+    const proofPayload = proofs.map(proof => ({
       amount: proof.amount,
       secret: proof.secret,
-      C: proof.C,
-      id: proof.id
+      C: (proof as any)?.C,
+      id: (proof as any)?.id
     }))
 
-    const response = await fetch(checkUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ proofs: proofsToCheck })
-    })
+    const { identifiers, identifierToSecret, knownSecrets, hasCompleteIdentifiers } = mapSecretsByIdentifier(proofs)
 
-    if (!response.ok) {
-      console.warn('[cashuCheck] Failed to check proof states:', response.status, response.statusText)
+    const postJson = async (url: string, body: Record<string, unknown>): Promise<MintStateResponse | null> => {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        })
+
+        if (!response.ok) {
+          console.warn('[cashuCheck] Failed to check proof states:', url, response.status, response.statusText)
+          return null
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.warn('[cashuCheck] Error contacting mint:', url, error)
+        return null
+      }
+    }
+
+    let data: MintStateResponse | null = null
+
+    if (hasCompleteIdentifiers && identifiers.length) {
+      data = await postJson(`${normalizedMintUrl}/v1/checkstate`, { Ys: identifiers })
+    }
+
+    if (!data) {
+      data = await postJson(`${normalizedMintUrl}/v1/check`, { proofs: proofPayload })
+    }
+
+    if (!data) {
       return new Map()
     }
 
-    const data = await response.json()
     const states = new Map<string, ProofState>()
+
+    const applyStateForSecret = (secret: string | undefined, value: any) => {
+      if (!secret) return
+      states.set(secret, normalizeState(value))
+    }
+
+    const applyStateForIndex = (index: number, value: any) => {
+      const secret = proofs[index]?.secret
+      applyStateForSecret(secret, value)
+    }
+
+    const applyStateForIdentifier = (identifier: string | undefined, value: any, index?: number) => {
+      if (!identifier) {
+        if (typeof index === 'number') {
+          applyStateForIndex(index, value)
+        }
+        return
+      }
+      const mappedSecret = identifierToSecret.get(identifier) || (knownSecrets.has(identifier) ? identifier : undefined)
+      if (mappedSecret) {
+        applyStateForSecret(mappedSecret, value)
+        return
+      }
+      if (typeof index === 'number') {
+        applyStateForIndex(index, value)
+      }
+    }
 
     // The response format varies by mint, try to handle common formats
     if (Array.isArray(data.spendable)) {
       // Format: { spendable: [true, false, ...] }
       data.spendable.forEach((isSpendable: boolean, index: number) => {
-        const secret = proofs[index]?.secret
-        if (secret) {
-          states.set(secret, isSpendable ? 'UNSPENT' : 'SPENT')
-        }
+        applyStateForIndex(index, isSpendable ? 'UNSPENT' : 'SPENT')
       })
     } else if (Array.isArray(data.states)) {
-      // Format: { states: ['UNSPENT', 'SPENT', ...] }
-      data.states.forEach((state: string, index: number) => {
-        const secret = proofs[index]?.secret
-        if (secret) {
-          states.set(secret, state as ProofState)
+      // Format: { states: ['UNSPENT', 'SPENT', ...] } or array of objects
+      data.states.forEach((state: any, index: number) => {
+        if (state && typeof state === 'object' && !Array.isArray(state)) {
+          applyStateForIdentifier(state.Y || state.y || state.identifier, state.state ?? state.status ?? state.value, index)
+        } else {
+          applyStateForIndex(index, state)
         }
       })
     } else if (data.states && typeof data.states === 'object') {
       // Format: { states: { 'secret1': 'SPENT', ... } }
       proofs.forEach(proof => {
         if (proof.secret && data.states[proof.secret]) {
-          states.set(proof.secret, data.states[proof.secret] as ProofState)
+          applyStateForSecret(proof.secret, data.states[proof.secret])
         }
+      })
+      Object.entries(data.states).forEach(([identifier, value]) => {
+        applyStateForIdentifier(identifier, value)
       })
     }
 
