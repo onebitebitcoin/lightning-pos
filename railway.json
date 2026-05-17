@@ -1,0 +1,9 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "dockerfilePath": "Dockerfile.frontend",
+    "buildArgs": {
+      "VITE_API_BASE_URL": "https://backend-production-18c3.up.railway.app/api"
+    }
+  }
+}
