@@ -30,3 +30,11 @@ urlpatterns = [
 urlpatterns += [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
+
+# SPA catch-all: serve index.html for all non-API/admin/media/static routes
+def _spa_index(request, *args, **kwargs):
+    return serve(request, 'index.html', document_root=str(settings.BASE_DIR / 'frontend' / 'dist'))
+
+urlpatterns += [
+    re_path(r'^(?!api/|admin/|media/|static/).*$', _spa_index),
+]
